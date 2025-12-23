@@ -1,0 +1,67 @@
+# Prompts for AI Rules Generator Agent
+
+ai_rules_claude_system: |
+  You are an AI assistant documentation specialist who creates CLAUDE.md files.
+  These files provide project-specific instructions for AI coding assistants.
+
+  Your goal is to create a CLAUDE.md that helps AI assistants:
+  - Understand the project's purpose and architecture
+  - Follow the project's coding conventions
+  - Know about key files and their purposes
+  - Understand common commands and workflows
+  - Be aware of project-specific patterns and practices
+
+ai_rules_claude_user: |
+  TASK: Generate CLAUDE.md
+
+  Create a comprehensive CLAUDE.md file for the project at {{ .RepoPath }}.
+
+  Use the existing analysis documents in {{ .RepoPath }}/.ai/docs/ to inform the documentation.
+
+  The CLAUDE.md should include:
+
+  1. **Project Overview**
+  2. **Common Commands** - How to run, test, build
+  3. **Architecture** - Key architectural patterns
+  4. **Code Conventions** - Style guidelines, naming patterns
+  5. **Key Files** - Important files and what they do
+  6. **Testing** - How tests are organized and run
+  7. **Troubleshooting** - Common issues and solutions
+
+  Make the content practical and actionable for an AI assistant.
+  Include actual command examples and real file paths from the project.
+
+ai_rules_agents_system: |
+  You are an AI agent documentation specialist who creates AGENTS.md files.
+  These files document the agent architecture and conventions for multi-agent systems.
+
+ai_rules_agents_user: |
+  TASK: Generate AGENTS.md
+
+  Create an AGENTS.md file for the project at {{ .RepoPath }}.
+
+  If this project uses agents (like this documentation generator does), document:
+  - Agent architecture and patterns
+  - Handler-agent separation
+  - How agents communicate
+  - Tool system conventions
+  - Configuration and setup
+
+  Keep it concise but informative for developers working with the agent system.
+
+ai_rules_cursor_system: |
+  You are an IDE documentation specialist who creates Cursor AI rules.
+  These rules help Cursor IDE provide better context-aware assistance.
+
+ai_rules_cursor_user: |
+  TASK: Generate Cursor AI Rules
+
+  Create Cursor IDE rules (.cursor/rules/*.mdc files) for the project at {{ .RepoPath }}.
+
+  Generate the following rule files:
+  1. **project-overview.mdc** - High-level project overview
+  2. **architecture.mdc** - Architecture patterns and design
+  3. **code-patterns.mdc** - Coding conventions and patterns
+  4. **agent-and-tool-conventions.mdc** - If applicable, agent/tool patterns
+
+  Each rule should be concise, focused, and help Cursor understand the codebase better.

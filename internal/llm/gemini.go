@@ -1,0 +1,282 @@
+package llm
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
+
+	"github.com/user/gendocs/internal/config"
+)
+
+// GeminiClient implements LLMClient for Google Gemini
+type GeminiClient struct {
+	*BaseLLMClient
+	apiKey string
+	model string
+}
+
+// geminiRequest represents the request body for Gemini API
+type geminiRequest struct {
+	Contents       []geminiContent    `json:"contents"`
+	Tools          []geminiTool       `json:"tools,omitempty"`
+	GenerationConfig geminiGenerationConfig `json:"generationConfig,omitempty"`
+	SystemInstruction *geminiContent  `json:"systemInstruction,omitempty"`
+}
+
+// geminiContent represents content in Gemini format
+type geminiContent struct {
+	Role  string           `json:"role,omitempty"`
+	Parts []geminiPart     `json:"parts"`
+}
+
+// geminiPart represents a part of content
+type geminiPart struct {
+	Text         string                 `json:"text,omitempty"`
+	FunctionCall map[string]interface{} `json:"functionCall,omitempty"`
+	FunctionResponse *geminiFunctionResponse `json:"functionResponse,omitempty"`
+}
+
+// geminiFunctionResponse represents a function response
+type geminiFunctionResponse struct {
+	Name     string `json:"name"`
+	Response map[string]interface{} `json:"response"`
+}
+
+// geminiTool represents a tool declaration
+type geminiTool struct {
+	FunctionDeclarations []geminiFunctionDeclaration `json:"functionDeclarations,omitempty"`
+}
+
+// geminiFunctionDeclaration represents a function declaration
+type geminiFunctionDeclaration struct {
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Parameters  map[string]interface{} `json:"parameters"`
+}
+
+// geminiGenerationConfig represents generation configuration
+type geminiGenerationConfig struct {
+	Temperature float64 `json:"temperature,omitempty"`
+	MaxOutputTokens int  `json:"maxOutputTokens,omitempty"`
+}
+
+// geminiResponse represents the response from Gemini API
+type geminiResponse struct {
+	Candidates []geminiCandidate `json:"candidates"`
+	UsageMetadata geminiUsageMetadata `json:"usageMetadata,omitempty"`
+	Error      *geminiError      `json:"error,omitempty"`
+}
+
+// geminiCandidate represents a candidate response
+type geminiCandidate struct {
+	Content   geminiContent `json:"content"`
+	FinishReason string     `json:"finishReason,omitempty"`
+}
+
+// geminiUsageMetadata represents token usage
+type geminiUsageMetadata struct {
+	PromptTokenCount     int `json:"promptTokenCount"`
+	CandidatesTokenCount int `json:"candidatesTokenCount"`
+	TotalTokenCount      int `json:"totalTokenCount"`
+}
+
+// geminiError represents an error
+type geminiError struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Status  string `json:"status"`
+}
+
+// NewGeminiClient creates a new Gemini client
+func NewGeminiClient(cfg config.LLMConfig, retryClient *RetryClient) *GeminiClient {
+	return &GeminiClient{
+		BaseLLMClient: NewBaseLLMClient(retryClient),
+		apiKey:        cfg.APIKey,
+		model:         cfg.Model,
+	}
+}
+
+// GenerateCompletion generates a completion from Gemini
+func (c *GeminiClient) GenerateCompletion(ctx context.Context, req CompletionRequest) (CompletionResponse, error) {
+	// Convert to Gemini format
+	gemReq := c.convertRequest(req)
+
+	jsonData, err := json.Marshal(gemReq)
+	if err != nil {
+		return CompletionResponse{}, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	// Create HTTP request
+	// Model format: models/gemini-1.5-pro or models/gemini-pro
+	modelName := c.model
+	if !strings.HasPrefix(modelName, "models/") {
+		modelName = "models/" + modelName
+	}
+	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/%s:generateContent?key=%s", modelName, c.apiKey)
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonData))
+	if err != nil {
+		return CompletionResponse{}, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	// Execute with retry
+	resp, err := c.retryClient.Do(httpReq)
+	if err != nil {
+		return CompletionResponse{}, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Read response
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return CompletionResponse{}, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	// Check for error status
+	if resp.StatusCode != http.StatusOK {
+		return CompletionResponse{}, fmt.Errorf("API error: status %d, body: %s", resp.StatusCode, string(body))
+	}
+
+	// Parse response
+	var gemResp geminiResponse
+	if err := json.Unmarshal(body, &gemResp); err != nil {
+		return CompletionResponse{}, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	// Check for API error
+	if gemResp.Error != nil {
+		return CompletionResponse{}, fmt.Errorf("API error: %s", gemResp.Error.Message)
+	}
+
+	return c.convertResponse(gemResp), nil
+}
+
+// SupportsTools returns true
+func (c *GeminiClient) SupportsTools() bool {
+	return true
+}
+
+// GetProvider returns the provider name
+func (c *GeminiClient) GetProvider() string {
+	return "gemini"
+}
+
+// convertRequest converts internal request to Gemini format
+func (c *GeminiClient) convertRequest(req CompletionRequest) geminiRequest {
+	// Build contents
+	contents := []geminiContent{}
+
+	// Add system instruction as first content with role "user"
+	// Gemini doesn't have a separate system field, it's part of content
+	if req.SystemPrompt != "" {
+		contents = append(contents, geminiContent{
+			Role: "user",
+			Parts: []geminiPart{
+				{Text: req.SystemPrompt},
+			},
+		})
+		// Add empty model response
+		contents = append(contents, geminiContent{
+			Role: "model",
+			Parts: []geminiPart{
+				{Text: "Understood. I will analyze the codebase according to your instructions."},
+			},
+		})
+	}
+
+	// Add messages
+	for _, msg := range req.Messages {
+		if msg.Role == "tool" {
+			// Tool response
+			contents = append(contents, geminiContent{
+				Role: "user",
+				Parts: []geminiPart{
+					{
+						FunctionResponse: &geminiFunctionResponse{
+							Response: map[string]interface{}{"result": msg.Content},
+						},
+					},
+				},
+			})
+		} else {
+			// Regular message
+			role := "user"
+			if msg.Role == "assistant" {
+				role = "model"
+			}
+			contents = append(contents, geminiContent{
+				Role: role,
+				Parts: []geminiPart{
+					{Text: msg.Content},
+				},
+			})
+		}
+	}
+
+	// Build tools
+	var tools []geminiTool
+	if len(req.Tools) > 0 {
+		tools = make([]geminiTool, 1)
+		functions := make([]geminiFunctionDeclaration, len(req.Tools))
+		for i, tool := range req.Tools {
+			functions[i] = geminiFunctionDeclaration{
+				Name:        tool.Name,
+				Description: tool.Description,
+				Parameters:  tool.Parameters,
+			}
+		}
+		tools[0] = geminiTool{
+			FunctionDeclarations: functions,
+		}
+	}
+
+	return geminiRequest{
+		Contents: contents,
+		Tools:    tools,
+		GenerationConfig: geminiGenerationConfig{
+			Temperature:    req.Temperature,
+			MaxOutputTokens: req.MaxTokens,
+		},
+	}
+}
+
+// convertResponse converts Gemini response to internal format
+func (c *GeminiClient) convertResponse(resp geminiResponse) CompletionResponse {
+	result := CompletionResponse{
+		Usage: TokenUsage{
+			InputTokens:  resp.UsageMetadata.PromptTokenCount,
+			OutputTokens: resp.UsageMetadata.CandidatesTokenCount,
+			TotalTokens:  resp.UsageMetadata.TotalTokenCount,
+		},
+	}
+
+	if len(resp.Candidates) == 0 {
+		return result
+	}
+
+	candidate := resp.Candidates[0]
+	var textContent string
+	var toolCalls []ToolCall
+
+	for _, part := range candidate.Content.Parts {
+		if part.Text != "" {
+			textContent += part.Text
+		}
+		if part.FunctionCall != nil {
+			toolCalls = append(toolCalls, ToolCall{
+				Name:      part.FunctionCall["name"].(string),
+				Arguments: part.FunctionCall["args"].(map[string]interface{}),
+			})
+		}
+	}
+
+	result.Content = textContent
+	result.ToolCalls = toolCalls
+
+	return result
+}
