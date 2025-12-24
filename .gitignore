@@ -30,6 +30,7 @@ go.work
 # AI-generated content (project-specific)
 .ai/docs/
 .ai/logs/
+.ai/config.yaml
 
 # Test artifacts
 coverage.txt
