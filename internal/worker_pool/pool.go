@@ -21,10 +21,22 @@ type WorkerPool struct {
 	semaphore  chan struct{}
 }
 
+// DefaultMaxWorkers is the default number of workers for LLM API calls
+// Using a conservative value to avoid rate limiting and connection issues
+const DefaultMaxWorkers = 2
+
 // NewWorkerPool creates a new worker pool
 func NewWorkerPool(maxWorkers int) *WorkerPool {
 	if maxWorkers <= 0 {
-		maxWorkers = runtime.NumCPU()
+		// Use conservative default for LLM API calls
+		// Higher concurrency can cause rate limiting and HTTP/2 stream errors
+		maxWorkers = DefaultMaxWorkers
+	}
+
+	// Cap at reasonable maximum to prevent overwhelming the API
+	maxCPU := runtime.NumCPU()
+	if maxWorkers > maxCPU {
+		maxWorkers = maxCPU
 	}
 
 	return &WorkerPool{

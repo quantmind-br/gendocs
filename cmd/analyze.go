@@ -19,6 +19,7 @@ var (
 	excludeReqFlow      bool
 	excludeAPI          bool
 	maxWorkers          int
+	forceAnalysis       bool
 )
 
 // analyzeCmd represents the analyze command
@@ -32,7 +33,11 @@ var analyzeCmd = &cobra.Command{
   - Request/response flow
   - API endpoints and contracts
 
-Results are written to .ai/docs/ directory.`,
+Results are written to .ai/docs/ directory.
+
+By default, incremental analysis is used which only re-analyzes files
+that have changed since the last run. Use --force to perform a full
+re-analysis ignoring the cache.`,
 	RunE: runAnalyze,
 }
 
@@ -46,6 +51,7 @@ func init() {
 	analyzeCmd.Flags().BoolVar(&excludeReqFlow, "exclude-request-flow", false, "Exclude request flow analysis")
 	analyzeCmd.Flags().BoolVar(&excludeAPI, "exclude-api-analysis", false, "Exclude API analysis")
 	analyzeCmd.Flags().IntVar(&maxWorkers, "max-workers", 0, "Maximum concurrent workers (0=auto)")
+	analyzeCmd.Flags().BoolVarP(&forceAnalysis, "force", "f", false, "Force full re-analysis, ignoring cache")
 }
 
 func runAnalyze(cmd *cobra.Command, args []string) error {
@@ -59,6 +65,7 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 		"exclude_api_analysis":   excludeAPI,
 		"max_workers":            maxWorkers,
 		"debug":                  debugFlag,
+		"force":                  forceAnalysis,
 	}
 
 	// Load configuration

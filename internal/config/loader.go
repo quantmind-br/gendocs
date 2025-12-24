@@ -185,6 +185,7 @@ func LoadAnalyzerConfig(repoPath string, cliOverrides map[string]interface{}) (*
 	cfg.ExcludeDeps = getBool(configMap, "exclude_dependencies", false)
 	cfg.ExcludeReqFlow = getBool(configMap, "exclude_request_flow", false)
 	cfg.ExcludeAPI = getBool(configMap, "exclude_api_analysis", false)
+	cfg.Force = getBool(configMap, "force", false)
 
 	// Validate required fields
 	if err := validateLLMConfig(&cfg.LLM, "ANALYZER"); err != nil {

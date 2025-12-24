@@ -1,0 +1,416 @@
+package cache
+
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"io"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"time"
+)
+
+// CacheVersion is the current cache format version
+const CacheVersion = 1
+
+// CacheFileName is the name of the cache file
+const CacheFileName = ".ai/analysis_cache.json"
+
+// AnalysisCache holds information about previous analysis runs
+type AnalysisCache struct {
+	Version      int                     `json:"version"`
+	LastAnalysis time.Time               `json:"last_analysis"`
+	GitCommit    string                  `json:"git_commit"`
+	Files        map[string]FileInfo     `json:"files"`
+	Agents       map[string]AgentStatus  `json:"agents"`
+}
+
+// FileInfo holds information about a file
+type FileInfo struct {
+	Hash     string    `json:"hash"`
+	Modified time.Time `json:"modified"`
+	Size     int64     `json:"size"`
+}
+
+// AgentStatus holds information about an agent's last run
+type AgentStatus struct {
+	LastRun       time.Time `json:"last_run"`
+	Success       bool      `json:"success"`
+	FilesAnalyzed []string  `json:"files_analyzed,omitempty"`
+}
+
+// ChangeReport describes what changed since last analysis
+type ChangeReport struct {
+	HasChanges       bool
+	NewFiles         []string
+	ModifiedFiles    []string
+	DeletedFiles     []string
+	AgentsToRun      []string
+	AgentsToSkip     []string
+	Reason           string
+	IsFirstRun       bool
+	GitCommitChanged bool
+}
+
+// AgentFilePatterns maps agents to file patterns they care about
+var AgentFilePatterns = map[string][]string{
+	"structure_analyzer": {
+		"*.go", "*.py", "*.js", "*.ts", "*.jsx", "*.tsx",
+		"*.java", "*.rs", "*.c", "*.cpp", "*.h", "*.hpp",
+		"go.mod", "package.json", "Cargo.toml", "pom.xml",
+	},
+	"dependency_analyzer": {
+		"go.mod", "go.sum", "package.json", "package-lock.json",
+		"yarn.lock", "pnpm-lock.yaml", "Cargo.toml", "Cargo.lock",
+		"requirements.txt", "pyproject.toml", "pom.xml", "build.gradle",
+	},
+	"data_flow_analyzer": {
+		"*.go", "*.py", "*.js", "*.ts", "*.jsx", "*.tsx",
+		"*.java", "*.rs",
+	},
+	"request_flow_analyzer": {
+		"*handler*.go", "*controller*.go", "*route*.go", "*api*.go",
+		"*handler*.py", "*view*.py", "*route*.py",
+		"*controller*.js", "*route*.js", "*api*.js",
+		"*controller*.ts", "*route*.ts", "*api*.ts",
+	},
+	"api_analyzer": {
+		"*handler*.go", "*controller*.go", "*route*.go", "*api*.go",
+		"*handler*.py", "*view*.py", "*route*.py",
+		"*controller*.js", "*route*.js", "*api*.js",
+		"*controller*.ts", "*route*.ts", "*api*.ts",
+		"openapi*.yaml", "swagger*.yaml", "*.proto",
+	},
+}
+
+// NewCache creates a new empty cache
+func NewCache() *AnalysisCache {
+	return &AnalysisCache{
+		Version: CacheVersion,
+		Files:   make(map[string]FileInfo),
+		Agents:  make(map[string]AgentStatus),
+	}
+}
+
+// LoadCache loads the cache from disk
+func LoadCache(repoPath string) (*AnalysisCache, error) {
+	cachePath := filepath.Join(repoPath, CacheFileName)
+
+	data, err := os.ReadFile(cachePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return NewCache(), nil
+		}
+		return nil, fmt.Errorf("failed to read cache: %w", err)
+	}
+
+	var cache AnalysisCache
+	if err := json.Unmarshal(data, &cache); err != nil {
+		// Cache is corrupted, return fresh cache
+		return NewCache(), nil
+	}
+
+	// Check version compatibility
+	if cache.Version != CacheVersion {
+		// Version mismatch, return fresh cache
+		return NewCache(), nil
+	}
+
+	return &cache, nil
+}
+
+// Save saves the cache to disk
+func (c *AnalysisCache) Save(repoPath string) error {
+	cachePath := filepath.Join(repoPath, CacheFileName)
+
+	// Ensure directory exists
+	dir := filepath.Dir(cachePath)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("failed to create cache directory: %w", err)
+	}
+
+	data, err := json.MarshalIndent(c, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal cache: %w", err)
+	}
+
+	if err := os.WriteFile(cachePath, data, 0644); err != nil {
+		return fmt.Errorf("failed to write cache: %w", err)
+	}
+
+	return nil
+}
+
+// GetCurrentGitCommit returns the current git commit hash
+func GetCurrentGitCommit(repoPath string) string {
+	cmd := exec.Command("git", "rev-parse", "--short", "HEAD")
+	cmd.Dir = repoPath
+	output, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(output))
+}
+
+// HashFile calculates SHA256 hash of a file
+func HashFile(path string) (string, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	hasher := sha256.New()
+	if _, err := io.Copy(hasher, file); err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(hasher.Sum(nil)), nil
+}
+
+// ScanFiles scans repository files and returns their info
+func ScanFiles(repoPath string, ignorePatterns []string) (map[string]FileInfo, error) {
+	files := make(map[string]FileInfo)
+
+	err := filepath.Walk(repoPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			if os.IsPermission(err) {
+				return nil
+			}
+			return err
+		}
+
+		// Get relative path
+		relPath, err := filepath.Rel(repoPath, path)
+		if err != nil {
+			return nil
+		}
+
+		// Skip directories and apply ignore patterns
+		if info.IsDir() {
+			if shouldIgnore(relPath, info.Name(), ignorePatterns) {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		// Skip ignored files
+		if shouldIgnore(relPath, info.Name(), ignorePatterns) {
+			return nil
+		}
+
+		// Skip binary files (quick check by extension)
+		if isBinaryExtension(filepath.Ext(path)) {
+			return nil
+		}
+
+		// Calculate hash
+		hash, err := HashFile(path)
+		if err != nil {
+			// Skip files we can't read
+			return nil
+		}
+
+		files[relPath] = FileInfo{
+			Hash:     hash,
+			Modified: info.ModTime(),
+			Size:     info.Size(),
+		}
+
+		return nil
+	})
+
+	return files, err
+}
+
+// DetectChanges compares current files with cached files
+func (c *AnalysisCache) DetectChanges(repoPath string, currentFiles map[string]FileInfo) *ChangeReport {
+	report := &ChangeReport{
+		NewFiles:      []string{},
+		ModifiedFiles: []string{},
+		DeletedFiles:  []string{},
+		AgentsToRun:   []string{},
+		AgentsToSkip:  []string{},
+	}
+
+	// Check if this is first run
+	if len(c.Files) == 0 || c.LastAnalysis.IsZero() {
+		report.IsFirstRun = true
+		report.HasChanges = true
+		report.Reason = "First analysis run"
+		report.AgentsToRun = getAllAgents()
+		for path := range currentFiles {
+			report.NewFiles = append(report.NewFiles, path)
+		}
+		return report
+	}
+
+	// Check git commit
+	currentCommit := GetCurrentGitCommit(repoPath)
+	if currentCommit != "" && c.GitCommit != "" && currentCommit != c.GitCommit {
+		report.GitCommitChanged = true
+	}
+
+	// Find new and modified files
+	for path, info := range currentFiles {
+		cached, exists := c.Files[path]
+		if !exists {
+			report.NewFiles = append(report.NewFiles, path)
+		} else if cached.Hash != info.Hash {
+			report.ModifiedFiles = append(report.ModifiedFiles, path)
+		}
+	}
+
+	// Find deleted files
+	for path := range c.Files {
+		if _, exists := currentFiles[path]; !exists {
+			report.DeletedFiles = append(report.DeletedFiles, path)
+		}
+	}
+
+	// Determine which agents need to run
+	changedFiles := append(report.NewFiles, report.ModifiedFiles...)
+	changedFiles = append(changedFiles, report.DeletedFiles...)
+
+	report.HasChanges = len(changedFiles) > 0
+
+	if !report.HasChanges {
+		report.Reason = "No files changed since last analysis"
+		report.AgentsToSkip = getAllAgents()
+		return report
+	}
+
+	// Determine which agents are affected by the changes
+	for agent, patterns := range AgentFilePatterns {
+		if agentNeedsRun(changedFiles, patterns, c.Agents[agent]) {
+			report.AgentsToRun = append(report.AgentsToRun, agent)
+		} else {
+			report.AgentsToSkip = append(report.AgentsToSkip, agent)
+		}
+	}
+
+	// If no specific agents matched, run all (safety fallback)
+	if len(report.AgentsToRun) == 0 && report.HasChanges {
+		report.AgentsToRun = getAllAgents()
+		report.AgentsToSkip = []string{}
+		report.Reason = "Changes detected but no specific agent patterns matched"
+	} else {
+		report.Reason = fmt.Sprintf("%d files changed, %d agents need re-run",
+			len(changedFiles), len(report.AgentsToRun))
+	}
+
+	return report
+}
+
+// UpdateAfterAnalysis updates the cache after a successful analysis
+func (c *AnalysisCache) UpdateAfterAnalysis(repoPath string, currentFiles map[string]FileInfo, agentResults map[string]bool) {
+	c.LastAnalysis = time.Now()
+	c.GitCommit = GetCurrentGitCommit(repoPath)
+	c.Files = currentFiles
+
+	for agent, success := range agentResults {
+		c.Agents[agent] = AgentStatus{
+			LastRun: time.Now(),
+			Success: success,
+		}
+	}
+}
+
+// Helper functions
+
+func getAllAgents() []string {
+	return []string{
+		"structure_analyzer",
+		"dependency_analyzer",
+		"data_flow_analyzer",
+		"request_flow_analyzer",
+		"api_analyzer",
+	}
+}
+
+func agentNeedsRun(changedFiles []string, patterns []string, lastStatus AgentStatus) bool {
+	// If agent never ran successfully, it needs to run
+	if lastStatus.LastRun.IsZero() || !lastStatus.Success {
+		return true
+	}
+
+	// Check if any changed file matches agent's patterns
+	for _, file := range changedFiles {
+		for _, pattern := range patterns {
+			if matchPattern(file, pattern) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func matchPattern(filename, pattern string) bool {
+	// Handle patterns like "*handler*.go"
+	if strings.Contains(pattern, "*") {
+		// Simple glob matching
+		pattern = strings.ToLower(pattern)
+		filename = strings.ToLower(filepath.Base(filename))
+
+		// Handle *.ext patterns
+		if strings.HasPrefix(pattern, "*.") {
+			ext := strings.TrimPrefix(pattern, "*")
+			return strings.HasSuffix(filename, ext)
+		}
+
+		// Handle *keyword*.ext patterns
+		if strings.HasPrefix(pattern, "*") && strings.Contains(pattern[1:], "*") {
+			parts := strings.Split(pattern, "*")
+			for _, part := range parts {
+				if part != "" && !strings.Contains(filename, part) {
+					return false
+				}
+			}
+			return true
+		}
+
+		// Handle *keyword* patterns
+		if strings.HasPrefix(pattern, "*") && strings.HasSuffix(pattern, "*") {
+			keyword := strings.Trim(pattern, "*")
+			return strings.Contains(filename, keyword)
+		}
+	}
+
+	// Exact match (for files like go.mod)
+	return strings.ToLower(filepath.Base(filename)) == strings.ToLower(pattern)
+}
+
+func shouldIgnore(relPath, name string, patterns []string) bool {
+	// Default ignore patterns
+	defaultIgnore := []string{
+		".git", "node_modules", "vendor", ".venv", "venv",
+		"__pycache__", "dist", "build", ".ai",
+	}
+
+	for _, pattern := range append(defaultIgnore, patterns...) {
+		if name == pattern || strings.HasPrefix(relPath, pattern+"/") {
+			return true
+		}
+	}
+
+	return false
+}
+
+var binaryExts = map[string]bool{
+	".exe": true, ".dll": true, ".so": true, ".dylib": true,
+	".bin": true, ".o": true, ".a": true, ".obj": true,
+	".png": true, ".jpg": true, ".jpeg": true, ".gif": true,
+	".ico": true, ".bmp": true, ".webp": true,
+	".mp3": true, ".mp4": true, ".avi": true, ".mov": true,
+	".zip": true, ".tar": true, ".gz": true, ".rar": true,
+	".pdf": true, ".doc": true, ".docx": true,
+	".woff": true, ".woff2": true, ".ttf": true, ".eot": true,
+}
+
+func isBinaryExtension(ext string) bool {
+	return binaryExts[strings.ToLower(ext)]
+}

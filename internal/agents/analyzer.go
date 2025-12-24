@@ -3,8 +3,10 @@ package agents
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 
+	"github.com/user/gendocs/internal/cache"
 	"github.com/user/gendocs/internal/config"
 	"github.com/user/gendocs/internal/llm"
 	"github.com/user/gendocs/internal/logging"
@@ -57,51 +59,124 @@ func (aa *AnalyzerAgent) Run(ctx context.Context) (*AnalysisResult, error) {
 		logging.Int("max_workers", aa.config.MaxWorkers),
 	)
 
+	// Load cache and detect changes (unless force mode)
+	var analysisCache *cache.AnalysisCache
+	var changeReport *cache.ChangeReport
+	var currentFiles map[string]cache.FileInfo
+	var scanErr error
+
+	// Always scan files for cache update
+	currentFiles, scanErr = cache.ScanFiles(aa.config.RepoPath, nil)
+	if scanErr != nil {
+		aa.logger.Warn(fmt.Sprintf("Failed to scan files: %v", scanErr))
+	}
+
+	// Always load/create cache (needed for saving later)
+	analysisCache, _ = cache.LoadCache(aa.config.RepoPath)
+	if analysisCache == nil {
+		analysisCache = cache.NewCache()
+	}
+
+	if !aa.config.Force && scanErr == nil {
+		// Detect changes
+		changeReport = analysisCache.DetectChanges(aa.config.RepoPath, currentFiles)
+
+		if !changeReport.HasChanges {
+			aa.logger.Info("No changes detected since last analysis",
+				logging.String("last_analysis", analysisCache.LastAnalysis.Format("2006-01-02 15:04:05")),
+			)
+			return &AnalysisResult{
+				Successful: []string{"No changes - using cached results"},
+				Failed:     []FailedAnalysis{},
+			}, nil
+		}
+
+		aa.logger.Info("Incremental analysis",
+			logging.Int("new_files", len(changeReport.NewFiles)),
+			logging.Int("modified_files", len(changeReport.ModifiedFiles)),
+			logging.Int("deleted_files", len(changeReport.DeletedFiles)),
+			logging.Int("agents_to_run", len(changeReport.AgentsToRun)),
+			logging.Int("agents_to_skip", len(changeReport.AgentsToSkip)),
+		)
+
+		if len(changeReport.AgentsToSkip) > 0 {
+			aa.logger.Info(fmt.Sprintf("Skipping unchanged agents: %v", changeReport.AgentsToSkip))
+		}
+	} else {
+		aa.logger.Info("Force mode enabled - running full analysis")
+	}
+
 	// Use the existing factory
 	factory := aa.llmFactory
 
-	// Build task list based on configuration
+	// Build task list based on configuration and change report
 	var tasks []worker_pool.Task
 	var outputPaths []string
+	var agentNames []string
 
 	docsDir := filepath.Join(aa.config.RepoPath, ".ai", "docs")
 
-	if !aa.config.ExcludeStructure {
+	// Helper to check if agent should run
+	shouldRunAgent := func(agentName string) bool {
+		if aa.config.Force || changeReport == nil {
+			return true
+		}
+		for _, a := range changeReport.AgentsToRun {
+			if a == agentName {
+				return true
+			}
+		}
+		return false
+	}
+
+	if !aa.config.ExcludeStructure && shouldRunAgent("structure_analyzer") {
 		task, outputPath := aa.createTask(ctx, factory, "structure_analyzer", CreateStructureAnalyzer,
 			filepath.Join(docsDir, "structure_analysis.md"))
 		tasks = append(tasks, task)
 		outputPaths = append(outputPaths, outputPath)
+		agentNames = append(agentNames, "structure_analyzer")
 	}
 
-	if !aa.config.ExcludeDeps {
+	if !aa.config.ExcludeDeps && shouldRunAgent("dependency_analyzer") {
 		task, outputPath := aa.createTask(ctx, factory, "dependency_analyzer", CreateDependencyAnalyzer,
 			filepath.Join(docsDir, "dependency_analysis.md"))
 		tasks = append(tasks, task)
 		outputPaths = append(outputPaths, outputPath)
+		agentNames = append(agentNames, "dependency_analyzer")
 	}
 
-	if !aa.config.ExcludeDataFlow {
+	if !aa.config.ExcludeDataFlow && shouldRunAgent("data_flow_analyzer") {
 		task, outputPath := aa.createTask(ctx, factory, "data_flow_analyzer", CreateDataFlowAnalyzer,
 			filepath.Join(docsDir, "data_flow_analysis.md"))
 		tasks = append(tasks, task)
 		outputPaths = append(outputPaths, outputPath)
+		agentNames = append(agentNames, "data_flow_analyzer")
 	}
 
-	if !aa.config.ExcludeReqFlow {
+	if !aa.config.ExcludeReqFlow && shouldRunAgent("request_flow_analyzer") {
 		task, outputPath := aa.createTask(ctx, factory, "request_flow_analyzer", CreateRequestFlowAnalyzer,
 			filepath.Join(docsDir, "request_flow_analysis.md"))
 		tasks = append(tasks, task)
 		outputPaths = append(outputPaths, outputPath)
+		agentNames = append(agentNames, "request_flow_analyzer")
 	}
 
-	if !aa.config.ExcludeAPI {
+	if !aa.config.ExcludeAPI && shouldRunAgent("api_analyzer") {
 		task, outputPath := aa.createTask(ctx, factory, "api_analyzer", CreateAPIAnalyzer,
 			filepath.Join(docsDir, "api_analysis.md"))
 		tasks = append(tasks, task)
 		outputPaths = append(outputPaths, outputPath)
+		agentNames = append(agentNames, "api_analyzer")
 	}
 
 	if len(tasks) == 0 {
+		if changeReport != nil && len(changeReport.AgentsToSkip) > 0 {
+			aa.logger.Info("All required agents already up-to-date")
+			return &AnalysisResult{
+				Successful: changeReport.AgentsToSkip,
+				Failed:     []FailedAnalysis{},
+			}, nil
+		}
 		return nil, fmt.Errorf("no analysis tasks to run (all agents excluded)")
 	}
 
@@ -111,7 +186,38 @@ func (aa *AnalyzerAgent) Run(ctx context.Context) (*AnalysisResult, error) {
 	results := aa.workerPool.Run(ctx, tasks)
 
 	// Process results
-	return aa.processResults(outputPaths, results), nil
+	analysisResult := aa.processResults(outputPaths, results)
+
+	// Update cache with results
+	if analysisCache != nil && len(currentFiles) > 0 {
+		agentResults := make(map[string]bool)
+		for i, name := range agentNames {
+			agentResults[name] = results[i].Error == nil
+		}
+		// Also mark skipped agents as successful (they were already cached)
+		if changeReport != nil {
+			for _, skipped := range changeReport.AgentsToSkip {
+				agentResults[skipped] = true
+			}
+		}
+		// In force mode, mark all agents as successful
+		if aa.config.Force {
+			for _, name := range []string{"structure_analyzer", "dependency_analyzer", "data_flow_analyzer", "request_flow_analyzer", "api_analyzer"} {
+				if _, exists := agentResults[name]; !exists {
+					agentResults[name] = true
+				}
+			}
+		}
+
+		analysisCache.UpdateAfterAnalysis(aa.config.RepoPath, currentFiles, agentResults)
+		if err := analysisCache.Save(aa.config.RepoPath); err != nil {
+			aa.logger.Warn(fmt.Sprintf("Failed to save cache: %v", err))
+		} else {
+			aa.logger.Info("Analysis cache updated")
+		}
+	}
+
+	return analysisResult, nil
 }
 
 // AgentCreator is a function that creates an agent
@@ -120,7 +226,7 @@ type AgentCreator func(llmCfg config.LLMConfig, repoPath string, factory *llm.Fa
 // createTask creates a task for the worker pool
 func (aa *AnalyzerAgent) createTask(ctx context.Context, factory *llm.Factory, name string, creator AgentCreator, outputPath string) (worker_pool.Task, string) {
 	task := func(ctx context.Context) (interface{}, error) {
-		aa.logger.Debug(fmt.Sprintf("Creating %s", name))
+		aa.logger.Info(fmt.Sprintf("Creating %s", name))
 
 		// Create agent
 		agent, err := creator(aa.config.LLM, aa.config.RepoPath, factory, aa.promptManager, aa.logger)
@@ -194,6 +300,28 @@ func NewDocumenterAgent(cfg config.DocumenterConfig, promptManager *prompts.Mana
 
 // Run generates the README
 func (da *DocumenterAgent) Run(ctx context.Context) error {
+	// Pre-load all analysis documents
+	analysisFiles := []string{
+		"structure_analysis.md",
+		"dependency_analysis.md",
+		"data_flow_analysis.md",
+		"request_flow_analysis.md",
+		"api_analysis.md",
+	}
+
+	analysisContent := make(map[string]string)
+	docsDir := filepath.Join(da.config.RepoPath, ".ai/docs")
+
+	for _, filename := range analysisFiles {
+		filePath := filepath.Join(docsDir, filename)
+		content, err := os.ReadFile(filePath)
+		if err != nil {
+			da.logger.Warn(fmt.Sprintf("Could not read %s: %v", filename, err))
+			continue
+		}
+		analysisContent[filename] = string(content)
+	}
+
 	retryClient := llm.NewRetryClient(llm.DefaultRetryConfig())
 	factory := llm.NewFactory(retryClient)
 
@@ -203,8 +331,18 @@ func (da *DocumenterAgent) Run(ctx context.Context) error {
 		return fmt.Errorf("failed to create documenter agent: %w", err)
 	}
 
-	// Run agent
-	output, err := agent.Run(ctx)
+	// Render user prompt with analysis content embedded
+	promptData := map[string]interface{}{
+		"RepoPath":        da.config.RepoPath,
+		"AnalysisContent": analysisContent,
+	}
+	userPrompt, err := da.promptManager.Render("documenter_user", promptData)
+	if err != nil {
+		return fmt.Errorf("failed to render prompt: %w", err)
+	}
+
+	// Run agent with custom user prompt
+	output, err := agent.RunOnce(ctx, userPrompt)
 	if err != nil {
 		return fmt.Errorf("documenter agent failed: %w", err)
 	}
@@ -237,6 +375,28 @@ func NewAIRulesGeneratorAgent(cfg config.AIRulesConfig, promptManager *prompts.M
 
 // Run generates AI rules files
 func (aa *AIRulesGeneratorAgent) Run(ctx context.Context) error {
+	// Pre-load all analysis documents
+	analysisFiles := []string{
+		"structure_analysis.md",
+		"dependency_analysis.md",
+		"data_flow_analysis.md",
+		"request_flow_analysis.md",
+		"api_analysis.md",
+	}
+
+	analysisContent := make(map[string]string)
+	docsDir := filepath.Join(aa.config.RepoPath, ".ai/docs")
+
+	for _, filename := range analysisFiles {
+		filePath := filepath.Join(docsDir, filename)
+		content, err := os.ReadFile(filePath)
+		if err != nil {
+			aa.logger.Warn(fmt.Sprintf("Could not read %s: %v", filename, err))
+			continue
+		}
+		analysisContent[filename] = string(content)
+	}
+
 	retryClient := llm.NewRetryClient(llm.DefaultRetryConfig())
 	factory := llm.NewFactory(retryClient)
 
@@ -246,8 +406,18 @@ func (aa *AIRulesGeneratorAgent) Run(ctx context.Context) error {
 		return fmt.Errorf("failed to create AI rules agent: %w", err)
 	}
 
-	// Run agent
-	output, err := agent.Run(ctx)
+	// Render user prompt with analysis content embedded
+	promptData := map[string]interface{}{
+		"RepoPath":        aa.config.RepoPath,
+		"AnalysisContent": analysisContent,
+	}
+	userPrompt, err := aa.promptManager.Render("ai_rules_user", promptData)
+	if err != nil {
+		return fmt.Errorf("failed to render prompt: %w", err)
+	}
+
+	// Run agent with custom user prompt
+	output, err := agent.RunOnce(ctx, userPrompt)
 	if err != nil {
 		return fmt.Errorf("AI rules agent failed: %w", err)
 	}

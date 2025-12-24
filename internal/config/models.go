@@ -48,6 +48,8 @@ type AnalyzerConfig struct {
 	ExcludeAPI        bool         `mapstructure:"exclude_api_analysis"`
 	MaxWorkers        int          `mapstructure:"max_workers"`
 	RetryConfig       RetryConfig  `mapstructure:"retry"`
+	Force             bool         `mapstructure:"force"`              // Force full re-analysis, ignore cache
+	Incremental       bool         `mapstructure:"incremental"`        // Enable incremental analysis (default: true)
 }
 
 // DocumenterConfig holds configuration for readme generation

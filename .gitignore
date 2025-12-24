@@ -1,0 +1,52 @@
+# Binaries
+gendocs
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Build artifacts
+build/
+dist/
+
+# Go workspace file
+go.work
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Generated documentation (except examples)
+*.html
+!examples/**/*.html
+
+# AI-generated content (project-specific)
+.ai/docs/
+.ai/logs/
+
+# Test artifacts
+coverage.txt
+coverage.html
+*.prof
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Environment and secrets
+.env
+.env.local
+*.pem
+*.key
+!**/*.pub.key
+
+# OS
+Thumbs.db
