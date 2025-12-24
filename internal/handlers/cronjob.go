@@ -187,7 +187,7 @@ func (h *CronjobHandler) cloneRepository(ctx context.Context, project gitlab.Pro
 	cmd := exec.CommandContext(ctx, "git", "clone", "--depth", "1", url, destDir)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		h.Logger.Debug(fmt.Sprintf("Git clone output: %s", string(output)))
+		h.Logger.Info(fmt.Sprintf("Git clone output: %s", string(output)))
 		return err
 	}
 
@@ -202,10 +202,10 @@ func (h *CronjobHandler) runAnalysis(ctx context.Context, repoPath string) error
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		h.Logger.Debug(fmt.Sprintf("Analysis output: %s", string(output)))
+		h.Logger.Info(fmt.Sprintf("Analysis output: %s", string(output)))
 		return err
 	}
 
-	h.Logger.Debug(fmt.Sprintf("Analysis output: %s", string(output)))
+	h.Logger.Info(fmt.Sprintf("Analysis output: %s", string(output)))
 	return nil
 }

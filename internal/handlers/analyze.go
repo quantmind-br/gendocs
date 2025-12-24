@@ -34,16 +34,21 @@ func (h *AnalyzeHandler) Handle(ctx context.Context) error {
 		logging.String("repo_path", h.config.RepoPath),
 	)
 
-	// Load prompts
-	// Try to find prompts directory - check relative to binary or repo
-	promptManager, err := prompts.NewManager("./prompts")
-	if err != nil {
+	// Load prompts with override support
+	// System prompts: try "./prompts" first, fallback to repo-relative path
+	systemPromptsDir := "./prompts"
+	if _, err := prompts.NewManager(systemPromptsDir); err != nil {
 		// Try relative to repo path
-		repoPromptsDir := fmt.Sprintf("%s/../gendocs/prompts", h.config.RepoPath)
-		promptManager, err = prompts.NewManager(repoPromptsDir)
-		if err != nil {
-			return errors.NewConfigurationError(fmt.Sprintf("failed to load prompts: %v", err))
-		}
+		systemPromptsDir = fmt.Sprintf("%s/../gendocs/prompts", h.config.RepoPath)
+	}
+
+	// Project prompts: .ai/prompts/ in the repository
+	projectPromptsDir := fmt.Sprintf("%s/.ai/prompts", h.config.RepoPath)
+
+	// Load with override support
+	promptManager, err := prompts.NewManagerWithOverrides(systemPromptsDir, projectPromptsDir)
+	if err != nil {
+		return errors.NewConfigurationError(fmt.Sprintf("failed to load prompts: %v", err))
 	}
 
 	// Create analyzer agent

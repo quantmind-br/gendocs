@@ -5,6 +5,7 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/spf13/cobra"
 	"github.com/user/gendocs/internal/tui"
 )
@@ -23,13 +24,29 @@ func init() {
 }
 
 func runConfig(cmd *cobra.Command, args []string) error {
+	// Initialize text inputs
+	apiKeyInput := textinput.New()
+	apiKeyInput.Placeholder = "Enter your API key"
+	apiKeyInput.EchoMode = textinput.EchoPassword
+	apiKeyInput.EchoCharacter = '•'
+	apiKeyInput.Focus()
+
+	modelInput := textinput.New()
+	modelInput.Placeholder = "Press Enter for default model"
+
+	baseURLInput := textinput.New()
+	baseURLInput.Placeholder = "https://api.example.com (optional)"
+
 	// Initialize Bubble Tea model
 	model := tui.Model{
-		Step:     0,
-		Provider: "",
-		Model:    "",
-		BaseURL:  "",
-		Quitting: false,
+		Step:         0,
+		Provider:     "",
+		Model:        "",
+		BaseURL:      "",
+		Quitting:     false,
+		APIKeyInput:  apiKeyInput,
+		ModelInput:   modelInput,
+		BaseURLInput: baseURLInput,
 	}
 
 	// Start Bubble Tea program

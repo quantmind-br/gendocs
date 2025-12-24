@@ -1,0 +1,474 @@
+{
+  "version": 1,
+  "last_analysis": "2025-12-23T20:31:07.313710445-03:00",
+  "git_commit": "ca138e6",
+  "files": {
+    ".env.example": {
+      "hash": "6b5b3478763ad548a126c63a612757503a2df4b77c969f627e3f98ef2ed4d522",
+      "modified": "2025-12-22T17:52:58.9327901-03:00",
+      "size": 2977
+    },
+    ".github/workflows/test.yml": {
+      "hash": "4033b5dd8abd1a430b23fe37b15823a65fcfe73a015bdfb87fbccc709e45cba3",
+      "modified": "2025-12-23T13:18:55.471897441-03:00",
+      "size": 2019
+    },
+    ".gitignore": {
+      "hash": "a69c829530736f1b19ad91761cb430cf368a4b283ed1d580b061d1c3903e1919",
+      "modified": "2025-12-23T17:17:42.964107081-03:00",
+      "size": 490
+    },
+    "CLAUDE.md": {
+      "hash": "690bca4694fe5787cb412653b1f7573b626e6117f81aeb40df8647cfb649e6dc",
+      "modified": "2025-12-23T19:49:45.279171613-03:00",
+      "size": 3863
+    },
+    "GEMINI_SETUP.md": {
+      "hash": "d3717fda3b0d3cf904f36666b6e1689f5622782d87cd328c49381f98efd1d053",
+      "modified": "2025-12-23T17:24:02.972785748-03:00",
+      "size": 5013
+    },
+    "INSTALL.md": {
+      "hash": "a85814e6b1ed7262d98e4d13fdb6093fa9479bd11422912c9e778bab284c4df7",
+      "modified": "2025-12-23T07:22:59.079120172-03:00",
+      "size": 7196
+    },
+    "Makefile": {
+      "hash": "b4bcaeb36000d0ad069dae25abb73ffa3d72d287e0b9d4e9372b43ab15910b62",
+      "modified": "2025-12-23T13:18:41.739538068-03:00",
+      "size": 3153
+    },
+    "PLAN.md": {
+      "hash": "a5896ac9239aa5b3f5a2400992ee95596d0e41e403423f29f76334002059c77c",
+      "modified": "2025-12-23T11:22:19.561275192-03:00",
+      "size": 72245
+    },
+    "README.html": {
+      "hash": "49075f5a58ecc11e8083346ba0df2ef85f4e828a3e940f13f0253b43da8d2cde",
+      "modified": "2025-12-23T17:41:50.181311685-03:00",
+      "size": 9785
+    },
+    "README.md": {
+      "hash": "5685f61ec636773f0366d8b98033a86439a9df5d5cbace4624183e86377c1bf6",
+      "modified": "2025-12-23T17:41:22.342624439-03:00",
+      "size": 3877
+    },
+    "README_OLD.md": {
+      "hash": "0f340cf4022a226fcf76590295092ccefb5557e7573e596e3084506c03c759d8",
+      "modified": "2025-12-22T17:52:48.656823662-03:00",
+      "size": 5576
+    },
+    "SESSION_SUMMARY.md": {
+      "hash": "f05922ae0c65acca1849089d69ef120262d2351f7388ff3322d22a5ccc21167b",
+      "modified": "2025-12-23T17:19:04.106195306-03:00",
+      "size": 10855
+    },
+    "TESTING.md": {
+      "hash": "dc9fba18139d768464050a9b1303686e4b9f51e6abd2e8ad4dc71e644db41831",
+      "modified": "2025-12-23T17:17:12.648323009-03:00",
+      "size": 6821
+    },
+    "cmd/analyze.go": {
+      "hash": "f28e4db05c265ff6795a4558fdfabc063c7fa02303c3eb4db95e96e6f9988bd8",
+      "modified": "2025-12-23T20:27:03.910069394-03:00",
+      "size": 3566
+    },
+    "cmd/config.go": {
+      "hash": "2b75aa56c8851a51db23ba600de18bb7f7c82194440ad93980f34f3cc96ba6b1",
+      "modified": "2025-12-23T07:54:02.827809179-03:00",
+      "size": 1963
+    },
+    "cmd/cronjob.go": {
+      "hash": "a6a3d8bafbe217ebfd562e914a3d8c26039b26a8bd4d5ecd80ce155b67a62142",
+      "modified": "2025-12-22T18:14:22.071084368-03:00",
+      "size": 3908
+    },
+    "cmd/generate.go": {
+      "hash": "5c5edf605bb1ffa72d452e526a641cb0e465005e929ee2ce1690650156afc9ee",
+      "modified": "2025-12-23T15:18:01.104048455-03:00",
+      "size": 8132
+    },
+    "cmd/root.go": {
+      "hash": "43645bd0a563ad205eecc4026b061a08d490b05daba4dd0742402f74aba6d5b8",
+      "modified": "2025-12-22T17:49:23.518496759-03:00",
+      "size": 800
+    },
+    "docs/ARCHITECTURE.md": {
+      "hash": "2377a86347d99a87b82292c758e975e3fe5411d103285ef1b9d7aadac8583508",
+      "modified": "2025-12-23T13:41:19.952436541-03:00",
+      "size": 20689
+    },
+    "docs/CONTRIBUTING.md": {
+      "hash": "8cf3c57e9104f95a56aee52a02865e8e2021fb62cfa8b8414cf8fa32777872ba",
+      "modified": "2025-12-23T13:43:35.765660189-03:00",
+      "size": 12518
+    },
+    "docs/EXPORT.md": {
+      "hash": "69394972bef35ccc651354dc8e1b5e33549e6614bd4daf427a9dbb404bd742e5",
+      "modified": "2025-12-23T15:19:27.002106241-03:00",
+      "size": 7532
+    },
+    "docs/TESTING.md": {
+      "hash": "8a17369935b0a788aaefbd0bd26523a17f83aa802555d427f6a395bc81d78ad4",
+      "modified": "2025-12-23T13:43:35.723659345-03:00",
+      "size": 13901
+    },
+    "examples/custom-prompts/README.md": {
+      "hash": "f2bb4c5936fe022caed31b39a14e1e62e48452cbf0b7429d7d73dc228b7938ec",
+      "modified": "2025-12-23T15:10:23.706064967-03:00",
+      "size": 4339
+    },
+    "examples/custom-prompts/basic-override.yaml": {
+      "hash": "4ce60e0710447f1ec66cb785c42ba71bef19f31f36ad7b7c75284bbb9e1c52f8",
+      "modified": "2025-12-23T15:09:52.671317435-03:00",
+      "size": 2181
+    },
+    "examples/custom-prompts/enterprise-docs.yaml": {
+      "hash": "96515cab9d89673a166393135f5401834c0aaaf40d8adb295f4ef208d02e152d",
+      "modified": "2025-12-23T15:09:52.798320495-03:00",
+      "size": 4033
+    },
+    "examples/custom-prompts/microservices.yaml": {
+      "hash": "d91bcbf2dc51c7668fc3a036a9681b91b3aabb572fcca647a424f93342b590f8",
+      "modified": "2025-12-23T15:09:52.728318809-03:00",
+      "size": 4192
+    },
+    "gendocs": {
+      "hash": "4acbc5f7f23d57e58a7d6dfd801bf8ef57099fd0c69b4fb2bfdecd90fb3da1db",
+      "modified": "2025-12-23T20:10:08.702364558-03:00",
+      "size": 22647781
+    },
+    "gendocs-test": {
+      "hash": "95c747399bcac22966e6477bd57bfb128e5badf868fddc7cbbe6613d80917f24",
+      "modified": "2025-12-23T20:30:06.687080236-03:00",
+      "size": 22695449
+    },
+    "go.mod": {
+      "hash": "fd0efc2efe33e855898021e88917026278c033811bb6dd4608d8f818f1963dbe",
+      "modified": "2025-12-23T15:14:00.840285687-03:00",
+      "size": 2287
+    },
+    "go.sum": {
+      "hash": "60032e6d57576e55f80c46e4bdbb41e54d48e852d64d40ebf35dd3284ba3e2cd",
+      "modified": "2025-12-23T15:14:00.840285687-03:00",
+      "size": 11103
+    },
+    "install.sh": {
+      "hash": "bae68fbc26d6ff0e61bf46c95bf1776669bf4939749c272ed6bc50270f76b03e",
+      "modified": "2025-12-23T07:16:54.802512367-03:00",
+      "size": 1549
+    },
+    "internal/agents/analyzer.go": {
+      "hash": "0c81b94514c01bf65bbf2d5461b3c728028f1dd3013deaeee4848418c6a1c6dd",
+      "modified": "2025-12-23T20:29:57.6718824-03:00",
+      "size": 13661
+    },
+    "internal/agents/analyzer_integration_test.go": {
+      "hash": "22cb80450498d12aaa8a6595fdce0201a325c202ed18edcfffcf5b0013bf0c0a",
+      "modified": "2025-12-23T13:39:29.195729543-03:00",
+      "size": 10956
+    },
+    "internal/agents/base.go": {
+      "hash": "f995a59c2e07ff955d28817569ee0bb523c19570baaf1d8f9f0b96f62b8d1e0a",
+      "modified": "2025-12-23T20:09:11.038542736-03:00",
+      "size": 8352
+    },
+    "internal/agents/factory.go": {
+      "hash": "3f781f82c4975f05dc6a0be9177fc2cc2887c12c4a079ecea551be9c7755839b",
+      "modified": "2025-12-22T18:01:16.153842307-03:00",
+      "size": 3365
+    },
+    "internal/agents/sub_agents.go": {
+      "hash": "6c3280a5a484dc823f404bba046e8880e4d913f38d530fd2e046d902519149f1",
+      "modified": "2025-12-23T17:36:33.2304791-03:00",
+      "size": 5188
+    },
+    "internal/cache/cache.go": {
+      "hash": "9ffe66a0e357be3ae3b02e95f75cd79115aadf21a9e48cfc1806d2ff5e5cfc07",
+      "modified": "2025-12-23T20:24:50.072132707-03:00",
+      "size": 11072
+    },
+    "internal/config/loader.go": {
+      "hash": "541989868281a017a1817e3d23be4de49313414593aec5187ea06e0d3c10994b",
+      "modified": "2025-12-23T20:27:20.231427534-03:00",
+      "size": 8551
+    },
+    "internal/config/loader_test.go": {
+      "hash": "450f496d13691ba345308f0a2d85e3c07019acd3de9c6d7a2455f8a1dd9dbac7",
+      "modified": "2025-12-23T13:37:09.757315721-03:00",
+      "size": 10772
+    },
+    "internal/config/models.go": {
+      "hash": "0df711f72a8d467dbc35f81ea455d4ddc199cf80116540783a4469550707dc43",
+      "modified": "2025-12-23T20:25:18.275751533-03:00",
+      "size": 4900
+    },
+    "internal/errors/agent.go": {
+      "hash": "25b433b1413e6aea6240d363042491f40c8e802020eadf6b67fbb678851c373b",
+      "modified": "2025-12-22T17:50:50.11453739-03:00",
+      "size": 3590
+    },
+    "internal/errors/base.go": {
+      "hash": "c580511fe8a758f562e4e983fec853f9fe44e93fc7307f69a6c91e20493bf70d",
+      "modified": "2025-12-22T17:44:53.446660305-03:00",
+      "size": 1505
+    },
+    "internal/errors/config.go": {
+      "hash": "5e939235e11d27b6317ee47816a5ea3ad7e980ba9b0183fa0f1f9a908f11280c",
+      "modified": "2025-12-23T13:54:24.355731416-03:00",
+      "size": 4322
+    },
+    "internal/errors/context.go": {
+      "hash": "4e618e7f64ad72600304fa9de44c8cad5403c6e3e7dcaae3f74f86acac31385b",
+      "modified": "2025-12-22T17:44:46.364503114-03:00",
+      "size": 1688
+    },
+    "internal/errors/exit_codes.go": {
+      "hash": "7062b069e23e22d5ba4a7b6458210b99efadc7b6edf19b47b3f841e16382fdfd",
+      "modified": "2025-12-22T17:50:04.562990888-03:00",
+      "size": 392
+    },
+    "internal/errors/gitlab.go": {
+      "hash": "0d3a3eab3a769cdfda97c23cbda54e65e672103fff767674f8a7fb1b3c28618c",
+      "modified": "2025-12-22T17:51:23.195273886-03:00",
+      "size": 2786
+    },
+    "internal/errors/handler.go": {
+      "hash": "2a43613eb323f136997f1e07535de9bd024d99bc9fe7b539d64b55b748eb2c80",
+      "modified": "2025-12-22T17:51:51.321090478-03:00",
+      "size": 2494
+    },
+    "internal/errors/validation.go": {
+      "hash": "4e9d4298356137549130d3c901c58f286194e910ae2ad7aa35ea4f0d841a125a",
+      "modified": "2025-12-22T17:51:03.390425243-03:00",
+      "size": 2742
+    },
+    "internal/export/html.go": {
+      "hash": "c63cd294507d485cf0debc4a79238ced91637d1c2aadeef1c22fb76579b9d154",
+      "modified": "2025-12-23T15:16:06.524301701-03:00",
+      "size": 7139
+    },
+    "internal/export/html_test.go": {
+      "hash": "4b094e17e47b7e9a34f9ec664589cf45472fbdfe886726292b3b0d9d5ea4ab0d",
+      "modified": "2025-12-23T15:16:36.823028271-03:00",
+      "size": 9211
+    },
+    "internal/gitlab/client.go": {
+      "hash": "bc56b15b3d582bbc4eb0f178a9fe33b6aa46fd48f8aa0e6550e0965b3b2823f6",
+      "modified": "2025-12-23T08:14:08.551398275-03:00",
+      "size": 4825
+    },
+    "internal/handlers/ai_rules.go": {
+      "hash": "66cc83abac54eb6ac2687906abcf5b14ae59d5260fe67be11297f501cc30bc36",
+      "modified": "2025-12-23T15:08:00.875621137-03:00",
+      "size": 1856
+    },
+    "internal/handlers/analyze.go": {
+      "hash": "f3b0dfcf043d534f7069da06f3d288031596150d8ce4272bea6f75ef0896064b",
+      "modified": "2025-12-23T15:08:00.698616863-03:00",
+      "size": 2359
+    },
+    "internal/handlers/base.go": {
+      "hash": "ba1554d17f7c60607d28e5f18781bbeca1f551ea8d6e55b3974b43397dc63b2f",
+      "modified": "2025-12-22T18:03:47.089404739-03:00",
+      "size": 619
+    },
+    "internal/handlers/cronjob.go": {
+      "hash": "4f985fa457c1e8dfe3c833db9ff7826c6377f9fa4aedf2723d7b1df9cfd0ff9a",
+      "modified": "2025-12-23T08:13:32.814579511-03:00",
+      "size": 6657
+    },
+    "internal/handlers/readme.go": {
+      "hash": "5e9c0a5c4a27e7fa19fd39a5a95ecc55e6d449f0c333e8c872df1272c91ea015",
+      "modified": "2025-12-23T15:08:00.77261865-03:00",
+      "size": 1830
+    },
+    "internal/llm/anthropic.go": {
+      "hash": "9d0370489972245c463ad53bb7c772f7ec2b4a4461822aa79d23a3ab1f5ec1ad",
+      "modified": "2025-12-23T13:51:12.417406159-03:00",
+      "size": 7704
+    },
+    "internal/llm/anthropic_test.go": {
+      "hash": "2291bf65d436c2b2eb91d98caac9bc11807d0510fdb4b8bf345c976e5b3fa949",
+      "modified": "2025-12-23T13:23:58.61368503-03:00",
+      "size": 9023
+    },
+    "internal/llm/client.go": {
+      "hash": "39cf1c0e224839f95f1471a2494783fe2ae85e4136671cea11aa72e5b08bed14",
+      "modified": "2025-12-23T13:25:11.423523225-03:00",
+      "size": 1812
+    },
+    "internal/llm/factory.go": {
+      "hash": "73af1712d1681b0e182040b067fcd3a2dc33dd13ac273f57fcb9939afd14d67c",
+      "modified": "2025-12-22T17:57:51.207283895-03:00",
+      "size": 803
+    },
+    "internal/llm/gemini.go": {
+      "hash": "3b225d0163de7819a0082a22958d81e18560a2aaa69c64d67002fa3000b52953",
+      "modified": "2025-12-23T13:50:53.607987601-03:00",
+      "size": 9018
+    },
+    "internal/llm/gemini_test.go": {
+      "hash": "4f4ace60843162aec5e7d05c7996c155e056a4c337b1845d115ecf90fa551d4f",
+      "modified": "2025-12-23T13:23:58.705687359-03:00",
+      "size": 10714
+    },
+    "internal/llm/openai.go": {
+      "hash": "76c4292d78af53adf22a8f1a885df8c90e7892d7df5c7bbcc9b7fea99dd0f6ec",
+      "modified": "2025-12-22T17:48:16.215160874-03:00",
+      "size": 7064
+    },
+    "internal/llm/openai_test.go": {
+      "hash": "3b5aa64f591599aaccf261ac45d2f1f0b3d4c5356ec4601ab632fec18c25aea0",
+      "modified": "2025-12-23T13:48:58.779457705-03:00",
+      "size": 9207
+    },
+    "internal/llm/retry_client.go": {
+      "hash": "4126eeb532327d1c23a3fe939bf5133a9b65201ece2898ba9b27dab566db4147",
+      "modified": "2025-12-23T13:47:50.362973984-03:00",
+      "size": 4366
+    },
+    "internal/logging/logger.go": {
+      "hash": "9c223dc5fb86a2eb4e04d58324c94918de24e70d91a1e21e9647f024eb280c5a",
+      "modified": "2025-12-22T17:51:32.628208327-03:00",
+      "size": 3838
+    },
+    "internal/prompts/integration_test.go": {
+      "hash": "4e91726e3ccee4da3c10a97befecaf31181ff663255d942110ab5f41d872ca4a",
+      "modified": "2025-12-23T17:14:56.06175958-03:00",
+      "size": 4454
+    },
+    "internal/prompts/manager.go": {
+      "hash": "042486417440028a6578ebc8be4eed574a98ca4fc27cf17a453ee05e02245fde",
+      "modified": "2025-12-23T15:03:51.566582588-03:00",
+      "size": 7343
+    },
+    "internal/prompts/manager_test.go": {
+      "hash": "6a9a94ad40e7e7daf3a2c18fb78a66a3aec821bd16f0564f825297d43a96b2ef",
+      "modified": "2025-12-23T15:04:56.159151209-03:00",
+      "size": 9209
+    },
+    "internal/prompts/manager_test_override.go": {
+      "hash": "ca752d84d871e4e2b1ccf8c527f4d22a0111d819389497d7f2141834d97ab5c8",
+      "modified": "2025-12-23T15:04:42.358816342-03:00",
+      "size": 8822
+    },
+    "internal/testing/fixtures.go": {
+      "hash": "e6ee3ca60e47f76575ccc7f59420f7605040477f5c20de7180e444d789af39ed",
+      "modified": "2025-12-23T13:17:58.612404797-03:00",
+      "size": 5472
+    },
+    "internal/testing/helpers.go": {
+      "hash": "a8fe3145f2156a347746803fc8868b6c1e95636166ab9ffdaf001685cc8468f4",
+      "modified": "2025-12-23T13:17:58.574403795-03:00",
+      "size": 5057
+    },
+    "internal/tools/base.go": {
+      "hash": "ac01cd86528570aad03219e1b883ba2bce5c7b7f999f26ac2f9156cbab561343",
+      "modified": "2025-12-22T17:48:34.498232909-03:00",
+      "size": 1732
+    },
+    "internal/tools/file_read.go": {
+      "hash": "9142b8737e2492c4be56c8adc5f4485b9510a2eaa19d3ce9689b3f56674fc1cc",
+      "modified": "2025-12-23T20:08:06.246123945-03:00",
+      "size": 5302
+    },
+    "internal/tools/file_read_test.go": {
+      "hash": "98121c5c2cbce771b16293ee8e75313470ec29a45801b09a078ab897ec7d6d27",
+      "modified": "2025-12-23T13:24:28.667444994-03:00",
+      "size": 7938
+    },
+    "internal/tools/list_files.go": {
+      "hash": "53b05333f24544ea0d5aeb594dde800b63bcc05ba07467dc1252402600af6a49",
+      "modified": "2025-12-23T20:07:26.50625396-03:00",
+      "size": 3226
+    },
+    "internal/tools/list_files_test.go": {
+      "hash": "8765dedf6c23979ba6dab96b69d3f8c60cd9af66a24291eebb18c493a700b567",
+      "modified": "2025-12-23T13:24:28.772447646-03:00",
+      "size": 9586
+    },
+    "internal/tools/utils.go": {
+      "hash": "0497dd889a038f373cf7f597e6df048ff656a6f4ba423f2d718c5170c484ce1b",
+      "modified": "2025-12-23T20:06:55.159567857-03:00",
+      "size": 8083
+    },
+    "internal/tui/config.go": {
+      "hash": "00f984ba3f895fd65229bc06861b6f9b6fa3b3783a0c729685cffdd6dd766cc5",
+      "modified": "2025-12-23T13:52:23.623999935-03:00",
+      "size": 9928
+    },
+    "internal/validation/markdown.go": {
+      "hash": "972b66d462c81aeb0658b2f77057c3b8990aa1f30fdd341af1c2e6fe876c7e51",
+      "modified": "2025-12-23T13:48:44.019135983-03:00",
+      "size": 6277
+    },
+    "internal/validation/markdown_test.go": {
+      "hash": "b37e7a6ecdaf8b2ab32713e5865b80c226bd5459fc3a7c4b7ade04c875d898c7",
+      "modified": "2025-12-23T13:38:34.286386078-03:00",
+      "size": 9652
+    },
+    "internal/worker_pool/pool.go": {
+      "hash": "dd16f63ed7f3d20d2a23f101600eef4c9d135a929732b69aa4b7363782c107bc",
+      "modified": "2025-12-23T20:09:44.274270672-03:00",
+      "size": 1975
+    },
+    "main.go": {
+      "hash": "bc2971cd96ea34454170a7e490e9ea8f937e5345156fcbd260e78af92c6304c5",
+      "modified": "2025-12-22T17:44:13.109765019-03:00",
+      "size": 83
+    },
+    "prompts/ai_rules_generator.yaml": {
+      "hash": "3e06be5569bf30b46b53a1ec3ca782d55fed18b04a968256cebad67623749394",
+      "modified": "2025-12-23T19:49:38.301021754-03:00",
+      "size": 7558
+    },
+    "prompts/analyzer.yaml": {
+      "hash": "6109420c4ae4ebbac824caa6b932b5a71e6d2ad682214a43e8e2e3f53e3bbc22",
+      "modified": "2025-12-23T17:33:17.641633329-03:00",
+      "size": 8310
+    },
+    "prompts/documenter.yaml": {
+      "hash": "44a6f31afce346295f8770333d6253295a466d939c3f25fafd1856ac1cc778fa",
+      "modified": "2025-12-23T17:40:53.329908089-03:00",
+      "size": 5181
+    },
+    "shotgun-prompt-20251223-081221.md": {
+      "hash": "3462c03329ffbfc952817d757e3253d04c10ab2bf94a5a6e3fb09768e036deee",
+      "modified": "2025-12-23T08:12:21.945958041-03:00",
+      "size": 366757
+    },
+    "shotgun-prompt-20251223-081221_response.md": {
+      "hash": "027379bd06bdbd872a47d1fa3d84f13274a0131cc7af98da91c091f1fc48edf3",
+      "modified": "2025-12-23T08:12:47.852550427-03:00",
+      "size": 10595
+    },
+    "uninstall.sh": {
+      "hash": "43db0355816a2da9ad81789a356d4d1d36118f2316474a36ba48f9c8298d8c57",
+      "modified": "2025-12-23T07:17:22.604168954-03:00",
+      "size": 795
+    }
+  },
+  "agents": {
+    "api_analyzer": {
+      "last_run": "2025-12-23T20:31:07.314291686-03:00",
+      "success": true
+    },
+    "data_flow_analyzer": {
+      "last_run": "2025-12-23T20:31:07.314291575-03:00",
+      "success": true
+    },
+    "dependency_analyzer": {
+      "last_run": "2025-12-23T20:31:07.314291525-03:00",
+      "success": true
+    },
+    "request_flow_analyzer": {
+      "last_run": "2025-12-23T20:31:07.314291626-03:00",
+      "success": true
+    },
+    "structure_analyzer": {
+      "last_run": "2025-12-23T20:31:07.314290403-03:00",
+      "success": true
+    }
+  }
+}

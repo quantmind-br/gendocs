@@ -34,14 +34,21 @@ func (h *ReadmeHandler) Handle(ctx context.Context) error {
 		logging.String("repo_path", h.config.RepoPath),
 	)
 
-	// Load prompts
-	promptManager, err := prompts.NewManager("./prompts")
+	// Load prompts with override support
+	// System prompts: try "./prompts" first, fallback to repo-relative path
+	systemPromptsDir := "./prompts"
+	if _, err := prompts.NewManager(systemPromptsDir); err != nil {
+		// Try relative to repo path
+		systemPromptsDir = fmt.Sprintf("%s/../gendocs/prompts", h.config.RepoPath)
+	}
+
+	// Project prompts: .ai/prompts/ in the repository
+	projectPromptsDir := fmt.Sprintf("%s/.ai/prompts", h.config.RepoPath)
+
+	// Load with override support
+	promptManager, err := prompts.NewManagerWithOverrides(systemPromptsDir, projectPromptsDir)
 	if err != nil {
-		repoPromptsDir := fmt.Sprintf("%s/../gendocs/prompts", h.config.RepoPath)
-		promptManager, err = prompts.NewManager(repoPromptsDir)
-		if err != nil {
-			return errors.NewConfigurationError(fmt.Sprintf("failed to load prompts: %v", err))
-		}
+		return errors.NewConfigurationError(fmt.Sprintf("failed to load prompts: %v", err))
 	}
 
 	// Create documenter agent

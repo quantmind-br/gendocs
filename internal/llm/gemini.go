@@ -15,8 +15,9 @@ import (
 // GeminiClient implements LLMClient for Google Gemini
 type GeminiClient struct {
 	*BaseLLMClient
-	apiKey string
-	model string
+	apiKey  string
+	model   string
+	baseURL string
 }
 
 // geminiRequest represents the request body for Gemini API
@@ -41,9 +42,10 @@ type geminiPart struct {
 }
 
 // geminiFunctionResponse represents a function response
+// Gemini format: {"name": "function_name", "response": {...}}
 type geminiFunctionResponse struct {
-	Name     string `json:"name"`
-	Response map[string]interface{} `json:"response"`
+	Name     string                 `json:"name"`
+	Response map[string]interface{} `json:"response,omitempty"`
 }
 
 // geminiTool represents a tool declaration
@@ -93,10 +95,15 @@ type geminiError struct {
 
 // NewGeminiClient creates a new Gemini client
 func NewGeminiClient(cfg config.LLMConfig, retryClient *RetryClient) *GeminiClient {
+	baseURL := cfg.BaseURL
+	if baseURL == "" {
+		baseURL = "https://generativelanguage.googleapis.com"
+	}
 	return &GeminiClient{
 		BaseLLMClient: NewBaseLLMClient(retryClient),
 		apiKey:        cfg.APIKey,
 		model:         cfg.Model,
+		baseURL:       baseURL,
 	}
 }
 
@@ -116,7 +123,7 @@ func (c *GeminiClient) GenerateCompletion(ctx context.Context, req CompletionReq
 	if !strings.HasPrefix(modelName, "models/") {
 		modelName = "models/" + modelName
 	}
-	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/%s:generateContent?key=%s", modelName, c.apiKey)
+	url := fmt.Sprintf("%s/v1beta/%s:generateContent?key=%s", c.baseURL, modelName, c.apiKey)
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonData))
 	if err != nil {
 		return CompletionResponse{}, fmt.Errorf("failed to create request: %w", err)
@@ -151,6 +158,16 @@ func (c *GeminiClient) GenerateCompletion(ctx context.Context, req CompletionReq
 	// Check for API error
 	if gemResp.Error != nil {
 		return CompletionResponse{}, fmt.Errorf("API error: %s", gemResp.Error.Message)
+	}
+
+	// Check for no candidates
+	if len(gemResp.Candidates) == 0 {
+		return CompletionResponse{}, fmt.Errorf("no candidates returned by model")
+	}
+
+	// Check for safety blocks
+	if len(gemResp.Candidates) > 0 && gemResp.Candidates[0].FinishReason == "SAFETY" {
+		return CompletionResponse{}, fmt.Errorf("response blocked for safety reasons")
 	}
 
 	return c.convertResponse(gemResp), nil
@@ -192,13 +209,32 @@ func (c *GeminiClient) convertRequest(req CompletionRequest) geminiRequest {
 	// Add messages
 	for _, msg := range req.Messages {
 		if msg.Role == "tool" {
-			// Tool response
+			// Tool response - extract function name from tool ID or content
+			// Format: {"name": "function_name", "response": {"result": "content"}}
+			funcName := msg.ToolID
+			if funcName == "" {
+				// Try to extract from Content if it's JSON
+				var toolData map[string]interface{}
+				if err := json.Unmarshal([]byte(msg.Content), &toolData); err == nil {
+					if name, ok := toolData["name"].(string); ok {
+						funcName = name
+					}
+				}
+			}
+			// Fallback to a default name if still empty
+			if funcName == "" {
+				funcName = "unknown_function"
+			}
+
 			contents = append(contents, geminiContent{
 				Role: "user",
 				Parts: []geminiPart{
 					{
 						FunctionResponse: &geminiFunctionResponse{
-							Response: map[string]interface{}{"result": msg.Content},
+							Name: funcName,
+							Response: map[string]interface{}{
+								"result": msg.Content,
+							},
 						},
 					},
 				},
@@ -208,6 +244,10 @@ func (c *GeminiClient) convertRequest(req CompletionRequest) geminiRequest {
 			role := "user"
 			if msg.Role == "assistant" {
 				role = "model"
+			}
+			// Skip empty content messages (avoid empty parts)
+			if msg.Content == "" {
+				continue
 			}
 			contents = append(contents, geminiContent{
 				Role: role,

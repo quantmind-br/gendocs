@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/user/gendocs/internal/config"
 	"github.com/user/gendocs/internal/llm"
@@ -76,7 +77,7 @@ func (sa *SubAgent) Run(ctx context.Context) (string, error) {
 	// Run with retry logic
 	var lastErr error
 	for attempt := 0; attempt < sa.maxRetries; attempt++ {
-		sa.logger.Debug(fmt.Sprintf("Running sub-agent %s (attempt %d/%d)", sa.config.Name, attempt+1, sa.maxRetries))
+		sa.logger.Info(fmt.Sprintf("Running sub-agent %s (attempt %d/%d)", sa.config.Name, attempt+1, sa.maxRetries))
 
 		result, err := sa.RunOnce(ctx, userPrompt)
 		if err == nil {
@@ -93,6 +94,9 @@ func (sa *SubAgent) Run(ctx context.Context) (string, error) {
 
 // SaveOutput saves the agent output to a file
 func (sa *SubAgent) SaveOutput(output, outputPath string) error {
+	// Clean the output to remove unwanted preambles and code fences
+	cleanedOutput := cleanLLMOutput(output)
+
 	// Ensure directory exists
 	dir := filepath.Dir(outputPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -100,10 +104,87 @@ func (sa *SubAgent) SaveOutput(output, outputPath string) error {
 	}
 
 	// Write output
-	if err := os.WriteFile(outputPath, []byte(output), 0644); err != nil {
+	if err := os.WriteFile(outputPath, []byte(cleanedOutput), 0644); err != nil {
 		return fmt.Errorf("failed to write output: %w", err)
 	}
 
 	sa.logger.Info(fmt.Sprintf("Output saved to %s", outputPath))
 	return nil
+}
+
+// cleanLLMOutput removes common LLM output artifacts like markdown code fences and preambles
+func cleanLLMOutput(output string) string {
+	lines := strings.Split(output, "\n")
+
+	// Find the start of actual markdown content
+	startIdx := -1
+
+	// First, try to find markdown code fence
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "```markdown" {
+			// Start after the code fence
+			startIdx = i + 1
+			break
+		}
+	}
+
+	// If no code fence found, look for markdown heading (# Something)
+	if startIdx == -1 {
+		for i, line := range lines {
+			trimmed := strings.TrimSpace(line)
+			// Look for any markdown heading (# or ## or ###, etc.)
+			if strings.HasPrefix(trimmed, "#") && len(trimmed) > 1 && trimmed[1] != '`' {
+				startIdx = i
+				break
+			}
+		}
+	}
+
+	// If still no markdown found, look for common preamble patterns to skip
+	if startIdx == -1 {
+		for i, line := range lines {
+			trimmed := strings.TrimSpace(line)
+			lower := strings.ToLower(trimmed)
+			// Skip lines that look like preambles or tool outputs
+			if strings.HasPrefix(lower, "okay,") ||
+			   strings.HasPrefix(lower, "here's") ||
+			   strings.HasPrefix(lower, "here is") ||
+			   strings.Contains(trimmed, "```tool_outputs") ||
+			   strings.Contains(trimmed, "{\"read_file_response\"") ||
+			   (strings.HasPrefix(trimmed, "*") && strings.Contains(trimmed, "**")) {
+				continue
+			}
+			// Found a line that doesn't match preamble patterns
+			// If this line starts a list or paragraph, it might be the start of content
+			if trimmed != "" && !strings.HasPrefix(trimmed, "```") {
+				startIdx = i
+				break
+			}
+		}
+	}
+
+	// If no markdown heading found, return original output
+	if startIdx == -1 {
+		return output
+	}
+
+	// Take everything from the first heading onward
+	relevantLines := lines[startIdx:]
+
+	// Remove trailing code fence if present
+	endIdx := len(relevantLines)
+	for i := len(relevantLines) - 1; i >= 0; i-- {
+		trimmed := strings.TrimSpace(relevantLines[i])
+		if trimmed == "" {
+			continue
+		}
+		if trimmed == "```" {
+			endIdx = i
+		} else {
+			break
+		}
+	}
+
+	return strings.Join(relevantLines[:endIdx], "\n")
 }

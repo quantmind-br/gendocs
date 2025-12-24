@@ -3,10 +3,13 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/user/gendocs/internal/config"
 	"github.com/user/gendocs/internal/errors"
+	"github.com/user/gendocs/internal/export"
 	"github.com/user/gendocs/internal/handlers"
 	"github.com/user/gendocs/internal/logging"
 )
@@ -19,7 +22,8 @@ var generateCmd = &cobra.Command{
 }
 
 var (
-	readmeRepoPath string
+	readmeRepoPath  string
+	autoExportHTML bool
 )
 
 // readmeCmd represents the generate readme command
@@ -37,6 +41,7 @@ func init() {
 	generateCmd.AddCommand(readmeCmd)
 
 	readmeCmd.Flags().StringVar(&readmeRepoPath, "repo-path", ".", "Path to repository")
+	readmeCmd.Flags().BoolVar(&autoExportHTML, "export-html", false, "Also export to HTML after generation")
 }
 
 func runReadme(cmd *cobra.Command, args []string) error {
@@ -103,6 +108,19 @@ func runReadme(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Info("README.md generation complete")
+
+	// Auto-export to HTML if requested
+	if autoExportHTML {
+		readmePath := filepath.Join(readmeRepoPath, "README.md")
+		htmlPath := filepath.Join(readmeRepoPath, "README.html")
+
+		fmt.Println("\nExporting to HTML...")
+		if err := exportToHTML(readmePath, htmlPath); err != nil {
+			// Don't fail the whole command, just warn
+			fmt.Fprintf(os.Stderr, "Warning: HTML export failed: %v\n", err)
+		}
+	}
+
 	return nil
 }
 
@@ -184,5 +202,92 @@ func runAIRules(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Info("AI rules generation complete")
+	return nil
+}
+
+// exportCmd represents the generate export command
+var exportCmd = &cobra.Command{
+	Use:   "export",
+	Short: "Export documentation to different formats",
+	Long: `Export generated documentation to formats like HTML for easier sharing.
+
+Supported formats:
+  - html: Standalone HTML file with embedded CSS and syntax highlighting
+
+Examples:
+  # Export README.md to HTML
+  gendocs generate export --repo-path . --format html --output docs.html
+
+  # Export specific file
+  gendocs generate export --repo-path . --input .ai/docs/code_structure.md --format html
+
+  # Export with default output (README.md → README.html)
+  gendocs generate export --repo-path .
+`,
+	RunE: runExport,
+}
+
+var (
+	exportFormat string
+	exportOutput string
+	exportInput  string
+)
+
+func init() {
+	generateCmd.AddCommand(exportCmd)
+
+	exportCmd.Flags().StringVar(&exportFormat, "format", "html", "Export format (html)")
+	exportCmd.Flags().StringVar(&exportOutput, "output", "", "Output file path (default: input.html)")
+	exportCmd.Flags().StringVar(&readmeRepoPath, "repo-path", ".", "Path to repository")
+	exportCmd.Flags().StringVar(&exportInput, "input", "README.md", "Input markdown file")
+}
+
+func runExport(cmd *cobra.Command, args []string) error {
+	// Determine input file path
+	inputPath := exportInput
+	if !filepath.IsAbs(inputPath) {
+		inputPath = filepath.Join(readmeRepoPath, inputPath)
+	}
+
+	// Check if input file exists
+	if _, err := os.Stat(inputPath); err != nil {
+		return fmt.Errorf("input file not found: %s", inputPath)
+	}
+
+	// Determine output file path
+	outputPath := exportOutput
+	if outputPath == "" {
+		// Default: replace extension with .html
+		ext := filepath.Ext(inputPath)
+		outputPath = strings.TrimSuffix(inputPath, ext) + ".html"
+	}
+
+	// Ensure output path is absolute
+	if !filepath.IsAbs(outputPath) {
+		outputPath = filepath.Join(readmeRepoPath, outputPath)
+	}
+
+	// Export based on format
+	switch exportFormat {
+	case "html":
+		return exportToHTML(inputPath, outputPath)
+	default:
+		return fmt.Errorf("unsupported format: %s (supported: html)", exportFormat)
+	}
+}
+
+func exportToHTML(inputPath, outputPath string) error {
+	fmt.Printf("Exporting %s to %s...\n", inputPath, outputPath)
+
+	exporter, err := export.NewHTMLExporter()
+	if err != nil {
+		return fmt.Errorf("failed to create exporter: %w", err)
+	}
+
+	if err := exporter.ExportToHTML(inputPath, outputPath); err != nil {
+		return fmt.Errorf("export failed: %w", err)
+	}
+
+	fmt.Printf("✓ HTML exported to %s\n", outputPath)
 	return nil
 }

@@ -62,7 +62,7 @@ func NewClient(cfg config.GitLabConfig, logger *logging.Logger) *Client {
 
 // FetchProjectsInGroup fetches all projects in a group (including subgroups)
 func (c *Client) FetchProjectsInGroup(ctx context.Context, groupID int) ([]Project, error) {
-	c.logger.Debug(fmt.Sprintf("Fetching projects in group %d", groupID))
+	c.logger.Info(fmt.Sprintf("Fetching projects in group %d", groupID))
 
 	// For now, return empty list - would need full GitLab API implementation
 	// This would require using xanzy/go-gitlab or implementing the API calls

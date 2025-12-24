@@ -1,218 +1,115 @@
-# Gendocs Go Implementation
+# Gendocs - Automated Documentation Generation
 
-This is the Go port of the AI Documentation Generator. The Go version provides better performance, easier distribution, and simplified deployment while maintaining complete feature parity with the Python version.
-
-## Status: ✅ IMPLEMENTATION COMPLETE
-
-**Progress: ~95% of PLAN.md**
-
-All major features have been implemented and the binary compiles successfully.
-
-## Quick Start
-
-```bash
-# 1. Install Go 1.22+
-# 2. Build
-cd gendocs && go build -o gendocs .
-
-# 3. Configure (option A: wizard, option B: env vars)
-./gendocs config
-# OR
-export ANALYZER_LLM_PROVIDER="openai"
-export ANALYZER_LLM_MODEL="gendocs analyze --repo-path ."
-```
-
-See [INSTALL.md](INSTALL.md) for detailed installation and configuration instructions.
+Gendocs is a CLI application that leverages Large Language Models (LLMs) to analyze codebases and automatically generate documentation. It streamlines the process of creating and maintaining up-to-date documentation for your projects.
 
 ## Features
 
-### Commands
+*   **Codebase Analysis:** Analyzes code structure, dependencies, data flow, and API definitions.
+*   **Automated Documentation:** Generates README files and AI assistant rules.
+*   **LLM Integration:** Supports multiple LLM providers (Anthropic, Gemini, OpenAI).
+*   **Customizable Configuration:** Configure LLM providers, agents, and output formats.
+*   **GitLab Integration:** Supports automated documentation updates via cronjobs.
+*   **HTML Export:** Converts Markdown documentation to HTML with syntax highlighting.
 
-- ✅ `gendocs analyze` - Analyze codebase structure and dependencies
-- ✅ `gendocs generate readme` - Generate README.md from analysis
-- ✅ `gendocs generate ai-rules` - Generate AI assistant configs (CLAUDE.md, AGENTS.md)
-- ✅ `gendocs cronjob analyze` - GitLab automated batch processing
-- ✅ `gendocs config` - Interactive TUI configuration wizard
+## Installation
 
-### LLM Providers
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository_url>
+    cd <repository_directory>
+    ```
+2.  **Install dependencies:**
 
-- ✅ OpenAI (including OpenAI-compatible APIs)
-- ✅ Anthropic Claude
-- ✅ Google Gemini
+    ```bash
+    go mod download
+    go mod vendor
+    ```
 
-### Architecture
+## Quick Start
 
-- ✅ **7 Agents**: AnalyzerAgent (orchestrator) + 5 sub-agents + DocumenterAgent + AIRulesAgent
-- ✅ **Handler-Agent Pattern**: Clean separation between CLI, handlers, and agents
-- ✅ **Tool System**: FileReadTool, ListFilesTool with retry logic
-- ✅ **Worker Pool**: Semaphore-based concurrent execution
-- ✅ **Configuration**: Multi-source (CLI > YAML > env > defaults)
-- ✅ **Error Handling**: 14 exception types with rich context
-- ✅ **Logging**: Structured JSON + colored console output
+1.  **Analyze your codebase:**
 
-## Building
+    ```bash
+    go run cmd/gendocs/main.go analyze --path <path_to_codebase>
+    ```
 
-```bash
-cd gendocs
-go build -o gendocs .
-```
+    This command analyzes the codebase at the specified path and saves the analysis results in the `.ai/docs/` directory.
+2.  **Generate a README file:**
 
-## Usage
+    ```bash
+    go run cmd/gendocs/main.go generate readme --output README.md
+    ```
 
-### Basic Usage
+    This command generates a `README.md` file based on the analysis results.
+3.  **(Optional) Generate AI rules:**
 
-```bash
-# Analyze a codebase
-./gendocs analyze --repo-path ../my-project
+    ```bash
+    go run cmd/gendocs/main.go generate ai_rules --output ai_rules.yaml
+    ```
 
-# Generate README from analysis
-./gendocs generate readme --repo-path ../my-project
+    This command generates an `ai_rules.yaml` file.
+4. **(Optional) Export to HTML:**
 
-# Generate AI assistant configs
-./gendocs generate ai-rules --repo-path ../my-project
+    ```bash
+    go run cmd/gendocs/main.go export html --input README.md --output docs/index.html
+    ```
 
-# Configure with interactive wizard
-./gendocs config
+    This command converts the README.md file to HTML format with syntax highlighting.
 
-# GitLab batch processing
-./gendocs cronjob analyze --group-project-id 123 --max-days-since-last-commit 14
-```
+## Architecture
 
-### Configuration
+Gendocs follows a clean architecture pattern, separating concerns into distinct layers:
 
-The Go version supports the same configuration sources as the Python version:
+*   **Command Layer (`cmd/`)**: Handles CLI command parsing and execution.
+*   **Agent System (`internal/agents/`)**: Coordinates analysis and documentation generation using specialized agents.
+*   **LLM Integration (`internal/llm/`)**: Provides a unified interface for interacting with different LLM providers.
+*   **Configuration (`internal/config/`)**: Loads and manages application configuration.
+*   **Handlers (`internal/handlers/`)**: Orchestrates the overall workflow for each command.
 
-1. **CLI arguments** (highest priority)
-2. **`.ai/config.yaml`** (project-specific)
-3. **`~/.gendocs.yaml`** (global user config, from TUI)
-4. **Environment variables**
-5. **Defaults** (lowest priority)
-
-### Environment Variables
-
-```bash
-# Analyzer configuration
-export ANALYZER_LLM_PROVIDER="openai"  # openai, anthropic, gemini
-export ANALYZER_LLM_MODEL="gpt-4o"
-export ANALYZER_LLM_API_KEY="sk-..."
-export ANALYZER_MAX_WORKERS=0  # 0 = auto-detect CPU count
-
-# Documenter configuration
-export DOCUMENTER_LLM_PROVIDER="openai"
-export DOCUMENTER_LLM_MODEL="gpt-4o"
-export DOCUMENTER_LLM_API_KEY="sk-..."
-
-# GitLab configuration (for cronjob)
-export GITLAB_API_URL="https://gitlab.example.com"
-export GITLAB_OAUTH_TOKEN="glpat-..."
-```
-
-## Project Structure
-
-```
-gendocs/
-├── cmd/                      # CLI commands (Cobra)
-│   ├── root.go
-│   ├── analyze.go
-│   ├── generate.go
-│   ├── cronjob.go
-│   └── config.go
-├── internal/
-│   ├── agents/              # AI agents
-│   │   ├── base.go
-│   │   ├── analyzer.go      # AnalyzerAgent orchestrator
-│   │   ├── sub_agents.go    # Sub-agent implementations
-│   │   └── factory.go
-│   ├── config/              # Configuration loading
-│   ├── errors/              # 14 exception types
-│   ├── gitlab/              # GitLab client
-│   ├── handlers/            # Command handlers
-│   │   ├── base.go
-│   │   ├── analyze.go
-│   │   ├── readme.go
-│   │   ├── ai_rules.go
-│   │   └── cronjob.go
-│   ├── llm/                 # LLM providers
-│   │   ├── client.go        # LLMClient interface
-│   │   ├── openai.go
-│   │   ├── anthropic.go
-│   │   ├── gemini.go
-│   │   ├── retry_client.go  # HTTP with retry
-│   │   └── factory.go
-│   ├── logging/             # Structured logging (zap)
-│   ├── prompts/             # Prompt template manager
-│   ├── tools/               # Agent tools
-│   │   ├── base.go
-│   │   ├── file_read.go
-│   │   └── list_files.go
-│   ├── tui/                 # TUI config wizard
-│   │   └── config.go        # Bubble Tea UI
-│   └── worker_pool/         # Concurrent execution
-├── prompts/                 # YAML prompt templates
-│   ├── analyzer.yaml
-│   ├── documenter.yaml
-│   └── ai_rules_generator.yaml
-├── main.go
-├── go.mod
-├── go.sum
-└── README.md
-```
-
-## Implementation Status
-
-| Phase | Component | Status |
-|-------|-----------|--------|
-| 1 | Foundation (project, errors, logging, config) | ✅ 100% |
-| 2 | LLM Integration (OpenAI, Anthropic, Gemini) | ✅ 100% |
-| 3 | Tools & Worker Pool | ✅ 100% |
-| 4 | Agents (7 agents with tool calling) | ✅ 100% |
-| 5 | CLI & Handlers (5 commands) | ✅ 100% |
-| 6 | GitLab Integration (cronjob) | ✅ 100% |
-| 7 | TUI Config Wizard (Bubble Tea) | ✅ 100% |
-| 8 | Testing | ⚠️ 0% |
-
-## What Works
-
-All CLI commands are implemented and functional:
-- `gendocs analyze` with all exclusion flags
-- `gendocs generate readme`
-- `gendocs generate ai-rules`
-- `gendocs cronjob analyze` (GitLab integration)
-- `gendocs config` (interactive TUI wizard)
-
-## What's Next
-
-The implementation is functionally complete. Remaining work:
-1. End-to-end testing with real LLM APIs
-2. Unit tests for better coverage
-3. Integration tests
-
-## Migration from Python
-
-The Go version maintains feature parity with the Python version:
-- Same `.ai/config.yaml` format
-- Same environment variable names
-- Same CLI command structure
-- Same output file formats
+The CLI commands delegate to handlers, which in turn create and run agents. Agents use LLM clients and tools to perform their tasks. All components share configuration and logging.
 
 ## Development
 
-### Prerequisites
-
-- Go 1.22 or later
-- Access to LLM provider API
-
-### Running
+### Running Tests
 
 ```bash
-# Build
-go build -o gendocs .
-
-# Run
-./gendocs --help
-./gendocs analyze --repo-path ../my-project
+go test ./...
 ```
+
+### Linting
+
+```bash
+# Install golangci-lint (if not already installed)
+# example:  brew install golangci/tap/golangci-lint
+golangci-lint run
+```
+
+### Building
+
+```bash
+go build -o gendocs cmd/gendocs/main.go
+```
+
+This command builds an executable file named `gendocs` in the current directory.
+
+## Configuration
+
+Gendocs uses environment variables and configuration files to manage its settings.
+
+*   **Configuration File:**  The application uses `viper` to load configurations. Configuration files can be in YAML format.
+*   **Environment Variables:** Environment variables can override settings defined in the configuration file.
+
+Refer to the `internal/config/` package for details on available configuration options.  Example environment variables used include those needed to authenticate with LLM providers (e.g., OpenAI API key).
+
+## Contributing
+
+Contributions are welcome! Please follow these guidelines:
+
+1.  Fork the repository.
+2.  Create a new branch for your feature or bug fix.
+3.  Write tests for your changes.
+4.  Submit a pull request.
 
 ## License
 
-Same as the parent project.
+This project is licensed under the [MIT License](LICENSE).

@@ -65,3 +65,131 @@ ai_rules_cursor_user: |
   4. **agent-and-tool-conventions.mdc** - If applicable, agent/tool patterns
 
   Each rule should be concise, focused, and help Cursor understand the codebase better.
+
+# Aliases for sub-agent compatibility (expects ai_rules_system and ai_rules_user)
+ai_rules_system: |
+  You are an AI assistant documentation specialist who creates CLAUDE.md files.
+  These files provide project-specific instructions for AI coding assistants.
+
+  Your goal is to create a CLAUDE.md that helps AI assistants:
+  - Understand the project's purpose and architecture
+  - Follow the project's coding conventions
+  - Know about key files and their purposes
+  - Understand common commands and workflows
+  - Be aware of project-specific patterns and practices
+
+  IMPORTANT OUTPUT RULES:
+  - Output ONLY the final CLAUDE.md content in Markdown format
+  - Do not include any preamble, explanations, or chain-of-thought
+  - Do not describe your process or explain what you're doing
+  - Do not wrap the output in markdown code fences
+  - Your response must start directly with the heading
+
+ai_rules_user: |
+  TASK: Generate CLAUDE.md
+
+  Create a comprehensive CLAUDE.md file for the project at {{ .RepoPath }}.
+
+  I have analyzed the codebase and generated the following analysis documents. Use this information to create the CLAUDE.md:
+
+  ## Structure Analysis
+  {{ index .AnalysisContent "structure_analysis.md" }}
+
+  ## Dependency Analysis
+  {{ index .AnalysisContent "dependency_analysis.md" }}
+
+  ## Data Flow Analysis
+  {{ index .AnalysisContent "data_flow_analysis.md" }}
+
+  ## Request Flow Analysis
+  {{ index .AnalysisContent "request_flow_analysis.md" }}
+
+  ## API Analysis
+  {{ index .AnalysisContent "api_analysis.md" }}
+
+  ---
+
+  Based on the above analysis, create a CLAUDE.md that includes:
+
+  1. **Project Overview** - What is this project and what does it do?
+  2. **Common Commands** - How to run, test, build
+  3. **Architecture** - Key architectural patterns
+  4. **Code Conventions** - Style guidelines, naming patterns
+  5. **Key Files** - Important files and what they do
+  6. **Testing** - How tests are organized and run
+  7. **Troubleshooting** - Common issues and solutions
+
+  Make the content practical and actionable for an AI assistant.
+  Include actual command examples and real file paths from the project.
+
+  IMPORTANT:
+  - Write factual information based ONLY on the analysis documents above
+  - Don't invent features, commands, or conventions that don't exist
+  - Keep descriptions concise but informative
+  - Focus on what AI assistants need to know to work effectively with this codebase
+
+  Output the complete CLAUDE.md content in Markdown format.
+
+# Additional aliases for handler compatibility
+ai_rules_system_prompt: |
+  You are an AI assistant documentation specialist who creates CLAUDE.md files.
+  These files provide project-specific instructions for AI coding assistants.
+
+  Your goal is to create a CLAUDE.md that helps AI assistants:
+  - Understand the project's purpose and architecture
+  - Follow the project's coding conventions
+  - Know about key files and their purposes
+  - Understand common commands and workflows
+  - Be aware of project-specific patterns and practices
+
+  IMPORTANT OUTPUT RULES:
+  - Output ONLY the final CLAUDE.md content in Markdown format
+  - Do not include any preamble, explanations, or chain-of-thought
+  - Do not describe your process or explain what you're doing
+  - Do not wrap the output in markdown code fences
+  - Your response must start directly with the heading
+
+ai_rules_user_prompt: |
+  TASK: Generate CLAUDE.md
+
+  Create a comprehensive CLAUDE.md file for the project at {{ .RepoPath }}.
+
+  I have analyzed the codebase and generated the following analysis documents. Use this information to create the CLAUDE.md:
+
+  ## Structure Analysis
+  {{ index .AnalysisContent "structure_analysis.md" }}
+
+  ## Dependency Analysis
+  {{ index .AnalysisContent "dependency_analysis.md" }}
+
+  ## Data Flow Analysis
+  {{ index .AnalysisContent "data_flow_analysis.md" }}
+
+  ## Request Flow Analysis
+  {{ index .AnalysisContent "request_flow_analysis.md" }}
+
+  ## API Analysis
+  {{ index .AnalysisContent "api_analysis.md" }}
+
+  ---
+
+  Based on the above analysis, create a CLAUDE.md that includes:
+
+  1. **Project Overview** - What is this project and what does it do?
+  2. **Common Commands** - How to run, test, build
+  3. **Architecture** - Key architectural patterns
+  4. **Code Conventions** - Style guidelines, naming patterns
+  5. **Key Files** - Important files and what they do
+  6. **Testing** - How tests are organized and run
+  7. **Troubleshooting** - Common issues and solutions
+
+  Make the content practical and actionable for an AI assistant.
+  Include actual command examples and real file paths from the project.
+
+  IMPORTANT:
+  - Write factual information based ONLY on the analysis documents above
+  - Don't invent features, commands, or conventions that don't exist
+  - Keep descriptions concise but informative
+  - Focus on what AI assistants need to know to work effectively with this codebase
+
+  Output the complete CLAUDE.md content in Markdown format.

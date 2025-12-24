@@ -1,8 +1,10 @@
 package llm
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"math"
 	"net/http"
 	"time"
@@ -70,11 +72,27 @@ func (rc *RetryClient) DoWithContext(ctx context.Context, req *http.Request) (*h
 	var resp *http.Response
 	var err error
 
+	// Read request body once and store for potential retries
+	var bodyBytes []byte
+	if req.Body != nil {
+		bodyBytes, err = io.ReadAll(req.Body)
+		req.Body.Close()
+		if err != nil {
+			return nil, fmt.Errorf("failed to read request body: %w", err)
+		}
+	}
+
 	totalStartTime := time.Now()
 
 	for attempt := 0; attempt < rc.config.MaxAttempts; attempt++ {
-		// Clone the request for each attempt (request body can only be read once)
+		// Clone the request for each attempt
 		reqClone := req.Clone(ctx)
+
+		// Restore body for this attempt
+		if len(bodyBytes) > 0 {
+			reqClone.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+			reqClone.ContentLength = int64(len(bodyBytes))
+		}
 
 		resp, err = rc.client.Do(reqClone)
 

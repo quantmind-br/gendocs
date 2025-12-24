@@ -15,8 +15,9 @@ import (
 // AnthropicClient implements LLMClient for Anthropic Claude
 type AnthropicClient struct {
 	*BaseLLMClient
-	apiKey string
-	model  string
+	apiKey  string
+	model   string
+	baseURL string
 }
 
 // anthropicRequest represents the request body for Anthropic API
@@ -38,10 +39,15 @@ type anthropicMessage struct {
 
 // anthropicContentBlock represents a content block
 type anthropicContentBlock struct {
-	Type     string                 `json:"type"`
-	Text     string                 `json:"text,omitempty"`
-	ToolUse  *anthropicToolUseBlock `json:"tool_use,omitempty"`
-	ToolResult *anthropicToolResultBlock `json:"tool_result,omitempty"`
+	Type   string                 `json:"type"`
+	Text   string                 `json:"text,omitempty"`
+	// Tool use fields (flat when type=="tool_use")
+	ID     string                 `json:"id,omitempty"`
+	Name   string                 `json:"name,omitempty"`
+	Input  map[string]interface{} `json:"input,omitempty"`
+	// Tool result fields (flat when type=="tool_result")
+	ToolUseID string `json:"tool_use_id,omitempty"`
+	Content   string `json:"content,omitempty"` // Can be string for tool results
 }
 
 // anthropicToolUseBlock represents a tool use call
@@ -89,10 +95,15 @@ type anthropicError struct {
 
 // NewAnthropicClient creates a new Anthropic client
 func NewAnthropicClient(cfg config.LLMConfig, retryClient *RetryClient) *AnthropicClient {
+	baseURL := cfg.BaseURL
+	if baseURL == "" {
+		baseURL = "https://api.anthropic.com"
+	}
 	return &AnthropicClient{
 		BaseLLMClient: NewBaseLLMClient(retryClient),
 		apiKey:        cfg.APIKey,
 		model:         cfg.Model,
+		baseURL:       baseURL,
 	}
 }
 
@@ -107,7 +118,7 @@ func (c *AnthropicClient) GenerateCompletion(ctx context.Context, req Completion
 	}
 
 	// Create HTTP request
-	url := "https://api.anthropic.com/v1/messages"
+	url := c.baseURL + "/v1/messages"
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonData))
 	if err != nil {
 		return CompletionResponse{}, fmt.Errorf("failed to create request: %w", err)
@@ -167,15 +178,14 @@ func (c *AnthropicClient) convertRequest(req CompletionRequest) anthropicRequest
 	// Convert internal messages to Anthropic format
 	for _, msg := range req.Messages {
 		if msg.Role == "tool" {
-			// Tool result message
+			// Tool result message (use flat structure)
 			messages = append(messages, anthropicMessage{
 				Role: "user",
 				Content: []anthropicContentBlock{
 					{
-						Type: "tool_result",
-						ToolResult: &anthropicToolResultBlock{
-							Content: msg.Content,
-						},
+						Type:      "tool_result",
+						ToolUseID: msg.ToolID,
+						Content:   msg.Content,
 					},
 				},
 			})
@@ -243,10 +253,10 @@ func (c *AnthropicClient) convertResponse(resp anthropicResponse) CompletionResp
 	for _, block := range resp.Content {
 		if block.Type == "text" {
 			textContent.WriteString(block.Text)
-		} else if block.Type == "tool_use" && block.ToolUse != nil {
+		} else if block.Type == "tool_use" {
 			toolCalls = append(toolCalls, ToolCall{
-				Name:      block.ToolUse.Name,
-				Arguments: block.ToolUse.Input,
+				Name:      block.Name,
+				Arguments: block.Input,
 			})
 		}
 	}

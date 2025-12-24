@@ -26,12 +26,16 @@ help:
 	@echo "Gendocs Makefile"
 	@echo ""
 	@echo "Available targets:"
-	@echo "  make build        - Compila o binário"
-	@echo "  make install      - Instala o binário em $(BIN_DIR)"
-	@echo "  make uninstall    - Remove o binário de $(BIN_DIR)"
-	@echo "  make clean        - Remove arquivos de build"
-	@echo "  make test         - Executa testes"
-	@echo "  make help         - Mostra esta mensagem"
+	@echo "  make build          - Compila o binário"
+	@echo "  make install        - Instala o binário em $(BIN_DIR)"
+	@echo "  make uninstall      - Remove o binário de $(BIN_DIR)"
+	@echo "  make clean          - Remove arquivos de build"
+	@echo "  make test           - Executa todos os testes"
+	@echo "  make test-verbose   - Executa testes com saída detalhada"
+	@echo "  make test-coverage  - Executa testes com relatório de coverage"
+	@echo "  make test-short     - Executa apenas testes curtos"
+	@echo "  make lint           - Executa linters"
+	@echo "  make help           - Mostra esta mensagem"
 
 build:
 	@echo "Compilando $(BINARY)..."
@@ -65,11 +69,37 @@ uninstall:
 clean:
 	@echo "Limpando arquivos de build..."
 	@rm -rf $(BUILD_DIR)
+	@rm -rf coverage/
 	@echo "Limpo."
 
 test:
 	@echo "Executando testes..."
-	$(GO) test -v ./...
+	$(GO) test -race -timeout 5m ./...
+	@echo "✓ Testes concluídos"
+
+test-verbose:
+	@echo "Executando testes (verbose)..."
+	$(GO) test -v -race -timeout 5m ./...
+
+test-coverage:
+	@echo "Executando testes com coverage..."
+	@mkdir -p coverage
+	$(GO) test -race -timeout 5m -coverprofile=coverage/coverage.out -covermode=atomic ./...
+	@$(GO) tool cover -func=coverage/coverage.out | tail -1
+	@echo ""
+	@echo "Para ver relatório HTML:"
+	@echo "  go tool cover -html=coverage/coverage.out"
+
+test-short:
+	@echo "Executando testes curtos (sem integração)..."
+	$(GO) test -short -race -timeout 2m ./...
+	@echo "✓ Testes curtos concluídos"
+
+lint:
+	@echo "Executando linters..."
+	@which golangci-lint > /dev/null || (echo "golangci-lint não instalado. Instale em https://golangci-lint.run/usage/install/" && exit 1)
+	golangci-lint run ./...
+	@echo "✓ Linting concluído"
 
 # Development helpers
 run: build

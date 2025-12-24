@@ -8,6 +8,7 @@ import (
 type Message struct {
 	Role    string // "system", "user", "assistant", "tool"
 	Content string
+	ToolID  string // ID of the tool that was called (for role="tool")
 }
 
 // ToolCall represents a tool/function call from the LLM
@@ -65,6 +66,10 @@ type BaseLLMClient struct {
 
 // NewBaseLLMClient creates a new base LLM client
 func NewBaseLLMClient(retryClient *RetryClient) *BaseLLMClient {
+	// If no retry client provided, create a default one
+	if retryClient == nil {
+		retryClient = NewRetryClient(nil) // Uses default config
+	}
 	return &BaseLLMClient{
 		retryClient: retryClient,
 	}
