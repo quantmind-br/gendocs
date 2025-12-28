@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "last_analysis": "2025-12-23T20:31:07.313710445-03:00",
-  "git_commit": "ca138e6",
+  "last_analysis": "2025-12-24T18:02:57.373977382-03:00",
+  "git_commit": "40527db",
   "files": {
     ".env.example": {
       "hash": "6b5b3478763ad548a126c63a612757503a2df4b77c969f627e3f98ef2ed4d522",
@@ -14,9 +14,9 @@
       "size": 2019
     },
     ".gitignore": {
-      "hash": "a69c829530736f1b19ad91761cb430cf368a4b283ed1d580b061d1c3903e1919",
-      "modified": "2025-12-23T17:17:42.964107081-03:00",
-      "size": 490
+      "hash": "1e2e1b308a6b6b229961a819eb24879a79e1a81b61fe3341da1e986c67563727",
+      "modified": "2025-12-24T17:57:53.189660434-03:00",
+      "size": 506
     },
     "CLAUDE.md": {
       "hash": "690bca4694fe5787cb412653b1f7573b626e6117f81aeb40df8647cfb649e6dc",
@@ -24,9 +24,9 @@
       "size": 3863
     },
     "GEMINI_SETUP.md": {
-      "hash": "d3717fda3b0d3cf904f36666b6e1689f5622782d87cd328c49381f98efd1d053",
-      "modified": "2025-12-23T17:24:02.972785748-03:00",
-      "size": 5013
+      "hash": "2e09a59ae72a826b6cc14feb4ab71831254dd8af7fbb42bdaab1b84f5c62b10e",
+      "modified": "2025-12-24T17:57:53.152659504-03:00",
+      "size": 4998
     },
     "INSTALL.md": {
       "hash": "a85814e6b1ed7262d98e4d13fdb6093fa9479bd11422912c9e778bab284c4df7",
@@ -90,7 +90,7 @@
     },
     "cmd/root.go": {
       "hash": "43645bd0a563ad205eecc4026b061a08d490b05daba4dd0742402f74aba6d5b8",
-      "modified": "2025-12-22T17:49:23.518496759-03:00",
+      "modified": "2025-12-23T20:32:05.7866939-03:00",
       "size": 800
     },
     "docs/ARCHITECTURE.md": {
@@ -137,11 +137,6 @@
       "hash": "4acbc5f7f23d57e58a7d6dfd801bf8ef57099fd0c69b4fb2bfdecd90fb3da1db",
       "modified": "2025-12-23T20:10:08.702364558-03:00",
       "size": 22647781
-    },
-    "gendocs-test": {
-      "hash": "95c747399bcac22966e6477bd57bfb128e5badf868fddc7cbbe6613d80917f24",
-      "modified": "2025-12-23T20:30:06.687080236-03:00",
-      "size": 22695449
     },
     "go.mod": {
       "hash": "fd0efc2efe33e855898021e88917026278c033811bb6dd4608d8f818f1963dbe",
@@ -451,24 +446,24 @@
   },
   "agents": {
     "api_analyzer": {
-      "last_run": "2025-12-23T20:31:07.314291686-03:00",
-      "success": true
+      "last_run": "2025-12-24T18:02:57.374713348-03:00",
+      "success": false
     },
     "data_flow_analyzer": {
-      "last_run": "2025-12-23T20:31:07.314291575-03:00",
-      "success": true
+      "last_run": "2025-12-24T18:02:57.374713127-03:00",
+      "success": false
     },
     "dependency_analyzer": {
-      "last_run": "2025-12-23T20:31:07.314291525-03:00",
-      "success": true
+      "last_run": "2025-12-24T18:02:57.374713057-03:00",
+      "success": false
     },
     "request_flow_analyzer": {
-      "last_run": "2025-12-23T20:31:07.314291626-03:00",
-      "success": true
+      "last_run": "2025-12-24T18:02:57.374713228-03:00",
+      "success": false
     },
     "structure_analyzer": {
-      "last_run": "2025-12-23T20:31:07.314290403-03:00",
-      "success": true
+      "last_run": "2025-12-24T18:02:57.374712596-03:00",
+      "success": false
     }
   }
 }
