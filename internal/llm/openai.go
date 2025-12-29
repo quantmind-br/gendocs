@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/user/gendocs/internal/config"
 )
@@ -26,6 +27,7 @@ type openaiRequest struct {
 	MaxTokens   int            `json:"max_tokens"`
 	Temperature float64        `json:"temperature"`
 	Tools       []openaiTool   `json:"tools,omitempty"`
+	Stream      bool           `json:"stream,omitempty"`
 }
 
 // openaiMessage represents a message in OpenAI format
@@ -94,6 +96,167 @@ type openaiErrorDetail struct {
 	Code    string `json:"code"`
 }
 
+// openaiStreamChunk represents a single chunk in OpenAI's streaming response
+type openaiStreamChunk struct {
+	ID      string                `json:"id"`
+	Object  string                `json:"object"`
+	Created int64                 `json:"created"`
+	Model   string                `json:"model"`
+	Choices []openaiStreamChoice  `json:"choices"`
+}
+
+// openaiStreamChoice represents a choice in streaming chunks
+type openaiStreamChoice struct {
+	Index        int                  `json:"index"`
+	Delta        openaiStreamDelta    `json:"delta"`
+	FinishReason string               `json:"finish_reason,omitempty"`
+}
+
+// openaiStreamDelta represents the delta field in streaming chunks
+type openaiStreamDelta struct {
+	Content   string                `json:"content,omitempty"`
+	Role      string                `json:"role,omitempty"`
+	ToolCalls []openaiToolCallDelta `json:"tool_calls,omitempty"`
+}
+
+// openaiToolCallDelta represents a tool call in the delta
+type openaiToolCallDelta struct {
+	Index    int                    `json:"index"`
+	Function openaiToolCallFuncDelta `json:"function,omitempty"`
+}
+
+// openaiToolCallFuncDelta represents function call details in streaming
+type openaiToolCallFuncDelta struct {
+	Name      string `json:"name,omitempty"`
+	Arguments string `json:"arguments,omitempty`
+}
+
+// openaiAccumulator builds CompletionResponse from OpenAI streaming chunks
+type openaiAccumulator struct {
+	content    strings.Builder
+	toolCalls  []openaiToolCall
+	partialArgs map[int]strings.Builder // Accumulates arguments by index
+	usage      openaiUsage
+	finishReason string
+	complete   bool
+}
+
+// newOpenAIAccumulator creates a new accumulator
+func newOpenAIAccumulator() *openaiAccumulator {
+	return &openaiAccumulator{
+		partialArgs: make(map[int]strings.Builder),
+	}
+}
+
+// HandleChunk processes a single streaming chunk
+func (a *openaiAccumulator) HandleChunk(data []byte) error {
+	// Check for [DONE] marker
+	if IsSSEDone(data) {
+		a.complete = true
+		return nil
+	}
+
+	var chunk openaiStreamChunk
+	if err := ParseSSEData(data, &chunk); err != nil {
+		return fmt.Errorf("failed to parse chunk: %w", err)
+	}
+
+	if len(chunk.Choices) == 0 {
+		return nil
+	}
+
+	choice := chunk.Choices[0]
+	delta := choice.Delta
+
+	// Accumulate content
+	if delta.Content != "" {
+		a.content.WriteString(delta.Content)
+	}
+
+	// Accumulate tool calls
+	for _, tc := range delta.ToolCalls {
+		idx := tc.Index
+
+		// Ensure toolCalls slice is large enough
+		for len(a.toolCalls) <= idx {
+			a.toolCalls = append(a.toolCalls, openaiToolCall{
+				Type: "function",
+			})
+		}
+
+		// Set ID if not set
+		if a.toolCalls[idx].ID == "" {
+			a.toolCalls[idx].ID = chunk.ID + "-" + fmt.Sprintf("%d", idx)
+		}
+
+		// Accumulate function name
+		if tc.Function.Name != "" {
+			a.toolCalls[idx].Function.Name = tc.Function.Name
+		}
+
+		// Accumulate arguments incrementally
+		if tc.Function.Arguments != "" {
+			if _, exists := a.partialArgs[idx]; !exists {
+				a.partialArgs[idx] = strings.Builder{}
+			}
+			a.partialArgs[idx].WriteString(tc.Function.Arguments)
+		}
+	}
+
+	// Check for completion
+	if choice.FinishReason != "" {
+		a.finishReason = choice.FinishReason
+
+		// Parse accumulated tool arguments
+		for idx, argBuilder := range a.partialArgs {
+			if idx < len(a.toolCalls) && argBuilder.Len() > 0 {
+				var args map[string]interface{}
+				if err := json.Unmarshal([]byte(argBuilder.String()), &args); err != nil {
+					return fmt.Errorf("failed to parse tool %d arguments: %w", idx, err)
+				}
+				a.toolCalls[idx].Function.Arguments = argBuilder.String()
+			}
+		}
+	}
+
+	return nil
+}
+
+// Build constructs the final CompletionResponse
+func (a *openaiAccumulator) Build() CompletionResponse {
+	result := CompletionResponse{
+		Content: a.content.String(),
+		Usage: TokenUsage{
+			InputTokens:  a.usage.PromptTokens,
+			OutputTokens: a.usage.CompletionTokens,
+			TotalTokens:  a.usage.TotalTokens,
+		},
+	}
+
+	// Convert tool calls
+	if len(a.toolCalls) > 0 {
+		result.ToolCalls = make([]ToolCall, len(a.toolCalls))
+		for i, tc := range a.toolCalls {
+			var args map[string]interface{}
+			if tc.Function.Arguments != "" {
+				json.Unmarshal([]byte(tc.Function.Arguments), &args)
+			}
+
+			result.ToolCalls[i] = ToolCall{
+				Name:      tc.Function.Name,
+				Arguments: args,
+			}
+		}
+	}
+
+	return result
+}
+
+// IsComplete returns true when stream is complete
+func (a *openaiAccumulator) IsComplete() bool {
+	return a.complete || a.finishReason != ""
+}
+
 // NewOpenAIClient creates a new OpenAI client
 func NewOpenAIClient(cfg config.LLMConfig, retryClient *RetryClient) *OpenAIClient {
 	baseURL := cfg.BaseURL
@@ -136,29 +299,42 @@ func (c *OpenAIClient) GenerateCompletion(ctx context.Context, req CompletionReq
 	}
 	defer resp.Body.Close()
 
-	// Read response
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return CompletionResponse{}, fmt.Errorf("failed to read response: %w", err)
-	}
-
 	// Check for error status
 	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
 		return CompletionResponse{}, fmt.Errorf("API error: status %d, body: %s", resp.StatusCode, string(body))
 	}
 
-	// Parse response
-	var oaResp openaiResponse
-	if err := json.Unmarshal(body, &oaResp); err != nil {
-		return CompletionResponse{}, fmt.Errorf("failed to parse response: %w", err)
+	// Parse streaming response
+	return c.parseStreamingResponse(resp.Body)
+}
+
+// parseStreamingResponse parses OpenAI's SSE stream and builds the response
+func (c *OpenAIClient) parseStreamingResponse(body io.ReadCloser) (CompletionResponse, error) {
+	parser := NewSSEParser(body)
+	accumulator := newOpenAIAccumulator()
+
+	for {
+		event, err := parser.NextEvent()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return CompletionResponse{}, fmt.Errorf("stream parsing error: %w", err)
+		}
+
+		// Handle event data (OpenAI doesn't use event types, all chunks are in data field)
+		if err := accumulator.HandleChunk(event.Data); err != nil {
+			return CompletionResponse{}, fmt.Errorf("chunk handling error: %w", err)
+		}
+
+		// Check if stream is complete
+		if accumulator.IsComplete() {
+			break
+		}
 	}
 
-	// Check for API error
-	if oaResp.Error != nil {
-		return CompletionResponse{}, fmt.Errorf("API error: %s", oaResp.Error.Message)
-	}
-
-	return c.convertResponse(oaResp), nil
+	return accumulator.Build(), nil
 }
 
 // SupportsTools returns true
@@ -212,6 +388,8 @@ func (c *OpenAIClient) convertRequest(req CompletionRequest) openaiRequest {
 			}
 		}
 	}
+
+	oaReq.Stream = true // Enable streaming response
 
 	return oaReq
 }
