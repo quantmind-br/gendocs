@@ -10,6 +10,7 @@ Gendocs is a CLI application that leverages Large Language Models (LLMs) to anal
 *   **Customizable Configuration:** Configure LLM providers, agents, and output formats.
 *   **GitLab Integration:** Supports automated documentation updates via cronjobs.
 *   **HTML Export:** Converts Markdown documentation to HTML with syntax highlighting.
+*   **JSON Export:** Converts Markdown to structured JSON for programmatic access and integration.
 
 ## Installation
 
@@ -51,10 +52,32 @@ Gendocs is a CLI application that leverages Large Language Models (LLMs) to anal
 4. **(Optional) Export to HTML:**
 
     ```bash
-    go run cmd/gendocs/main.go export html --input README.md --output docs/index.html
+    go run cmd/gendocs/main.go generate export --input README.md --output docs/index.html --format html
     ```
 
     This command converts the README.md file to HTML format with syntax highlighting.
+
+5. **(Optional) Export to JSON:**
+
+    ```bash
+    go run cmd/gendocs/main.go generate export --input README.md --output docs.json --format json
+    ```
+
+    This command converts the README.md file to structured JSON format with metadata and hierarchical content. The JSON output includes:
+
+    - **Metadata**: Document title, generation timestamp, generator info, word/character counts
+    - **Headings**: Hierarchical tree structure for navigation and table of contents generation
+    - **Elements**: All document elements (paragraphs, code blocks, lists, tables, blockquotes, links, images) in document order
+
+    JSON export is ideal for:
+    - Search indexing (Elasticsearch, Algolia)
+    - Static site generators with custom templates
+    - API documentation generation
+    - Content analysis and migration
+    - Integration with documentation portals
+
+    For detailed JSON structure documentation, see [docs/JSON_FORMAT.md](docs/JSON_FORMAT.md).
+    For examples, see [examples/json-export/](examples/json-export/).
 
 ## Architecture
 
@@ -169,6 +192,14 @@ Gendocs uses environment variables and configuration files to manage its setting
 *   **Environment Variables:** Environment variables can override settings defined in the configuration file.
 
 Refer to the `internal/config/` package for details on available configuration options.  Example environment variables used include those needed to authenticate with LLM providers (e.g., OpenAI API key).
+
+## Documentation
+
+For more detailed documentation on specific features:
+
+- **[JSON Format Guide](docs/JSON_FORMAT.md)**: Complete JSON export structure documentation, including element types, usage examples in JavaScript/Python/bash, best practices, and troubleshooting
+- **[JSON Export Examples](examples/json-export/)**: Comprehensive examples demonstrating all JSON exporter features with practical code samples
+- **[Export Guide](docs/EXPORT.md)**: General export documentation covering all export formats
 
 ## Contributing
 
