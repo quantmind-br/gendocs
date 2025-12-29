@@ -541,12 +541,109 @@ func (dc *DiskCache) backupCorruptedCache() {
 	os.Rename(dc.filePath, backupPath)
 }
 
-// StartAutoSave starts background auto-save (not implemented in this subtask)
+// StartAutoSave starts background auto-save with the given interval
 func (dc *DiskCache) StartAutoSave(interval time.Duration) {
-	// Will be implemented in subtask 2-4
+	dc.mu.Lock()
+	if dc.autoSave {
+		// Already started
+		dc.mu.Unlock()
+		return
+	}
+	dc.autoSave = true
+	dc.mu.Unlock()
+
+	dc.stopSave = make(chan struct{})
+
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				dc.mu.Lock()
+				if dc.dirty {
+					// Save without holding lock (copy data first)
+					dataToSave := *dc.data
+					dirtyFlag := dc.dirty
+					dc.mu.Unlock()
+
+					// Save asynchronously
+					if dirtyFlag {
+						if err := dc.saveData(&dataToSave); err != nil {
+							// Log error but continue - non-blocking
+							// TODO: Add logging in subtask 4-2
+						}
+					}
+				} else {
+					dc.mu.Unlock()
+				}
+			case <-dc.stopSave:
+				// Stop signal received, do one final save if dirty
+				dc.mu.Lock()
+				if dc.dirty {
+					dataToSave := *dc.data
+					dc.mu.Unlock()
+					dc.saveData(&dataToSave)
+				} else {
+					dc.mu.Unlock()
+				}
+				return
+			}
+		}
+	}()
 }
 
-// Stop stops the disk cache (not implemented in this subtask)
+// Stop stops the disk cache and performs final save if needed
 func (dc *DiskCache) Stop() {
-	// Will be implemented in subtask 2-4
+	dc.mu.Lock()
+	if !dc.autoSave {
+		dc.mu.Unlock()
+		return
+	}
+	dc.autoSave = false
+	dc.mu.Unlock()
+
+	// Signal the background goroutine to stop
+	if dc.stopSave != nil {
+		close(dc.stopSave)
+		dc.stopSave = nil
+	}
+}
+
+// saveData saves the cache data to disk without holding the lock
+func (dc *DiskCache) saveData(data *DiskCacheData) error {
+	// Ensure directory exists
+	dir := filepath.Dir(dc.filePath)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("failed to create cache directory: %w", err)
+	}
+
+	// Update metadata
+	data.UpdatedAt = time.Now()
+
+	// Marshal to JSON
+	jsonData, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal cache: %w", err)
+	}
+
+	// Write to temporary file first (atomic write)
+	tmpFile := dc.filePath + ".tmp"
+	if err := os.WriteFile(tmpFile, jsonData, 0644); err != nil {
+		return fmt.Errorf("failed to write cache: %w", err)
+	}
+
+	// Rename to actual file (atomic on Unix)
+	if err := os.Rename(tmpFile, dc.filePath); err != nil {
+		os.Remove(tmpFile) // Clean up temp file
+		return fmt.Errorf("failed to save cache: %w", err)
+	}
+
+	// Clear dirty flag after successful save
+	dc.mu.Lock()
+	dc.dirty = false
+	dc.mu.Unlock()
+
+	return nil
 }

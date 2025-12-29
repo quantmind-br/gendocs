@@ -15,7 +15,7 @@
   - [x] Subtask 2-1: Create LLM response cache package
   - [x] Subtask 2-2: Implement cache key generation
   - [x] Subtask 2-3: Implement in-memory cache with LRU eviction
-  - [ ] Subtask 2-4: Implement persistent disk cache
+  - [x] Subtask 2-4: Implement persistent disk cache
   - [ ] Subtask 2-5: Implement cache TTL and expiration
 
 ### Current Phase: Implement Core Caching Layer (Phase 2)
@@ -95,6 +95,32 @@ Subtask 2-1 completed - Created internal/llmcache package with basic structures.
   - removeEntryList(): Remove entries from list only
   - evictLRU(): Evict least recently used entry when over capacity
 - Implementation complete and ready for unit testing (subtask 6-2)
+
+✅ **Subtask 2-4: Implement persistent disk cache** (COMPLETED 2025-12-29)
+- Implemented JSON-based disk cache with automatic loading and background persistence
+- Added three key methods to `internal/llmcache/cache.go`:
+  - StartAutoSave(interval): Starts background goroutine that periodically saves dirty cache data
+    - Thread-safe with mutex protection
+    - Prevents duplicate starts with autoSave flag
+    - Copies data before saving to avoid holding lock during I/O
+    - Performs final save on stop signal
+  - Stop(): Stops background auto-save goroutine gracefully
+    - Performs final save if cache is dirty
+    - Closes stopSave channel to signal goroutine
+    - Thread-safe with state checking
+  - saveData(data): Helper method for saving cache without holding lock
+    - Atomic writes using temp file + rename pattern
+    - Creates directory if needed
+    - Clears dirty flag after successful save
+    - Proper error handling with wrapped errors
+- All features from design document implemented:
+  - Background auto-save with configurable interval ✓
+  - Graceful shutdown with final save ✓
+  - Lock-free I/O operations ✓
+  - Atomic file writes ✓
+  - Thread-safety throughout ✓
+  - Error handling (non-blocking on save errors) ✓
+- Ready for unit testing (subtask 6-3)
 
 - Created `internal/llmcache/cache.go`: Core cache operations
   - CacheStats: Thread-safe statistics tracking (hits, misses, evictions, size, hit rate)
