@@ -461,6 +461,26 @@ func (dc *DiskCache) Load() error {
 		return nil
 	}
 
+	// Validate entry checksums and remove corrupted entries
+	corruptedCount := 0
+	for key, entry := range cacheData.Entries {
+		if !entry.ValidateChecksum() {
+			// Checksum validation failed, remove corrupted entry
+			delete(cacheData.Entries, key)
+			corruptedCount++
+			dc.logger.Warn("disk_cache_corrupted_entry",
+				logging.String("key", key),
+				logging.String("action", "removed"))
+		}
+	}
+
+	if corruptedCount > 0 {
+		dc.logger.Info("disk_cache_validation",
+			logging.Int("corrupted_entries", corruptedCount),
+			logging.Int("valid_entries", len(cacheData.Entries)),
+			logging.String("file_path", dc.filePath))
+	}
+
 	dc.data = &cacheData
 	dc.logger.Info("disk_cache_load",
 		logging.String("status", "success"),
@@ -572,6 +592,9 @@ func (dc *DiskCache) Put(key string, value *CachedResponse) error {
 	if dc.data == nil {
 		dc.data = dc.newCacheData()
 	}
+
+	// Ensure checksum is calculated and up-to-date before storing
+	value.UpdateChecksum()
 
 	isNew := !dc.data.Entries[key].IsExpired()
 	dc.data.Entries[key] = *value
