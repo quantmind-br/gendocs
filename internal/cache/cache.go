@@ -9,7 +9,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -47,6 +49,84 @@ type ScanMetrics struct {
 	TotalFiles  int // Total number of files scanned
 	CachedFiles int // Number of files that reused cached hashes
 	HashedFiles int // Number of files that required new hash computation
+}
+
+// hashFileJob represents a file hashing job with its path and result
+type hashFileJob struct {
+	relPath string // Relative path of the file to hash
+	fullPath string // Absolute path of the file to hash
+}
+
+// hashFileResult holds the result of hashing a single file
+type hashFileResult struct {
+	relPath string // Relative path of the file
+	hash    string // Computed hash
+	err     error  // Error if hashing failed
+}
+
+// DefaultMaxHashWorkers is the default maximum number of parallel hash workers
+const DefaultMaxHashWorkers = 8
+
+// getMaxHashWorkers returns the optimal number of hash workers based on CPU count
+func getMaxHashWorkers() int {
+	numCPU := runtime.NumCPU()
+	// Limit to 8 workers to avoid overwhelming the filesystem
+	if numCPU > DefaultMaxHashWorkers {
+		return DefaultMaxHashWorkers
+	}
+	return numCPU
+}
+
+// parallelHashFiles computes hashes for multiple files concurrently using a worker pool
+func parallelHashFiles(jobs []hashFileJob) map[string]string {
+	if len(jobs) == 0 {
+		return make(map[string]string)
+	}
+
+	numWorkers := getMaxHashWorkers()
+	results := make(map[string]string)
+	resultsChan := make(chan hashFileResult, len(jobs))
+	var wg sync.WaitGroup
+
+	// Create worker pool
+	jobQueue := make(chan hashFileJob, len(jobs))
+
+	// Start workers
+	for i := 0; i < numWorkers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for job := range jobQueue {
+				hash, err := HashFile(job.fullPath)
+				resultsChan <- hashFileResult{
+					relPath: job.relPath,
+					hash:    hash,
+					err:     err,
+				}
+			}
+		}()
+	}
+
+	// Dispatch jobs
+	for _, job := range jobs {
+		jobQueue <- job
+	}
+	close(jobQueue)
+
+	// Wait for all workers to finish
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+	}()
+
+	// Collect results
+	for result := range resultsChan {
+		if result.err == nil {
+			results[result.relPath] = result.hash
+		}
+	}
+
+	return results
 }
 
 // ChangeReport describes what changed since last analysis
