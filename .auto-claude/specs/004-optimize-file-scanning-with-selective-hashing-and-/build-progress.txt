@@ -144,4 +144,12 @@ Target improvement: 3-5x faster for incremental scans on large repositories.
   - Documentation of cache hit conditions and why both mtime AND size must match
   - Explanation of worker pool design and bounded parallelism strategy
   - Performance characteristics and example usage in ScanFiles documentation
-- Next: Phase 4, Subtask 2 - Update README and documentation
+- Phase 4, Subtask 2 completed: Updated README and documentation:
+  - Added comprehensive "Performance Optimizations" section to README.md
+  - Documented selective hashing optimization (mtime+size-based cache)
+  - Documented parallel hashing optimization (worker pool pattern)
+  - Added configuration examples for max_hash_workers
+  - Documented metrics and monitoring (cache hit/miss logging)
+  - Included benchmark results table showing typical improvements
+  - Explained cache hit conditions and performance impact
+- Next: Phase 4, Subtask 3 - Final code review and validation
