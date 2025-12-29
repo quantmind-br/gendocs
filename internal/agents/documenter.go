@@ -52,8 +52,17 @@ func (da *DocumenterAgent) Run(ctx context.Context) error {
 		analysisContent[filename] = string(content)
 	}
 
+	// Setup LLM response caches
+	memoryCache, diskCache, cacheCleanup, err := setupCaches(da.config.LLM, da.logger)
+	if err != nil {
+		da.logger.Warn(fmt.Sprintf("Failed to setup LLM cache: %v (caching disabled)", err))
+		cacheCleanup = func() {} // No-op cleanup
+	}
+	defer cacheCleanup()
+
+	// Create LLM factory with cache support
 	retryClient := llm.NewRetryClient(llm.DefaultRetryConfig())
-	factory := llm.NewFactory(retryClient)
+	factory := llm.NewFactory(retryClient, memoryCache, diskCache, da.config.LLM.Cache.IsEnabled(), da.config.LLM.Cache.GetTTL())
 
 	// Create documenter agent
 	agent, err := CreateDocumenterAgent(da.config.LLM, da.config.RepoPath, factory, da.promptManager, da.logger)

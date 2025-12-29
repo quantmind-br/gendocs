@@ -191,7 +191,60 @@ Gendocs uses environment variables and configuration files to manage its setting
 *   **Configuration File:**  The application uses `viper` to load configurations. Configuration files can be in YAML format.
 *   **Environment Variables:** Environment variables can override settings defined in the configuration file.
 
-Refer to the `internal/config/` package for details on available configuration options.  Example environment variables used include those needed to authenticate with LLM providers (e.g., OpenAI API key).
+### Cache Configuration
+
+Gendocs supports caching LLM API responses to reduce API costs and improve performance on repeated analyses. Cache settings are configured under the `llm.cache` section in your configuration file (`.ai/config.yaml`):
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | boolean | `false` | Enable or disable LLM response caching. When enabled, identical LLM requests will return cached responses instead of making new API calls. |
+| `max_size` | integer | `1000` | Maximum number of entries to store in the in-memory cache. When this limit is reached, least-recently-used entries are automatically evicted. |
+| `ttl` | integer | `7` | Time-to-live for cache entries in days. After this period, cached responses are considered stale and will not be used. |
+| `cache_path` | string | `.ai/llm_cache.json` | Path to the persistent disk cache file. This file survives program restarts and allows cache entries to be reused across multiple runs. |
+
+#### Example Configuration
+
+```yaml
+llm:
+  provider: openai
+  model: gpt-4
+  api_key: your-api-key
+  cache:
+    enabled: true
+    max_size: 1000
+    ttl: 7
+    cache_path: .ai/llm_cache.json
+```
+
+#### Cache Management Commands
+
+Gendocs provides CLI commands to manage the LLM response cache:
+
+*   **View cache statistics:**
+    ```bash
+    gendocs cache-stats
+    ```
+    Displays cache hit/miss rates, number of entries, storage size, and other metrics.
+
+*   **Clear the cache:**
+    ```bash
+    gendocs cache-clear
+    ```
+    Removes all cached responses, forcing the next run to make fresh API calls.
+
+*   **Show cache stats after analysis:**
+    ```bash
+    gendocs analyze --show-cache-stats
+    ```
+    Displays cache statistics immediately after completing an analysis.
+
+#### Benefits of Caching
+
+*   **Cost Savings:** Avoid redundant API calls for identical requests, significantly reducing LLM API costs.
+*   **Faster Iteration:** Repeated analyses with unchanged code complete much faster by serving responses from cache.
+*   **Offline Capability:** Cached responses allow some operations to complete even without API access.
+
+For additional configuration options, refer to the `internal/config/` package. Example environment variables used include those needed to authenticate with LLM providers (e.g., OpenAI API key).
 
 ## Documentation
 

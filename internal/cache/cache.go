@@ -361,81 +361,10 @@ func HashFile(path string) (string, error) {
 	return hex.EncodeToString(hasher.Sum(nil)), nil
 }
 
-// ScanFiles scans repository files and returns their information using selective hashing and parallel processing.
-//
-// This function is the core of the optimized file scanning system, combining two key optimizations:
-//
-// 1. SELECTIVE HASHING (Cache Hit Detection):
-//    - For each file, compare its mtime and size against the cached values
-//    - If both match: Skip hash computation, reuse cached hash (cache HIT)
-//    - If either differs: Mark file for hashing (cache MISS)
-//    - This dramatically reduces I/O for incremental scans where most files are unchanged
-//
-// 2. PARALLEL HASHING (Worker Pool):
-//    - All files marked as cache misses are hashed concurrently
-//    - Uses a worker pool pattern with bounded parallelism
-//    - Separates I/O-bound directory walking from CPU-bound hash computation
-//
-// Three-Phase Architecture:
-//
-//   Phase 1 - File Discovery (I/O Bound):
-//     - Walk the directory tree using filepath.Walk()
-//     - Collect file metadata (path, mtime, size) for all files
-//     - No hash computation yet, just metadata gathering
-//     - This allows us to make cache hit/miss decisions for all files upfront
-//
-//   Phase 2 - Cache Classification (In-Memory):
-//     - For each file, check if cached metadata exists
-//     - Compare mtime and size to determine cache hit vs miss
-//     - Separate files into two groups:
-//       * Cached: Reuse hash, update metrics
-//       * Needs Hashing: Add to parallel hashing batch
-//     - Build initial results map with cached hashes and placeholders
-//
-//   Phase 3 - Parallel Hashing (CPU Bound):
-//     - Batch hash all "needs hashing" files using parallelHashFiles()
-//     - Worker pool computes multiple hashes concurrently
-//     - Update the results map with computed hashes
-//     - This is where the CPU-intensive work happens in parallel
-//
-// Performance Characteristics:
-//   - Best Case (all files cached): O(n) directory walk, no hash computations
-//   - Worst Case (all files changed): O(n) directory walk + parallel hash computation
-//   - Typical Case (mix): O(n) walk + parallel hash for subset of files
-//   - Parallel hashing provides near-linear speedup with CPU cores
-//
-// Parameters:
-//   - repoPath: Root directory of the repository to scan
-//   - ignorePatterns: File/directory patterns to skip (e.g., ".git", "node_modules")
-//   - cache: Optional analysis cache (nil = no cache, compute all hashes)
-//   - metrics: Optional metrics tracker (nil = don't track statistics)
-//   - maxHashWorkers: Maximum parallel hash workers (0 = auto-detect CPU count, capped at 8)
-//
-// Returns:
-//   - map[string]FileInfo: Map of relative file paths to their metadata (hash, mtime, size)
-//   - error: Error if directory walk fails
-//
-// Example Usage:
-//
-//	// With cache and metrics
-//	cache, _ := LoadCache(repoPath)
-//	var metrics ScanMetrics
-//	files, err := ScanFiles(repoPath, nil, cache, &metrics, 0)
-//	fmt.Printf("Cache hit rate: %.1f%%\n",
-//	    float64(metrics.CachedFiles)/float64(metrics.TotalFiles)*100)
-//
-//	// Without cache (backward compatible)
-//	files, err := ScanFiles(repoPath, nil, nil, nil, 0)
-func ScanFiles(repoPath string, ignorePatterns []string, cache *AnalysisCache, metrics *ScanMetrics, maxHashWorkers int) (map[string]FileInfo, error) {
-	// Phase 1: Walk directory tree and collect file metadata (no hashing yet)
-	//
-	// This is I/O bound work. We gather mtime and size for all files first, before
-	// deciding which files need hash computation. This allows us to make cache hit/miss
-	// decisions for all files upfront, which is critical for efficient batching.
-	var allFiles []fileMetadata
-	var needsHashing []hashFileJob
+// ScanFiles scans repository files and returns their info
+func ScanFiles(repoPath string, ignorePatterns []string) (map[string]FileInfo, error) {
+	files := make(map[string]FileInfo)
 
-	// Walk the directory tree
 	err := filepath.Walk(repoPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			if os.IsPermission(err) {
@@ -468,108 +397,23 @@ func ScanFiles(repoPath string, ignorePatterns []string, cache *AnalysisCache, m
 			return nil
 		}
 
-		// Collect file metadata (no hash computation yet)
-		allFiles = append(allFiles, fileMetadata{
-			relPath:  relPath,
-			fullPath: path,
-			modTime:  info.ModTime(),
-			size:     info.Size(),
-		})
+		// Calculate hash
+		hash, err := HashFile(path)
+		if err != nil {
+			// Skip files we can't read
+			return nil
+		}
+
+		files[relPath] = FileInfo{
+			Hash:     hash,
+			Modified: info.ModTime(),
+			Size:     info.Size(),
+		}
 
 		return nil
 	})
 
-	if err != nil {
-		return nil, err
-	}
-
-	// Phase 2: Classify files into cache hits and misses
-	//
-	// For each file, check if we have cached metadata. If the mtime and size match,
-	// we can skip hash computation (cache hit). Otherwise, we need to compute the hash.
-	// This is the core of the selective hashing optimization.
-	results := make(map[string]FileInfo)
-
-	for _, file := range allFiles {
-		if metrics != nil {
-			metrics.TotalFiles++
-		}
-
-		// Check if this is a cache hit
-		if cache != nil {
-			if cachedInfo, exists := cache.Files[file.relPath]; exists {
-				// Cache hit if both mtime and size match
-				if cachedInfo.Modified.Equal(file.modTime) && cachedInfo.Size == file.size {
-					// Cache HIT: reuse cached hash
-					results[file.relPath] = FileInfo{
-						Hash:     cachedInfo.Hash,
-						Modified: file.modTime,
-						Size:     file.size,
-					}
-					if metrics != nil {
-						metrics.CachedFiles++
-					}
-					continue
-				}
-			}
-		}
-
-		// Cache MISS: file needs hashing
-		needsHashing = append(needsHashing, hashFileJob{
-			relPath:  file.relPath,
-			fullPath: file.fullPath,
-		})
-	}
-
-	// Phase 3: Parallel hash computation for cache misses
-	//
-	// Now we compute hashes for all files that weren't cache hits. This is CPU-bound
-	// work, so we use a worker pool to parallelize across multiple cores. The separation
-	// of Phase 2 (classification) from Phase 3 (hashing) is critical for efficiency:
-	// it allows us to batch all hash computations and process them in parallel.
-	if len(needsHashing) > 0 {
-		if metrics != nil {
-			metrics.HashedFiles = len(needsHashing)
-		}
-
-		// Hash all files in parallel using worker pool
-		hashes := parallelHashFiles(needsHashing, maxHashWorkers)
-
-		// Update results with computed hashes
-		for i, job := range needsHashing {
-			if hash, ok := hashes[job.relPath]; ok {
-				results[job.relPath] = FileInfo{
-					Hash:     hash,
-					Modified: fileModTimeFromJob(job, needsHashing, allFiles),
-					Size:     fileSizeFromJob(job, needsHashing, allFiles),
-				}
-			}
-			// If hashing failed, we skip the file (results won't contain it)
-			_ = i // Use i to avoid unused variable warning
-		}
-	}
-
-	return results, nil
-}
-
-// Helper function to get modTime from a job
-func fileModTimeFromJob(job hashFileJob, jobs []hashFileJob, files []fileMetadata) time.Time {
-	for _, f := range files {
-		if f.relPath == job.relPath {
-			return f.modTime
-		}
-	}
-	return time.Time{}
-}
-
-// Helper function to get size from a job
-func fileSizeFromJob(job hashFileJob, jobs []hashFileJob, files []fileMetadata) int64 {
-	for _, f := range files {
-		if f.relPath == job.relPath {
-			return f.size
-		}
-	}
-	return 0
+	return files, err
 }
 
 // DetectChanges compares current files with cached files

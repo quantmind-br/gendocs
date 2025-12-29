@@ -1,0 +1,9 @@
+{
+  "sourceType": "ideation",
+  "ideationType": "performance_optimizations",
+  "ideaId": "perf-005",
+  "rationale": "The documenter agent and AI rules agent both read all 5 analysis files and make LLM calls with them as context. If the analysis files haven't changed, the LLM responses will be nearly identical. By hashing the prompt + system message and caching responses, we can avoid redundant API calls. This would save significant API costs and latency for incremental runs where only some agents need to re-run.",
+  "category": "performance",
+  "performanceCategory": "caching",
+  "impact": "high"
+}

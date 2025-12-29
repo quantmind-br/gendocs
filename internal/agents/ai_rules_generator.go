@@ -52,8 +52,17 @@ func (aa *AIRulesGeneratorAgent) Run(ctx context.Context) error {
 		analysisContent[filename] = string(content)
 	}
 
+	// Setup LLM response caches
+	memoryCache, diskCache, cacheCleanup, err := setupCaches(aa.config.LLM, aa.logger)
+	if err != nil {
+		aa.logger.Warn(fmt.Sprintf("Failed to setup LLM cache: %v (caching disabled)", err))
+		cacheCleanup = func() {} // No-op cleanup
+	}
+	defer cacheCleanup()
+
+	// Create LLM factory with cache support
 	retryClient := llm.NewRetryClient(llm.DefaultRetryConfig())
-	factory := llm.NewFactory(retryClient)
+	factory := llm.NewFactory(retryClient, memoryCache, diskCache, aa.config.LLM.Cache.IsEnabled(), aa.config.LLM.Cache.GetTTL())
 
 	// For now, generate CLAUDE.md
 	agent, err := CreateAIRulesGeneratorAgent(aa.config.LLM, aa.config.RepoPath, factory, aa.promptManager, aa.logger)
