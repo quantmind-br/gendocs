@@ -71,6 +71,10 @@ func (m TextFieldModel) Init() tea.Cmd {
 }
 
 func (m TextFieldModel) Update(msg tea.Msg) (TextFieldModel, tea.Cmd) {
+	if !m.input.Focused() {
+		return m, nil
+	}
+
 	var cmd tea.Cmd
 	m.input, cmd = m.input.Update(msg)
 
