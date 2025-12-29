@@ -42,6 +42,13 @@ type AgentStatus struct {
 	FilesAnalyzed []string  `json:"files_analyzed,omitempty"`
 }
 
+// ScanMetrics holds statistics about file scanning operations
+type ScanMetrics struct {
+	TotalFiles  int // Total number of files scanned
+	CachedFiles int // Number of files that reused cached hashes
+	HashedFiles int // Number of files that required new hash computation
+}
+
 // ChangeReport describes what changed since last analysis
 type ChangeReport struct {
 	HasChanges       bool
@@ -173,7 +180,8 @@ func HashFile(path string) (string, error) {
 
 // ScanFiles scans repository files and returns their info
 // If cache is provided, it will skip hashing files whose mtime and size haven't changed
-func ScanFiles(repoPath string, ignorePatterns []string, cache *AnalysisCache) (map[string]FileInfo, error) {
+// If metrics is provided, it will populate statistics about cache hits and hash computations
+func ScanFiles(repoPath string, ignorePatterns []string, cache *AnalysisCache, metrics *ScanMetrics) (map[string]FileInfo, error) {
 	files := make(map[string]FileInfo)
 
 	err := filepath.Walk(repoPath, func(path string, info os.FileInfo, err error) error {
@@ -208,17 +216,24 @@ func ScanFiles(repoPath string, ignorePatterns []string, cache *AnalysisCache) (
 			return nil
 		}
 
+		// Track total files
+		if metrics != nil {
+			metrics.TotalFiles++
+		}
+
 		// Get file metadata
 		modTime := info.ModTime()
 		fileSize := info.Size()
 
 		// Check if we can reuse cached hash
 		var hash string
+		cached := false
 		if cache != nil {
 			if cachedFile, exists := cache.Files[relPath]; exists {
 				// If mtime and size match, reuse the cached hash
 				if cachedFile.Modified.Equal(modTime) && cachedFile.Size == fileSize {
 					hash = cachedFile.Hash
+					cached = true
 				}
 			}
 		}
@@ -230,6 +245,15 @@ func ScanFiles(repoPath string, ignorePatterns []string, cache *AnalysisCache) (
 			if err != nil {
 				// Skip files we can't read
 				return nil
+			}
+		}
+
+		// Track metrics
+		if metrics != nil {
+			if cached {
+				metrics.CachedFiles++
+			} else {
+				metrics.HashedFiles++
 			}
 		}
 

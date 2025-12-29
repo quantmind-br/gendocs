@@ -52,6 +52,7 @@ func (aa *AnalyzerAgent) Run(ctx context.Context) (*AnalysisResult, error) {
 	var changeReport *cache.ChangeReport
 	var currentFiles map[string]cache.FileInfo
 	var scanErr error
+	var scanMetrics cache.ScanMetrics
 
 	// Always load/create cache (needed for selective hashing)
 	analysisCache, _ = cache.LoadCache(aa.config.RepoPath)
@@ -59,10 +60,22 @@ func (aa *AnalyzerAgent) Run(ctx context.Context) (*AnalysisResult, error) {
 		analysisCache = cache.NewCache()
 	}
 
-	// Always scan files for cache update (with cache for selective hashing)
-	currentFiles, scanErr = cache.ScanFiles(aa.config.RepoPath, nil, analysisCache)
+	// Always scan files for cache update (with cache for selective hashing and metrics tracking)
+	currentFiles, scanErr = cache.ScanFiles(aa.config.RepoPath, nil, analysisCache, &scanMetrics)
 	if scanErr != nil {
 		aa.logger.Warn(fmt.Sprintf("Failed to scan files: %v", scanErr))
+	}
+
+	// Log scan metrics to show optimization effectiveness
+	aa.logger.Debug("File scan metrics",
+		logging.Int("total_files", scanMetrics.TotalFiles),
+		logging.Int("cached_files", scanMetrics.CachedFiles),
+		logging.Int("hashed_files", scanMetrics.HashedFiles),
+	)
+	if scanMetrics.TotalFiles > 0 {
+		cacheHitRate := float64(scanMetrics.CachedFiles) / float64(scanMetrics.TotalFiles) * 100
+		aa.logger.Debug(fmt.Sprintf("Cache hit rate: %.1f%% (%d/%d files reused cached hashes)",
+			cacheHitRate, scanMetrics.CachedFiles, scanMetrics.TotalFiles))
 	}
 
 	if !aa.config.Force && scanErr == nil {
