@@ -12,14 +12,23 @@ type BaseConfig struct {
 
 // LLMConfig holds LLM provider configuration
 type LLMConfig struct {
-	Provider    string  `mapstructure:"provider"`     // openai, anthropic, gemini
-	Model       string  `mapstructure:"model"`
-	APIKey      string  `mapstructure:"api_key"`
-	BaseURL     string  `mapstructure:"base_url"`      // Optional, for OpenAI-compatible APIs
-	Retries     int     `mapstructure:"retries"`
-	Timeout     int     `mapstructure:"timeout"`       // Timeout in seconds
-	MaxTokens   int     `mapstructure:"max_tokens"`
-	Temperature float64 `mapstructure:"temperature"`
+	Provider    string       `mapstructure:"provider"`     // openai, anthropic, gemini
+	Model       string       `mapstructure:"model"`
+	APIKey      string       `mapstructure:"api_key"`
+	BaseURL     string       `mapstructure:"base_url"`      // Optional, for OpenAI-compatible APIs
+	Retries     int          `mapstructure:"retries"`
+	Timeout     int          `mapstructure:"timeout"`       // Timeout in seconds
+	MaxTokens   int          `mapstructure:"max_tokens"`
+	Temperature float64      `mapstructure:"temperature"`
+	Cache       LLMCacheConfig `mapstructure:"cache"`       // Cache configuration
+}
+
+// LLMCacheConfig holds LLM response cache configuration
+type LLMCacheConfig struct {
+	Enabled   bool   `mapstructure:"enabled"`    // Enable/disable caching
+	MaxSize   int    `mapstructure:"max_size"`   // Maximum number of entries in memory cache
+	TTL       int    `mapstructure:"ttl"`        // Time-to-live for cache entries in days
+	CachePath string `mapstructure:"cache_path"` // Path to disk cache file
 }
 
 // GeminiConfig holds Gemini-specific configuration
@@ -132,4 +141,33 @@ func (c *LLMConfig) GetRetries() int {
 		return 2 // Default retries
 	}
 	return c.Retries
+}
+
+// IsEnabled returns whether caching is enabled
+func (c *LLMCacheConfig) IsEnabled() bool {
+	return c.Enabled
+}
+
+// GetMaxSize returns the maximum cache size with a default
+func (c *LLMCacheConfig) GetMaxSize() int {
+	if c.MaxSize == 0 {
+		return 1000 // Default max entries
+	}
+	return c.MaxSize
+}
+
+// GetTTL returns the TTL as a time.Duration with a default
+func (c *LLMCacheConfig) GetTTL() time.Duration {
+	if c.TTL == 0 {
+		return 7 * 24 * time.Hour // Default 7 days
+	}
+	return time.Duration(c.TTL) * 24 * time.Hour
+}
+
+// GetCachePath returns the cache file path with a default
+func (c *LLMCacheConfig) GetCachePath() string {
+	if c.CachePath == "" {
+		return ".ai/llm_cache.json" // Default cache path
+	}
+	return c.CachePath
 }
