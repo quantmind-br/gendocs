@@ -340,7 +340,7 @@ func TestDiskCache_CorruptionHandling(t *testing.T) {
 		cacheData.Entries["corrupted-key"] = corruptedEntry
 
 		// Save corrupted data
-		corruptedJSON, _ := json.MarshalIndent(cacheData, "", "  ")
+		corruptedJSON, _ := json.MarshalIndent(cacheData, "", "  ") //nolint:govet
 		if err := os.WriteFile(cachePath, corruptedJSON, 0644); err != nil {
 			t.Fatalf("Failed to write corrupted cache: %v", err)
 		}
@@ -396,7 +396,7 @@ func TestDiskCache_CorruptionHandling(t *testing.T) {
 			Stats: DiskCacheStats{},
 		}
 
-		data, _ := json.MarshalIndent(cacheData, "", "  ")
+		data, _ := json.MarshalIndent(cacheData, "", "  ") //nolint:govet
 		if err := os.WriteFile(cachePath, data, 0644); err != nil {
 			t.Fatalf("Failed to write old format cache: %v", err)
 		}
@@ -444,7 +444,7 @@ func TestDiskCache_VersionMismatch(t *testing.T) {
 		Stats: DiskCacheStats{},
 	}
 
-	data, _ := json.MarshalIndent(cacheData, "", "  ")
+	data, _ := json.MarshalIndent(cacheData, "", "  ") //nolint:govet
 	if err := os.WriteFile(cachePath, data, 0644); err != nil {
 		t.Fatalf("Failed to write cache: %v", err)
 	}
@@ -778,7 +778,7 @@ func TestDiskCache_ConcurrentAccess(t *testing.T) {
 					ExpiresAt:   time.Now().Add(DefaultTTL),
 					AccessCount: 0,
 				}
-				cache.Put(key, entry)
+				_ = cache.Put(key, entry)
 				done <- true
 			}(i)
 		}
@@ -830,7 +830,7 @@ func TestDiskCache_ConcurrentAccess(t *testing.T) {
 						ExpiresAt:   time.Now().Add(DefaultTTL),
 						AccessCount: 0,
 					}
-					cache.Put(key, entry)
+					_ = cache.Put(key, entry)
 				}
 				done <- true
 			}(i)

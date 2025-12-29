@@ -9,11 +9,11 @@ import (
 
 	"github.com/yuin/goldmark"
 	highlighting "github.com/yuin/goldmark-highlighting/v2"
+	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
+	east "github.com/yuin/goldmark/extension/ast"
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer/html"
-	"github.com/yuin/goldmark/ast"
-	east "github.com/yuin/goldmark/extension/ast"
 	"github.com/yuin/goldmark/text"
 )
 
@@ -25,12 +25,12 @@ type JSONDocument struct {
 
 // Metadata contains document metadata
 type Metadata struct {
-	Title      string    `json:"title"`
+	Title       string    `json:"title"`
 	GeneratedAt time.Time `json:"generated_at"`
-	Generator  Generator `json:"generator"`
-	SourceFile string    `json:"source_file"`
-	WordCount  int       `json:"word_count,omitempty"`
-	CharCount  int       `json:"char_count,omitempty"`
+	Generator   Generator `json:"generator"`
+	SourceFile  string    `json:"source_file"`
+	WordCount   int       `json:"word_count,omitempty"`
+	CharCount   int       `json:"char_count,omitempty"`
 }
 
 // Generator information
@@ -57,7 +57,7 @@ type Heading struct {
 // headingNode is used for building the hierarchy during AST traversal
 type headingTreeNode struct {
 	heading  *Heading
-	parent   int // index in the heading slice
+	parent   int   // index in the heading slice
 	children []int // indices of children
 }
 
@@ -88,7 +88,7 @@ type CodeBlockElement struct {
 // ListElement represents a list (unordered, ordered, or task)
 type ListElement struct {
 	Type     string     `json:"type"`
-	ListType string     `json:"list_type"` // "unordered", "ordered", "task"
+	ListType string     `json:"list_type"`       // "unordered", "ordered", "task"
 	Start    int        `json:"start,omitempty"` // Starting number for ordered lists
 	Items    []ListItem `json:"items"`
 }
@@ -97,19 +97,19 @@ type ListElement struct {
 type ListItem struct {
 	Content string     `json:"content"`
 	Checked *bool      `json:"checked,omitempty"` // For task lists (nil if not a task)
-	Items   []ListItem `json:"items"` // Nested sub-items
+	Items   []ListItem `json:"items"`             // Nested sub-items
 }
 
 // TableElement represents a table
 type TableElement struct {
-	Type   string      `json:"type"`
-	Header []TableCell `json:"header"`
+	Type   string        `json:"type"`
+	Header []TableCell   `json:"header"`
 	Rows   [][]TableCell `json:"rows"`
 }
 
 // TableCell represents a single table cell
 type TableCell struct {
-	Content   string `json:"content"`
+	Content   string `json:"text"`
 	Alignment string `json:"alignment,omitempty"` // "left", "center", "right", or omitted
 }
 
@@ -233,7 +233,7 @@ func (e *JSONExporter) buildJSONDocument(
 ) (*JSONDocument, error) {
 	// Build metadata
 	metadata := Metadata{
-		Title:      title,
+		Title:       title,
 		GeneratedAt: time.Now(),
 		Generator: Generator{
 			Name:    "Gendocs",
@@ -399,15 +399,9 @@ func (e *JSONExporter) processFencedCodeBlock(code *ast.FencedCodeBlock, element
 	// Extract language
 	language := string(code.Language(e.source))
 
-	// Extract code content
-	var codeBuilder strings.Builder
-	for child := code.FirstChild(); child != nil; child = child.NextSibling() {
-		if text, ok := child.(*ast.Text); ok {
-			codeBuilder.WriteString(string(text.Segment.Value(e.source)))
-		}
-	}
+	// Extract code content using the Text() method
+	codeStr := string(code.Text(e.source)) //nolint:staticcheck // TODO: migrate to code.Lines
 
-	codeStr := codeBuilder.String()
 	lines := strings.Count(codeStr, "\n") + 1
 	if strings.TrimSpace(codeStr) == "" {
 		lines = 0
@@ -430,15 +424,9 @@ func (e *JSONExporter) processFencedCodeBlock(code *ast.FencedCodeBlock, element
 
 // processCodeBlock processes an indented code block
 func (e *JSONExporter) processCodeBlock(code *ast.CodeBlock, elements *[]Element) {
-	// Extract code content
-	var codeBuilder strings.Builder
-	for child := code.FirstChild(); child != nil; child = child.NextSibling() {
-		if text, ok := child.(*ast.Text); ok {
-			codeBuilder.WriteString(string(text.Segment.Value(e.source)))
-		}
-	}
+	// Extract code content using the Text() method
+	codeStr := string(code.Text(e.source)) //nolint:staticcheck // TODO: migrate to code.Lines
 
-	codeStr := codeBuilder.String()
 	lines := strings.Count(codeStr, "\n") + 1
 	if strings.TrimSpace(codeStr) == "" {
 		lines = 0
@@ -470,17 +458,34 @@ func (e *JSONExporter) processList(list *ast.List, elements *[]Element) {
 		start = list.Start
 	}
 
-	// Check if it's a task list
-	_ = false // isTaskList used implicitly via listType
-	if list.FirstChild() != nil {
-		if item, ok := list.FirstChild().(*ast.ListItem); ok {
-			if item.FirstChild() != nil {
-				if _, ok := item.FirstChild().(*east.TaskCheckBox); ok {
-					// task list detected
-					listType = "task"
+	// Check if it's a task list by checking ALL items
+	// Task lists have a TaskCheckBox in their items
+	hasTaskCheckBox := false
+	for itemChild := list.FirstChild(); itemChild != nil; itemChild = itemChild.NextSibling() {
+		if item, ok := itemChild.(*ast.ListItem); ok {
+			// Check all children for TaskCheckBox (could be direct child or in TextBlock)
+			for child := item.FirstChild(); child != nil; child = child.NextSibling() {
+				if _, ok := child.(*east.TaskCheckBox); ok {
+					hasTaskCheckBox = true
+					break
+				}
+				// Also check inside TextBlock
+				if textBlock, ok := child.(*ast.TextBlock); ok {
+					for gc := textBlock.FirstChild(); gc != nil; gc = gc.NextSibling() {
+						if _, ok := gc.(*east.TaskCheckBox); ok {
+							hasTaskCheckBox = true
+							break
+						}
+					}
 				}
 			}
+			if hasTaskCheckBox {
+				break
+			}
 		}
+	}
+	if hasTaskCheckBox {
+		listType = "task"
 	}
 
 	// Extract list items
@@ -518,12 +523,21 @@ func (e *JSONExporter) extractListItems(list *ast.List) []ListItem {
 		// Extract content (text before any nested list)
 		content := e.extractListItemContent(listItem)
 
-		// Check for task checkbox
+		// Check for task checkbox (may be inside TextBlock)
 		var checked *bool
 		if listItem.FirstChild() != nil {
+			// TaskCheckBox might be a direct child (old behavior)
 			if checkbox, ok := listItem.FirstChild().(*east.TaskCheckBox); ok {
 				isChecked := checkbox.IsChecked
 				checked = &isChecked
+			} else if textBlock, ok := listItem.FirstChild().(*ast.TextBlock); ok {
+				// Or it might be inside a TextBlock
+				if textBlock.FirstChild() != nil {
+					if checkbox, ok := textBlock.FirstChild().(*east.TaskCheckBox); ok {
+						isChecked := checkbox.IsChecked
+						checked = &isChecked
+					}
+				}
 			}
 		}
 
@@ -533,6 +547,15 @@ func (e *JSONExporter) extractListItems(list *ast.List) []ListItem {
 			if nestedList, ok := child.(*ast.List); ok {
 				nestedItems = e.extractListItems(nestedList)
 				break
+			}
+			// Also check inside TextBlock for nested lists
+			if textBlock, ok := child.(*ast.TextBlock); ok {
+				for gc := textBlock.FirstChild(); gc != nil; gc = gc.NextSibling() {
+					if nestedList, ok := gc.(*ast.List); ok {
+						nestedItems = e.extractListItems(nestedList)
+						break
+					}
+				}
 			}
 		}
 
@@ -558,7 +581,26 @@ func (e *JSONExporter) extractListItemContent(item *ast.ListItem) string {
 		if _, ok := child.(*ast.List); ok {
 			break
 		}
-		content.WriteString(e.extractNodeText(child))
+		// Handle TextBlocks (which contain the actual text content)
+		if textBlock, ok := child.(*ast.TextBlock); ok {
+			// Extract text from all children of TextBlock, skipping TaskCheckBox
+			for gc := textBlock.FirstChild(); gc != nil; gc = gc.NextSibling() {
+				if _, ok := gc.(*east.TaskCheckBox); ok {
+					continue
+				}
+				// Handle Text nodes directly
+				if textNode, ok := gc.(*ast.Text); ok {
+					content.WriteString(string(textNode.Segment.Value(e.source)))
+				} else if strNode, ok := gc.(*ast.String); ok {
+					content.WriteString(string(strNode.Value))
+				} else {
+					content.WriteString(e.extractNodeText(gc))
+				}
+			}
+		} else {
+			// For other node types, use the standard extraction
+			content.WriteString(e.extractNodeText(child))
+		}
 	}
 
 	return strings.TrimSpace(content.String())
@@ -566,32 +608,20 @@ func (e *JSONExporter) extractListItemContent(item *ast.ListItem) string {
 
 // processTable processes a table node
 func (e *JSONExporter) processTable(table *east.Table, elements *[]Element) {
-	// Extract header row
 	var header []TableCell
-	if row := table.FirstChild(); row != nil {
-		if tableRow, ok := row.(*east.TableRow); ok {
-			header = e.extractTableRow(tableRow, table)
-		}
-	}
-
-	// Extract data rows
 	var rows [][]TableCell
-	rowIndex := 0
-	for row := table.FirstChild(); row != nil; row = row.NextSibling() {
-		tableRow, ok := row.(*east.TableRow)
-		if !ok {
-			continue
-		}
 
-		// Skip first row (header)
-		if rowIndex == 0 {
-			rowIndex++
-			continue
+	// Process table children - TableHeader comes first, then TableRows
+	for child := table.FirstChild(); child != nil; child = child.NextSibling() {
+		switch n := child.(type) {
+		case *east.TableHeader:
+			// Extract header row from TableHeader
+			header = e.extractTableHeader(n, table)
+		case *east.TableRow:
+			// Extract data row from TableRow
+			rowData := e.extractTableRow(n, table)
+			rows = append(rows, rowData)
 		}
-
-		rowData := e.extractTableRow(tableRow, table)
-		rows = append(rows, rowData)
-		rowIndex++
 	}
 
 	tableElem := TableElement{
@@ -605,6 +635,44 @@ func (e *JSONExporter) processTable(table *east.Table, elements *[]Element) {
 		"header": tableElem.Header,
 		"rows":   tableElem.Rows,
 	})
+}
+
+// extractTableHeader extracts the header row from a TableHeader node
+func (e *JSONExporter) extractTableHeader(header *east.TableHeader, table *east.Table) []TableCell {
+	var cells []TableCell
+	colIndex := 0
+
+	for cell := header.FirstChild(); cell != nil; cell = cell.NextSibling() {
+		tableCell, ok := cell.(*east.TableCell)
+		if !ok {
+			continue
+		}
+
+		content := e.extractText(tableCell)
+
+		// Determine alignment
+		var alignment string
+		if table.Alignments != nil && colIndex < len(table.Alignments) {
+			switch table.Alignments[colIndex] {
+			case east.AlignLeft:
+				alignment = "left"
+			case east.AlignCenter:
+				alignment = "center"
+			case east.AlignRight:
+				alignment = "right"
+			default:
+				alignment = "default"
+			}
+		}
+
+		cells = append(cells, TableCell{
+			Content:   strings.TrimSpace(content),
+			Alignment: alignment,
+		})
+		colIndex++
+	}
+
+	return cells
 }
 
 // extractTableRow extracts a single table row
@@ -760,18 +828,20 @@ func (e *JSONExporter) generateID(text string) string {
 	}
 
 	id := result.String()
+
+	// Collapse multiple consecutive hyphens into one
+	for strings.Contains(id, "--") {
+		id = strings.ReplaceAll(id, "--", "-")
+	}
+
+	// Trim leading/trailing hyphens
+	id = strings.Trim(id, "-")
+
 	if id == "" {
 		return "heading"
 	}
 
 	return id
-}
-
-// sourceTextProvider implements text source for code blocks
-type sourceTextProvider struct{}
-
-func (s sourceTextProvider) Text(source []byte) []byte {
-	return source
 }
 
 // marshalJSON converts the JSONDocument to JSON bytes with indentation
@@ -805,11 +875,6 @@ func countText(content []byte) (wordCount, charCount int) {
 	wordCount = len(words)
 
 	return wordCount, charCount
-}
-
-// Helper conversion function
-func textBytes(b []byte) []byte {
-	return b
 }
 
 // buildHeadingHierarchy constructs the hierarchical heading structure

@@ -13,14 +13,14 @@ import (
 // It stores the original request, the LLM's response, and various metadata
 // for cache management and validation.
 type CachedResponse struct {
-	Key         string                 `json:"key"`           // Cache key (SHA256 hash)
-	Request     CacheKeyRequest        `json:"request"`       // Original request (for validation)
-	Response    llmtypes.CompletionResponse `json:"response"`      // LLM response content
-	CreatedAt   time.Time              `json:"created_at"`    // Timestamp when the entry was cached
-	ExpiresAt   time.Time              `json:"expires_at"`    // Timestamp when the entry expires
-	SizeBytes   int64                  `json:"size_bytes"`    // Approximate size in memory (in bytes)
-	AccessCount int                    `json:"access_count"`  // Number of times this entry has been accessed
-	Checksum    string                 `json:"checksum"`      // SHA256 checksum for data integrity validation
+	Key         string                      `json:"key"`          // Cache key (SHA256 hash)
+	Request     CacheKeyRequest             `json:"request"`      // Original request (for validation)
+	Response    llmtypes.CompletionResponse `json:"response"`     // LLM response content
+	CreatedAt   time.Time                   `json:"created_at"`   // Timestamp when the entry was cached
+	ExpiresAt   time.Time                   `json:"expires_at"`   // Timestamp when the entry expires
+	SizeBytes   int64                       `json:"size_bytes"`   // Approximate size in memory (in bytes)
+	AccessCount int                         `json:"access_count"` // Number of times this entry has been accessed
+	Checksum    string                      `json:"checksum"`     // SHA256 checksum for data integrity validation
 }
 
 // NewCachedResponse creates a new CachedResponse with the given TTL.
@@ -78,8 +78,8 @@ func (cr *CachedResponse) CalculateChecksum() string {
 	// Create a representation of the data to checksum
 	// We include all fields that represent the actual cached data
 	dataToHash := struct {
-		Key      string                 `json:"key"`
-		Request  CacheKeyRequest        `json:"request"`
+		Key      string                      `json:"key"`
+		Request  CacheKeyRequest             `json:"request"`
 		Response llmtypes.CompletionResponse `json:"response"`
 	}{
 		Key:      cr.Key,

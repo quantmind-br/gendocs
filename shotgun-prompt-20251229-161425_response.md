@@ -1,0 +1,399 @@
+````diff
+diff --git a/CLAUDE.md b/CLAUDE.md
+deleted file mode 100644
+index abcdef0..0000000
+--- a/CLAUDE.md
++++ /dev/null
+@@ -1,135 +0,0 @@
+-# CLAUDE.md - Development Guide
+-
+-## Build & Test Commands
+-- **Build binary**: `go build -o gendocs .` (or `make build`)
+-- **Run all tests**: `go test ./...` (or `make test`)
+-- **Run unit tests only**: `go test -short ./...` (or `make test-short`)
+-- **Run integration tests**: `go test -tags integration ./...`
+-- **Run specific package tests**: `go test ./internal/llm/`
+-- **Run specific test**: `go test -run TestName ./path/to/package`
+-- **Run linter**: `golangci-lint run` (or `make lint`)
+-- **Check coverage**: `make test-coverage`
+-
+-## Project Overview
+-Gendocs is a multi-agent AI CLI tool for codebase analysis and documentation.
+-
+-### Core Architecture
+-1.  **CLI Layer** (`cmd/`): Cobra-based commands for `analyze`, `generate`, `cronjob`, `config`.
+-2.  **Handler Layer** (`internal/handlers/`): Orchestrates business logic between CLI and Agents.
+-3.  **Agent Layer** (`internal/agents/`):
+-    - `AnalyzerAgent`: Orchestrator for sub-analyzers.
+-    - `SubAnalyzers`: Structure, Dependency, DataFlow, RequestFlow, API.
+-    - `DocumenterAgent`: Generates README.md.
+-    - `AIRulesGeneratorAgent`: Generates assistant configs.
+-4.  **LLM Layer** (`internal/llm/`): Provider abstraction (OpenAI, Anthropic, Gemini).
+-5.  **Tool Layer** (`internal/tools/`): Capabilities given to agents (FileRead, ListFiles).
+-
+-## Coding Standards
+-
+-### Go Style
+-- Follow standard Go formatting (`go fmt`).
+-- Use descriptive variable names (e.g., `analyzerConfig` vs `cfg`).
+-- Prefer `fmt.Errorf("context: %w", err)` for error wrapping.
+-- Ensure interfaces are used for testability (e.g., `LLMClient`).
+-
+-### Package Organization
+-- `cmd/`: CLI entry points and flag parsing.
+-- `internal/config/`: Configuration models and loaders.
+-- `internal/llm/`: LLM provider implementations and streaming logic.
+-- `internal/agents/`: AI logic and agent implementations.
+-- `internal/tools/`: Filesystem tools for agents.
+-- `internal/logging/`: Structured logging (zap).
+-
+-### Concurrency
+-- Use the internal `worker_pool` for parallel tasks.
+-- Respect `context.Context` for cancellation and timeouts.
+-- Use `sync.Mutex` or `sync.RWMutex` for thread-safe shared state.
+-
+-### Error Handling
+-- Use `AIDocGenError` from `internal/errors` for user-facing errors.
+-- Include actionable suggestions in error messages.
+-
+-## Development Workflow
+-1.  **Prompts**: System and user prompts are stored in `prompts/*.yaml`.
+-2.  **Testing**:
+-    - Write unit tests for all new logic.
+-    - Use `internal/testing` helpers for mocks and temp repos.
+-    - All PRs require passing `make test`.
+-3.  **Environment**:
+-    - Set `ANALYZER_LLM_API_KEY` for development.
+-    - Use `.env` file via `cp .env.example .env`.
+-
+-## Common CLI Usage
+-```bash
+-# Analyze current repository
+-gendocs analyze
+-
+-# Generate README
+-gendocs generate readme
+-
+-# Clear LLM cache
+-gendocs cache-clear
+-```
+-
+-## Commands List
+-
+-| Command | Purpose |
+-| :--- | :--- |
+-| `analyze` | Scans codebase and generates analysis MDs in `.ai/docs/` |
+-| `generate readme` | Synthesizes analysis files into a `README.md` |
+-| `generate ai-rules`| Generates assistant configuration files |
+-| `generate export` | Exports documentation to HTML or JSON |
+-| `cronjob analyze` | Batch process GitLab projects |
+-| `config` | Interactive CLI setup wizard |
+-
+-## Documentation Reference
+-- [Architecture](docs/ARCHITECTURE.md)
+-- [Testing](docs/TESTING.md)
+-- [Contributing](docs/CONTRIBUTING.md)
+-- [Export Guide](docs/EXPORT.md)
+-- [JSON Format](docs/JSON_FORMAT.md)
+-
+-## Troubleshooting
+-
+-### LLM Connection Issues
+-- Verify API key in environment variables or `~/.gendocs.yaml`.
+-- Check logs in `.ai/logs/` for detailed API error responses.
+-- Use `--debug` flag for more verbose output.
+-
+-### Path Traversal Errors
+-- Ensure the `--repo-path` points to a valid directory.
+-- Tools are restricted to the repository root for security.
+-
+-### Cache Issues
+-- If analysis is outdated, use `--force`.
+-- If cache file is corrupted, run `gendocs cache-clear`.
+-
+-## Core Interfaces
+-
+-### LLMClient
+-```go
+-type LLMClient interface {
+-    GenerateCompletion(ctx context.Context, req CompletionRequest) (CompletionResponse, error)
+-    SupportsTools() bool
+-    GetProvider() string
+-}
+-```
+-
+-### Agent
+-```go
+-type Agent interface {
+-    Run(ctx context.Context) (string, error)
+-    Name() string
+-}
+-```
+-
+-### Tool
+-```go
+-type Tool interface {
+-    Name() string
+-    Description() string
+-    Parameters() map[string]interface{}
+-    Execute(ctx context.Context, params map[string]interface{}) (interface{}, error)
+-}
+-```
+-
+-**Maintainers**: Gendocs Team
+diff --git a/INSTALL.md b/INSTALL.md
+deleted file mode 100644
+index abcdef0..0000000
+--- a/INSTALL.md
++++ /dev/null
+@@ -1,135 +0,0 @@
+-# Gendocs Installation Guide
+-
+-This guide will help you install Gendocs on your system. Gendocs is a CLI tool that generates comprehensive documentation for your codebase using AI.
+-
+-## Prerequisites
+-
+-- **Go 1.22+** installed on your system.
+-- An API key from one of the supported LLM providers:
+-  - **OpenAI** (GPT-4 recommended)
+-  - **Anthropic** (Claude 3 Opus/Sonnet recommended)
+-  - **Google Gemini** (Gemini 1.5 Pro recommended)
+-
+----
+-
+-## Option 1: Fast Installation (Bash Script)
+-
+-The easiest way to install Gendocs on macOS and Linux:
+-
+-```bash
+-curl -sSL [https://raw.githubusercontent.com/user/gendocs/main/install.sh](https://raw.githubusercontent.com/user/gendocs/main/install.sh) | sudo bash
+-```
+-
+-This script will:
+-1. Detect your OS and Architecture.
+-2. Download the latest binary (or build it if not available).
+-3. Move it to `/usr/local/bin/gendocs`.
+-4. Verify the installation.
+-
+----
+-
+-## Option 2: Install via Go (Cross-Platform)
+-
+-If you have Go installed, you can install directly via `go install`:
+-
+-```bash
+-go install [github.com/user/gendocs@latest](https://github.com/user/gendocs@latest)
+-```
+-
+-Make sure your `$GOPATH/bin` is in your `PATH`.
+-
+----
+-
+-## Option 3: Build from Source
+-
+-If you want to contribute or build the latest version manually:
+-
+-```bash
+-# Clone the repository
+-git clone [https://github.com/user/gendocs.git](https://github.com/user/gendocs.git)
+-cd gendocs
+-
+-# Build the binary
+-make build
+-# Or: go build -o gendocs .
+-
+-# (Optional) Move to your path
+-sudo mv gendocs /usr/local/bin/
+-```
+-
+----
+-
+-## Configuration
+-
+-After installing, you need to configure your LLM provider.
+-
+-### Interactive Setup (Recommended)
+-
+-Run the interactive configuration wizard:
+-
+-```bash
+-gendocs config
+-```
+-
+-The wizard will ask for:
+-1. Preferred LLM provider (OpenAI, Anthropic, Gemini).
+-2. Your API Key.
+-3. Preferred model name.
+-
+-Settings are saved to `~/.gendocs.yaml`.
+-
+----
+-
+-### Environment Variables
+-
+-Alternatively, you can use environment variables. Add these to your `.bashrc` or `.zshrc`:
+-
+-```bash
+-# OpenAI
+-export ANALYZER_LLM_PROVIDER=openai
+-export ANALYZER_LLM_MODEL=gpt-4-turbo
+-export ANALYZER_LLM_API_KEY=your_openai_key
+-
+-# Anthropic
+-export ANALYZER_LLM_PROVIDER=anthropic
+-export ANALYZER_LLM_MODEL=claude-3-sonnet-20240229
+-export ANALYZER_LLM_API_KEY=your_anthropic_key
+-
+-# Gemini
+-export ANALYZER_LLM_PROVIDER=gemini
+-export ANALYZER_LLM_MODEL=gemini-1.5-pro
+-export ANALYZER_LLM_API_KEY=your_gemini_key
+-```
+-
+----
+-
+-## Verifying Installation
+-
+-Verify that Gendocs is installed and configured correctly:
+-
+-```bash
+-gendocs --version
+-```
+-
+-Test it on a small project:
+-
+-```bash
+-cd /path/to/your/project
+-gendocs analyze
+-```
+-
+----
+-
+-## Uninstallation
+-
+-If you used the install script:
+-
+-```bash
+-sudo ./uninstall.sh
+-```
+-
+-Manually:
+-```bash
+-sudo rm /usr/local/bin/gendocs
+-rm ~/.gendocs.yaml
+-```
+diff --git a/install.sh b/install.sh
+deleted file mode 100755
+index abcdef0..0000000
+--- a/install.sh
++++ /dev/null
+@@ -1,65 +0,0 @@
+-#!/bin/bash
+-# Script de instalação para Gendocs
+-# Uso: curl -sSL https://... | sudo bash
+-
+-set -e
+-
+-BINARY_NAME="gendocs"
+-INSTALL_DIR="/usr/local/bin"
+-REPO_URL="https://github.com/user/gendocs"
+-
+-echo "=== Gendocs Installation Script ==="
+-echo ""
+-
+-# Detect OS
+-OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
+-ARCH="$(uname -m)"
+-
+-case "$ARCH" in
+-    x86_64) ARCH="amd64" ;;
+-    arm64|aarch64) ARCH="arm64" ;;
+-    *) echo "❌ Arquitetura não suportada: $ARCH"; exit 1 ;;
+-esac
+-
+-echo "Detectado: $OS-$ARCH"
+-
+-# Check if Go is installed
+-if ! command -v go &> /dev/null; then
+-    echo "❌ Go não encontrado. Por favor, instale o Go 1.22+ primeiro."
+-    exit 1
+-fi
+-
+-# Build from source (since we are in the repo or downloading it)
+-echo "Construindo Gendocs a partir do código fonte..."
+-
+-TMP_DIR=$(mktemp -d)
+-cd "$TMP_DIR"
+-
+-git clone --depth 1 "$REPO_URL" .
+-go build -o "$BINARY_NAME" .
+-
+-echo "Instalando binário em $INSTALL_DIR..."
+-if [ -w "$INSTALL_DIR" ]; then
+-    mv "$BINARY_NAME" "$INSTALL_DIR/"
+-else
+-    sudo mv "$BINARY_NAME" "$INSTALL_DIR/"
+-fi
+-
+-echo ""
+-echo "✅ Gendocs instalado com sucesso!"
+-echo ""
+-echo "Próximos passos:"
+-echo "1. Execute 'gendocs config' para configurar sua chave de API"
+-echo "2. Vá para a pasta do seu projeto e execute 'gendocs analyze'"
+-echo "3. Gere o README com 'gendocs generate readme'"
+-echo ""
+-echo "Para ajuda, execute: gendocs --help"
+-
+-# Clean up
+-rm -rf "$TMP_DIR"
+diff --git a/uninstall.sh b/uninstall.sh
+deleted file mode 100755
+index abcdef0..0000000
+--- a/uninstall.sh
++++ /dev/null
+@@ -1,45 +0,0 @@
+-#!/bin/bash
+-# Script de desinstalação para Gendocs
+-# Uso: sudo ./uninstall.sh
+-
+-set -e
+-
+-BINARY_NAME="gendocs"
+-BIN_DIR="/usr/local/bin"
+-CONFIG_DIR="$HOME/.gendocs.yaml"
+-
+-echo "=== Gendocs Uninstallation Script ==="
+-echo ""
+-
+-# Remove binary
+-echo "Removendo binário de $BIN_DIR..."
+-if [ -f "$BIN_DIR/$BINARY_NAME" ]; then
+-    sudo rm -f "$BIN_DIR/$BINARY_NAME"
+-    echo "✅ Binário removido"
+-else
+-    echo "⚠️  Binário não encontrado em $BIN_DIR/$BINARY_NAME"
+-fi
+-
+-# Ask about config
+-echo ""
+-read -p "Remover configuração em $CONFIG_DIR? (y/N) " -n 1 -r
+-echo
+-if [[ $REPLY =~ ^[Yy]$ ]]; then
+-    rm -f "$CONFIG_DIR"
+-    echo "✅ Configuração removida"
+-else
+-    echo "ℹ️  Configuração mantida"
+-fi
+-
+-# Remove logs/docs in current dir?
+-echo ""
+-read -p "Remover pastas .ai nos projetos locais? (y/N) " -n 1 -r
+-echo
+-if [[ $REPLY =~ ^[Yy]$ ]]; then
+-    echo "⚠️  Por favor, remova as pastas .ai manualmente nos seus projetos."
+-fi
+-
+-echo ""
+-echo "=== Desinstalação concluída ==="
+````

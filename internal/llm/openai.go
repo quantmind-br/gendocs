@@ -22,12 +22,12 @@ type OpenAIClient struct {
 
 // openaiRequest represents the request body for OpenAI API
 type openaiRequest struct {
-	Model       string         `json:"model"`
+	Model       string          `json:"model"`
 	Messages    []openaiMessage `json:"messages"`
-	MaxTokens   int            `json:"max_tokens"`
-	Temperature float64        `json:"temperature"`
-	Tools       []openaiTool   `json:"tools,omitempty"`
-	Stream      bool           `json:"stream,omitempty"`
+	MaxTokens   int             `json:"max_tokens"`
+	Temperature float64         `json:"temperature"`
+	Tools       []openaiTool    `json:"tools,omitempty"`
+	Stream      bool            `json:"stream,omitempty"`
 }
 
 // openaiMessage represents a message in OpenAI format
@@ -40,8 +40,8 @@ type openaiMessage struct {
 
 // openaiTool represents a tool definition in OpenAI format
 type openaiTool struct {
-	Type     string              `json:"type"`
-	Function openaiToolFunction  `json:"function"`
+	Type     string             `json:"type"`
+	Function openaiToolFunction `json:"function"`
 }
 
 // openaiToolFunction represents tool function parameters
@@ -53,33 +53,15 @@ type openaiToolFunction struct {
 
 // openaiToolCall represents a tool call in OpenAI format
 type openaiToolCall struct {
-	ID       string                `json:"id"`
-	Type     string                `json:"type"`
-	Function openaiToolCallFunc    `json:"function"`
+	ID       string             `json:"id"`
+	Type     string             `json:"type"`
+	Function openaiToolCallFunc `json:"function"`
 }
 
 // openaiToolCallFunc represents function call details
 type openaiToolCallFunc struct {
 	Name      string `json:"name"`
 	Arguments string `json:"arguments"`
-}
-
-// openaiResponse represents the response from OpenAI API
-type openaiResponse struct {
-	ID      string             `json:"id"`
-	Object  string             `json:"object"`
-	Created int64              `json:"created"`
-	Model   string             `json:"model"`
-	Choices []openaiChoice     `json:"choices"`
-	Usage   openaiUsage        `json:"usage"`
-	Error   *openaiErrorDetail `json:"error,omitempty"`
-}
-
-// openaiChoice represents a choice in the response
-type openaiChoice struct {
-	Index        int              `json:"index"`
-	Message      openaiMessage    `json:"message"`
-	FinishReason string           `json:"finish_reason"`
 }
 
 // openaiUsage represents token usage
@@ -89,27 +71,20 @@ type openaiUsage struct {
 	TotalTokens      int `json:"total_tokens"`
 }
 
-// openaiErrorDetail represents an error from OpenAI
-type openaiErrorDetail struct {
-	Message string `json:"message"`
-	Type    string `json:"type"`
-	Code    string `json:"code"`
-}
-
 // openaiStreamChunk represents a single chunk in OpenAI's streaming response
 type openaiStreamChunk struct {
-	ID      string                `json:"id"`
-	Object  string                `json:"object"`
-	Created int64                 `json:"created"`
-	Model   string                `json:"model"`
-	Choices []openaiStreamChoice  `json:"choices"`
+	ID      string               `json:"id"`
+	Object  string               `json:"object"`
+	Created int64                `json:"created"`
+	Model   string               `json:"model"`
+	Choices []openaiStreamChoice `json:"choices"`
 }
 
 // openaiStreamChoice represents a choice in streaming chunks
 type openaiStreamChoice struct {
-	Index        int                  `json:"index"`
-	Delta        openaiStreamDelta    `json:"delta"`
-	FinishReason string               `json:"finish_reason,omitempty"`
+	Index        int               `json:"index"`
+	Delta        openaiStreamDelta `json:"delta"`
+	FinishReason string            `json:"finish_reason,omitempty"`
 }
 
 // openaiStreamDelta represents the delta field in streaming chunks
@@ -121,7 +96,7 @@ type openaiStreamDelta struct {
 
 // openaiToolCallDelta represents a tool call in the delta
 type openaiToolCallDelta struct {
-	Index    int                    `json:"index"`
+	Index    int                     `json:"index"`
 	Function openaiToolCallFuncDelta `json:"function,omitempty"`
 }
 
@@ -133,18 +108,18 @@ type openaiToolCallFuncDelta struct {
 
 // openaiAccumulator builds CompletionResponse from OpenAI streaming chunks
 type openaiAccumulator struct {
-	content    strings.Builder
-	toolCalls  []openaiToolCall
-	partialArgs map[int]strings.Builder // Accumulates arguments by index
-	usage      openaiUsage
+	content      strings.Builder
+	toolCalls    []openaiToolCall
+	partialArgs  map[int]*strings.Builder // Accumulates arguments by index
+	usage        openaiUsage
 	finishReason string
-	complete   bool
+	complete     bool
 }
 
 // newOpenAIAccumulator creates a new accumulator
 func newOpenAIAccumulator() *openaiAccumulator {
 	return &openaiAccumulator{
-		partialArgs: make(map[int]strings.Builder),
+		partialArgs: make(map[int]*strings.Builder),
 	}
 }
 
@@ -197,7 +172,7 @@ func (a *openaiAccumulator) HandleChunk(data []byte) error {
 		// Accumulate arguments incrementally
 		if tc.Function.Arguments != "" {
 			if _, exists := a.partialArgs[idx]; !exists {
-				a.partialArgs[idx] = strings.Builder{}
+				a.partialArgs[idx] = &strings.Builder{}
 			}
 			a.partialArgs[idx].WriteString(tc.Function.Arguments)
 		}
@@ -239,7 +214,7 @@ func (a *openaiAccumulator) Build() CompletionResponse {
 		for i, tc := range a.toolCalls {
 			var args map[string]interface{}
 			if tc.Function.Arguments != "" {
-				json.Unmarshal([]byte(tc.Function.Arguments), &args)
+				_ = json.Unmarshal([]byte(tc.Function.Arguments), &args)
 			}
 
 			result.ToolCalls[i] = ToolCall{
@@ -297,7 +272,7 @@ func (c *OpenAIClient) GenerateCompletion(ctx context.Context, req CompletionReq
 	if err != nil {
 		return CompletionResponse{}, fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Check for error status
 	if resp.StatusCode != http.StatusOK {
@@ -332,6 +307,10 @@ func (c *OpenAIClient) parseStreamingResponse(body io.ReadCloser) (CompletionRes
 		if accumulator.IsComplete() {
 			break
 		}
+	}
+
+	if !accumulator.IsComplete() {
+		return CompletionResponse{}, fmt.Errorf("stream ended unexpectedly")
 	}
 
 	return accumulator.Build(), nil
@@ -392,46 +371,4 @@ func (c *OpenAIClient) convertRequest(req CompletionRequest) openaiRequest {
 	oaReq.Stream = true // Enable streaming response
 
 	return oaReq
-}
-
-// convertResponse converts OpenAI response to internal format
-func (c *OpenAIClient) convertResponse(resp openaiResponse) CompletionResponse {
-	if len(resp.Choices) == 0 {
-		return CompletionResponse{
-			Usage: TokenUsage{
-				InputTokens:  resp.Usage.PromptTokens,
-				OutputTokens: resp.Usage.CompletionTokens,
-				TotalTokens:  resp.Usage.TotalTokens,
-			},
-		}
-	}
-
-	choice := resp.Choices[0]
-	result := CompletionResponse{
-		Content: choice.Message.Content,
-		Usage: TokenUsage{
-			InputTokens:  resp.Usage.PromptTokens,
-			OutputTokens: resp.Usage.CompletionTokens,
-			TotalTokens:  resp.Usage.TotalTokens,
-		},
-	}
-
-	// Convert tool calls
-	if len(choice.Message.ToolCalls) > 0 {
-		result.ToolCalls = make([]ToolCall, len(choice.Message.ToolCalls))
-		for i, tc := range choice.Message.ToolCalls {
-			// Parse arguments JSON string
-			var args map[string]interface{}
-			if tc.Function.Arguments != "" {
-				json.Unmarshal([]byte(tc.Function.Arguments), &args)
-			}
-
-			result.ToolCalls[i] = ToolCall{
-				Name:      tc.Function.Name,
-				Arguments: args,
-			}
-		}
-	}
-
-	return result
 }

@@ -12,15 +12,15 @@ type BaseConfig struct {
 
 // LLMConfig holds LLM provider configuration
 type LLMConfig struct {
-	Provider    string         `mapstructure:"provider"`     // openai, anthropic, gemini
+	Provider    string         `mapstructure:"provider"` // openai, anthropic, gemini
 	Model       string         `mapstructure:"model"`
 	APIKey      string         `mapstructure:"api_key"`
-	BaseURL     string         `mapstructure:"base_url"`      // Optional, for OpenAI-compatible APIs
+	BaseURL     string         `mapstructure:"base_url"` // Optional, for OpenAI-compatible APIs
 	Retries     int            `mapstructure:"retries"`
-	Timeout     int            `mapstructure:"timeout"`       // Timeout in seconds
+	Timeout     int            `mapstructure:"timeout"` // Timeout in seconds
 	MaxTokens   int            `mapstructure:"max_tokens"`
 	Temperature float64        `mapstructure:"temperature"`
-	Cache       LLMCacheConfig `mapstructure:"cache"`         // Cache configuration
+	Cache       LLMCacheConfig `mapstructure:"cache"` // Cache configuration
 }
 
 // LLMCacheConfig holds LLM response cache configuration
@@ -40,26 +40,26 @@ type GeminiConfig struct {
 
 // RetryConfig holds HTTP retry configuration
 type RetryConfig struct {
-	MaxAttempts       int `mapstructure:"max_attempts"`        // Default: 5
-	Multiplier        int `mapstructure:"multiplier"`          // Default: 1
+	MaxAttempts       int `mapstructure:"max_attempts"`         // Default: 5
+	Multiplier        int `mapstructure:"multiplier"`           // Default: 1
 	MaxWaitPerAttempt int `mapstructure:"max_wait_per_attempt"` // Default: 60 seconds
-	MaxTotalWait      int `mapstructure:"max_total_wait"`      // Default: 300 seconds
+	MaxTotalWait      int `mapstructure:"max_total_wait"`       // Default: 300 seconds
 }
 
 // AnalyzerConfig holds configuration for the analyze command
 type AnalyzerConfig struct {
 	BaseConfig
-	LLM               LLMConfig    `mapstructure:"llm"`
-	ExcludeStructure  bool         `mapstructure:"exclude_code_structure"`
-	ExcludeDataFlow   bool         `mapstructure:"exclude_data_flow"`
-	ExcludeDeps       bool         `mapstructure:"exclude_dependencies"`
-	ExcludeReqFlow    bool         `mapstructure:"exclude_request_flow"`
-	ExcludeAPI        bool         `mapstructure:"exclude_api_analysis"`
-	MaxWorkers        int          `mapstructure:"max_workers"`
-	MaxHashWorkers    int          `mapstructure:"max_hash_workers"`
-	RetryConfig       RetryConfig  `mapstructure:"retry"`
-	Force             bool         `mapstructure:"force"`              // Force full re-analysis, ignore cache
-	Incremental       bool         `mapstructure:"incremental"`        // Enable incremental analysis (default: true)
+	LLM              LLMConfig   `mapstructure:"llm"`
+	ExcludeStructure bool        `mapstructure:"exclude_code_structure"`
+	ExcludeDataFlow  bool        `mapstructure:"exclude_data_flow"`
+	ExcludeDeps      bool        `mapstructure:"exclude_dependencies"`
+	ExcludeReqFlow   bool        `mapstructure:"exclude_request_flow"`
+	ExcludeAPI       bool        `mapstructure:"exclude_api_analysis"`
+	MaxWorkers       int         `mapstructure:"max_workers"`
+	MaxHashWorkers   int         `mapstructure:"max_hash_workers"`
+	RetryConfig      RetryConfig `mapstructure:"retry"`
+	Force            bool        `mapstructure:"force"`       // Force full re-analysis, ignore cache
+	Incremental      bool        `mapstructure:"incremental"` // Enable incremental analysis (default: true)
 }
 
 // DocumenterConfig holds configuration for readme generation
@@ -72,10 +72,10 @@ type DocumenterConfig struct {
 // AIRulesConfig holds configuration for AI rules generation
 type AIRulesConfig struct {
 	BaseConfig
-	LLM           LLMConfig   `mapstructure:"llm"`
-	RetryConfig   RetryConfig `mapstructure:"retry"`
-	MaxTokensMarkdown  int    `mapstructure:"max_tokens_markdown"`
-	MaxTokensCursor    int    `mapstructure:"max_tokens_cursor"`
+	LLM               LLMConfig   `mapstructure:"llm"`
+	RetryConfig       RetryConfig `mapstructure:"retry"`
+	MaxTokensMarkdown int         `mapstructure:"max_tokens_markdown"`
+	MaxTokensCursor   int         `mapstructure:"max_tokens_cursor"`
 }
 
 // CronjobConfig holds configuration for cronjob command

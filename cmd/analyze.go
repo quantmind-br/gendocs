@@ -83,7 +83,7 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer logger.Sync()
+	defer func() { _ = logger.Sync() }()
 
 	showProgress := !verboseFlag
 

@@ -14,10 +14,10 @@ import (
 // CacheKeyRequest represents the fields used for cache key generation.
 // It contains the essential elements of an LLM request that affect the response.
 type CacheKeyRequest struct {
-	SystemPrompt string             `json:"system_prompt"` // System prompt that guides the LLM behavior
-	Messages     []CacheKeyMessage  `json:"messages"`      // Conversation messages (order matters)
-	Tools        []CacheKeyTool     `json:"tools"`         // Available tools (sorted for order independence)
-	Temperature  float64            `json:"temperature"`   // Sampling temperature (affects response randomness)
+	SystemPrompt string            `json:"system_prompt"` // System prompt that guides the LLM behavior
+	Messages     []CacheKeyMessage `json:"messages"`      // Conversation messages (order matters)
+	Tools        []CacheKeyTool    `json:"tools"`         // Available tools (sorted for order independence)
+	Temperature  float64           `json:"temperature"`   // Sampling temperature (affects response randomness)
 }
 
 // CacheKeyMessage represents a message in cache key generation.
@@ -69,8 +69,8 @@ func GenerateCacheKey(req llmtypes.CompletionRequest) (string, error) {
 	tools := make([]CacheKeyTool, len(req.Tools))
 	for i, tool := range req.Tools {
 		tools[i] = CacheKeyTool{
-			Name:        tool.Name,
-			Description: tool.Description,
+			Name:        strings.TrimSpace(tool.Name),
+			Description: strings.TrimSpace(tool.Description),
 			Parameters:  tool.Parameters,
 		}
 	}
@@ -117,8 +117,8 @@ func CacheKeyRequestFrom(req llmtypes.CompletionRequest) CacheKeyRequest {
 	tools := make([]CacheKeyTool, len(req.Tools))
 	for i, tool := range req.Tools {
 		tools[i] = CacheKeyTool{
-			Name:        tool.Name,
-			Description: tool.Description,
+			Name:        strings.TrimSpace(tool.Name),
+			Description: strings.TrimSpace(tool.Description),
 			Parameters:  tool.Parameters,
 		}
 	}

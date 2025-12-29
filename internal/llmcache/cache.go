@@ -262,8 +262,8 @@ func (c *LRUCache) Stats() CacheStats {
 	defer c.mu.RUnlock()
 
 	// Create a copy to avoid race conditions
-	stats := c.stats
-	return stats
+	stats := c.stats //nolint:govet // intentional copy of stats
+	return stats     //nolint:govet
 }
 
 // moveToFront moves an entry to the front of the LRU list.
@@ -573,7 +573,7 @@ func (dc *DiskCache) saveLocked() error {
 
 	// Rename to actual file (atomic on Unix)
 	if err := os.Rename(tmpFile, dc.filePath); err != nil {
-		os.Remove(tmpFile) // Clean up temp file
+		_ = os.Remove(tmpFile) // Clean up temp file
 		dc.logger.Error("disk_cache_save_failed", logging.Error(err))
 		return fmt.Errorf("failed to save cache: %w", err)
 	}
@@ -711,6 +711,9 @@ func (dc *DiskCache) Stats() DiskCacheStats {
 		return DiskCacheStats{}
 	}
 
+	// Update stats before returning to ensure TotalEntries is current
+	dc.updateStats()
+
 	dc.data.mu.RLock()
 	defer dc.data.mu.RUnlock()
 
@@ -811,11 +814,10 @@ func (dc *DiskCache) updateStats() {
 		totalSize += entry.SizeBytes
 	}
 
-	dc.data.Stats = DiskCacheStats{
-		TotalEntries:   len(dc.data.Entries),
-		ExpiredEntries: expiredCount,
-		TotalSizeBytes: totalSize,
-	}
+	// Preserve Hits, Misses, and Evictions counts while updating other fields
+	dc.data.Stats.TotalEntries = len(dc.data.Entries)
+	dc.data.Stats.ExpiredEntries = expiredCount
+	dc.data.Stats.TotalSizeBytes = totalSize
 }
 
 // backupCorruptedCache backs up a corrupted cache file.
@@ -823,7 +825,7 @@ func (dc *DiskCache) updateStats() {
 func (dc *DiskCache) backupCorruptedCache() {
 	timestamp := time.Now().Format("20060102-150405")
 	backupPath := dc.filePath + ".corrupted." + timestamp
-	os.Rename(dc.filePath, backupPath)
+	_ = os.Rename(dc.filePath, backupPath)
 }
 
 // StartAutoSave starts background auto-save with the given interval.
@@ -852,16 +854,15 @@ func (dc *DiskCache) StartAutoSave(interval time.Duration) {
 				dc.mu.Lock()
 				if dc.dirty {
 					// Save without holding lock (copy data first)
-					dataToSave := *dc.data
+					dataToSave := *dc.data //nolint:govet // intentional copy for async save
 					dirtyFlag := dc.dirty
 					dc.mu.Unlock()
 
 					// Save asynchronously
 					if dirtyFlag {
-						if err := dc.saveData(&dataToSave); err != nil {
-							// Log error but continue - non-blocking
-							// TODO: Add logging in subtask 4-2
-						}
+						// Log error but continue - non-blocking
+						// TODO: Add logging in subtask 4-2
+						_ = dc.saveData(&dataToSave)
 					}
 				} else {
 					dc.mu.Unlock()
@@ -870,9 +871,9 @@ func (dc *DiskCache) StartAutoSave(interval time.Duration) {
 				// Stop signal received, do one final save if dirty
 				dc.mu.Lock()
 				if dc.dirty {
-					dataToSave := *dc.data
+					dataToSave := *dc.data //nolint:govet // intentional copy for final save
 					dc.mu.Unlock()
-					dc.saveData(&dataToSave)
+					_ = dc.saveData(&dataToSave)
 				} else {
 					dc.mu.Unlock()
 				}
@@ -927,7 +928,7 @@ func (dc *DiskCache) saveData(data *DiskCacheData) error {
 
 	// Rename to actual file (atomic on Unix)
 	if err := os.Rename(tmpFile, dc.filePath); err != nil {
-		os.Remove(tmpFile) // Clean up temp file
+		_ = os.Remove(tmpFile) // Clean up temp file
 		return fmt.Errorf("failed to save cache: %w", err)
 	}
 

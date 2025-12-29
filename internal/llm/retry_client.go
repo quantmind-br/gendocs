@@ -84,16 +84,16 @@ type RetryConfig struct {
 // DefaultRetryConfig returns default retry configuration with optimized connection pooling
 func DefaultRetryConfig() *RetryConfig {
 	return &RetryConfig{
-		MaxAttempts:           5,
-		Multiplier:            1,
-		MaxWaitPerAttempt:     60 * time.Second,
-		MaxTotalWait:          300 * time.Second,
+		MaxAttempts:       5,
+		Multiplier:        1,
+		MaxWaitPerAttempt: 60 * time.Second,
+		MaxTotalWait:      300 * time.Second,
 		// Connection pooling defaults optimized for LLM APIs
-		MaxIdleConns:           100,
-		MaxIdleConnsPerHost:    10,
-		IdleConnTimeout:        90 * time.Second,
-		TLSHandshakeTimeout:    10 * time.Second,
-		ExpectContinueTimeout:  1 * time.Second,
+		MaxIdleConns:          100,
+		MaxIdleConnsPerHost:   10,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
 	}
 }
 
@@ -211,7 +211,7 @@ func (rc *RetryClient) DoWithContext(ctx context.Context, req *http.Request) (*h
 	var bodyBytes []byte
 	if req.Body != nil {
 		bodyBytes, err = io.ReadAll(req.Body)
-		req.Body.Close()
+		_ = req.Body.Close()
 		if err != nil {
 			return nil, fmt.Errorf("failed to read request body: %w", err)
 		}

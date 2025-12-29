@@ -38,9 +38,9 @@ func setupBenchmarkRepo(b *testing.B, numFiles int) (string, map[string]FileInfo
 
 	// Create files with realistic content patterns
 	filePatterns := []struct {
-		path     string
-		content  string
-		count    int
+		path    string
+		content string
+		count   int
 	}{
 		{
 			path: "cmd/server/main.go",

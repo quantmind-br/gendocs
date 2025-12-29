@@ -128,7 +128,7 @@ func (p *Progress) StartTask(id string) {
 	}
 	task.Status = TaskRunning
 	task.StartTime = time.Now()
-	_, _ = fmt.Fprintf(p.getWriter(), "%s %s\n", progressStepStyle.Render("●"), task.Name)
+	// Note: No direct output here - render() handles all display updates
 }
 
 func (p *Progress) CompleteTask(id string) {
@@ -141,7 +141,7 @@ func (p *Progress) CompleteTask(id string) {
 	}
 	task.Status = TaskSuccess
 	task.EndTime = time.Now()
-	_, _ = fmt.Fprintf(p.getWriter(), "%s %s\n", progressSuccessStyle.Render("✓"), task.Name)
+	// Note: No direct output here - render() handles all display updates
 }
 
 func (p *Progress) FailTask(id string, err error) {
@@ -155,11 +155,7 @@ func (p *Progress) FailTask(id string, err error) {
 	task.Status = TaskError
 	task.Error = err
 	task.EndTime = time.Now()
-	if err != nil {
-		_, _ = fmt.Fprintf(p.getWriter(), "%s %s: %s\n", progressErrorStyle.Render("✗"), task.Name, err.Error())
-	} else {
-		_, _ = fmt.Fprintf(p.getWriter(), "%s %s\n", progressErrorStyle.Render("✗"), task.Name)
-	}
+	// Note: No direct output here - render() handles all display updates
 }
 
 func (p *Progress) SkipTask(id string) {
@@ -171,7 +167,7 @@ func (p *Progress) SkipTask(id string) {
 		return
 	}
 	task.Status = TaskSkipped
-	_, _ = fmt.Fprintf(p.getWriter(), "%s %s %s\n", progressInfoStyle.Render("○"), task.Name, progressInfoStyle.Render("(skipped)"))
+	// Note: No direct output here - render() handles all display updates
 }
 
 func (p *Progress) Start() {
@@ -181,11 +177,18 @@ func (p *Progress) Start() {
 		return
 	}
 	p.started = true
-	p.mu.Unlock()
 
 	_, _ = fmt.Fprintln(p.getWriter())
 	_, _ = fmt.Fprintln(p.getWriter(), progressTitleStyle.Render(" "+p.title+" "))
 	_, _ = fmt.Fprintln(p.getWriter())
+
+	// Initial render to create task lines
+	for _, task := range p.tasks {
+		line := p.formatTaskLine(task)
+		_, _ = fmt.Fprintln(p.getWriter(), line)
+	}
+
+	p.mu.Unlock()
 
 	p.ticker = time.NewTicker(100 * time.Millisecond)
 	go p.animate()

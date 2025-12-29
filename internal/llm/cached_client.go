@@ -61,6 +61,10 @@ func (c *CachedLLMClient) GenerateCompletion(
 	ctx context.Context,
 	req CompletionRequest,
 ) (CompletionResponse, error) {
+	if err := ctx.Err(); err != nil {
+		return CompletionResponse{}, err
+	}
+
 	// If caching disabled, delegate directly
 	if !c.enabled {
 		return c.client.GenerateCompletion(ctx, req)
@@ -101,10 +105,9 @@ func (c *CachedLLMClient) GenerateCompletion(
 
 	// Store in disk cache (best-effort, non-blocking)
 	if c.diskCache != nil {
-		if err := c.diskCache.Put(cacheKey, cachedResp); err != nil {
-			// Disk cache write failure is acceptable - just lose persistence benefit
-			// TODO: Add logging in subtask 4-2
-		}
+		// Disk cache write failure is acceptable - just lose persistence benefit
+		// TODO: Add logging in subtask 4-2
+		_ = c.diskCache.Put(cacheKey, cachedResp)
 	}
 
 	return resp, nil
@@ -148,7 +151,7 @@ func (c *CachedLLMClient) GetStats() llmcache.CacheStats {
 		}
 	}
 
-	return memStats
+	return memStats //nolint:govet // intentional copy of stats
 }
 
 // CleanupExpired removes expired entries from both caches.
@@ -163,10 +166,9 @@ func (c *CachedLLMClient) CleanupExpired() (memoryExpired, diskExpired int) {
 
 	diskExpired = 0
 	if c.diskCache != nil {
-		if err := c.diskCache.CleanupExpired(); err == nil {
-			// Disk cache cleanup succeeded
-			// Note: DiskCache.CleanupExpired doesn't return count, so we can't track it
-		}
+		// Disk cache cleanup - errors are ignored (non-critical operation)
+		// Note: DiskCache.CleanupExpired doesn't return count, so we can't track it
+		_ = c.diskCache.CleanupExpired()
 	}
 
 	return memoryExpired, diskExpired

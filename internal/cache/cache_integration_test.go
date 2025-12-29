@@ -107,7 +107,7 @@ func TestIntegration_FullScanCycle(t *testing.T) {
 		t.Errorf("Expected 4 files in loaded cache, got %d", len(cache2.Files))
 	}
 
-	if !cache2.LastAnalysis.IsZero() {
+	if cache2.LastAnalysis.IsZero() {
 		t.Errorf("Expected LastAnalysis to be set")
 	}
 
@@ -199,9 +199,10 @@ func TestIntegration_IncrementalScanWithChanges(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 
 	// Modify some files and add new ones
+	// Note: We don't rewrite utils.go because WriteFile would change its mtime,
+	// making the cache detect it as modified even though content is the same
 	modifiedFiles := map[string]string{
 		"main.go":   "package main\n\nfunc main() {\n\tprintln(\"changed\")\n}\n", // Modified
-		"utils.go":  "package main\n\nfunc Utils() {}\n",                          // Unchanged
 		"README.md": "# Test Project\n\nUpdated documentation\n",                  // Modified
 		"new.go":    "package main\n\nfunc New() {}\n",                            // New file
 	}
@@ -312,12 +313,12 @@ func TestIntegration_IncrementalScanWithDeletions(t *testing.T) {
 	}
 
 	// Delete some files
-	os.Remove(filepath.Join(tmpDir, "utils.go"))
-	os.Remove(filepath.Join(tmpDir, "config.go"))
+	_ = os.Remove(filepath.Join(tmpDir, "utils.go"))
+	_ = os.Remove(filepath.Join(tmpDir, "config.go"))
 
 	// Modify remaining file
 	time.Sleep(10 * time.Millisecond)
-	os.WriteFile(filepath.Join(tmpDir, "main.go"), []byte("package main\n\nfunc main() {\n}\n"), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "main.go"), []byte("package main\n\nfunc main() {\n}\n"), 0644)
 
 	// Second scan: load cache and detect deletions
 	cache2, err := LoadCache(tmpDir)

@@ -83,9 +83,9 @@ func TestLRUCache_BasicOperations(t *testing.T) {
 			t.Errorf("Expected 'second value', got '%s'", retrieved.Response.Content)
 		}
 
-		// Size should still be 1 (not 2)
-		if cache.Size() != 4 { // 3 from previous tests + 1 update
-			t.Errorf("Expected cache size 4, got %d", cache.Size())
+		// Size should still be 2 (test-key-1 from first test + test-key-3 update)
+		if cache.Size() != 2 {
+			t.Errorf("Expected cache size 2, got %d", cache.Size())
 		}
 	})
 }

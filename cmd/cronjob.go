@@ -19,7 +19,7 @@ and creating merge requests with the results.`,
 }
 
 var (
-	cronjobMaxDays    int
+	cronjobMaxDays     int
 	cronjobWorkingPath string
 	cronjobGroupID     int
 )
@@ -41,7 +41,7 @@ func init() {
 	cronjobAnalyzeCmd.Flags().IntVar(&cronjobMaxDays, "max-days-since-last-commit", 14, "Skip projects with no commits in N days")
 	cronjobAnalyzeCmd.Flags().StringVar(&cronjobWorkingPath, "working-path", "./work", "Working directory for cloning repos")
 	cronjobAnalyzeCmd.Flags().IntVar(&cronjobGroupID, "group-project-id", 0, "GitLab group/project ID to analyze")
-	cronjobAnalyzeCmd.MarkFlagRequired("group-project-id")
+	_ = cronjobAnalyzeCmd.MarkFlagRequired("group-project-id")
 }
 
 func runCronjobAnalyze(cmd *cobra.Command, args []string) error {
@@ -64,11 +64,11 @@ func runCronjobAnalyze(cmd *cobra.Command, args []string) error {
 	}
 
 	gitLabCfg := config.GitLabConfig{
-		APIURL:      gitLabURL,
-		OAuthToken:  gitLabToken,
-		UserName:    os.Getenv("GITLAB_USER_NAME"),
+		APIURL:       gitLabURL,
+		OAuthToken:   gitLabToken,
+		UserName:     os.Getenv("GITLAB_USER_NAME"),
 		UserUsername: os.Getenv("GITLAB_USER_USERNAME"),
-		UserEmail:   os.Getenv("GITLAB_USER_EMAIL"),
+		UserEmail:    os.Getenv("GITLAB_USER_EMAIL"),
 	}
 
 	// Set defaults for GitLab user info
@@ -79,26 +79,23 @@ func runCronjobAnalyze(cmd *cobra.Command, args []string) error {
 		gitLabCfg.UserUsername = "agent_doc"
 	}
 
-	// Analyzer configuration (from env vars with defaults for cronjob)
-	analyzerCfg := config.AnalyzerConfig{
-		BaseConfig: config.BaseConfig{
-			Debug: debugFlag,
-		},
-		LLM: LLMConfigFromEnv("ANALYZER", LLMDefaults{
-			Retries:     2,
-			Timeout:     180,
-			MaxTokens:   8192,
-			Temperature: 0.0,
-		}),
-		MaxWorkers: 0, // Auto-detect
+	cliOverrides := map[string]interface{}{
+		"debug":       debugFlag,
+		"max_workers": 0,
 	}
+
+	analyzerCfgPtr, err := config.LoadAnalyzerConfig(".", cliOverrides)
+	if err != nil {
+		return err
+	}
+	analyzerCfg := *analyzerCfgPtr
 
 	// Initialize logger (verbose=true to enable console output for cronjob)
 	logger, err := InitLogger(cronjobWorkingPath, debugFlag, true)
 	if err != nil {
 		return err
 	}
-	defer logger.Sync()
+	defer func() { _ = logger.Sync() }()
 
 	logger.Info("Starting cronjob analysis",
 		logging.Int("group_id", cronjobGroupID),

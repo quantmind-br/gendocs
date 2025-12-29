@@ -36,13 +36,13 @@ type Project struct {
 
 // MergeRequest represents a GitLab merge request
 type MergeRequest struct {
-	ID          int    `json:"id"`
-	IID         int    `json:"iid"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	ID           int    `json:"id"`
+	IID          int    `json:"iid"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
 	SourceBranch string `json:"source_branch"`
 	TargetBranch string `json:"target_branch"`
-	WebURL      string `json:"web_url"`
+	WebURL       string `json:"web_url"`
 }
 
 // NewClient creates a new GitLab client
@@ -141,8 +141,8 @@ func (c *Client) CreateMR(ctx context.Context, project Project, sourceBranch, ta
 	// Placeholder - would implement GitLab API call
 	c.logger.Info(fmt.Sprintf("Would create MR in %s: %s -> %s", project.PathWithNamespace, sourceBranch, targetBranch))
 	return &MergeRequest{
-		Title:       title,
-		Description: description,
+		Title:        title,
+		Description:  description,
 		SourceBranch: sourceBranch,
 		TargetBranch: targetBranch,
 	}, nil

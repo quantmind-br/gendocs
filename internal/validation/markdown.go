@@ -90,14 +90,7 @@ func (v *MarkdownValidator) checkCodeBlocks(content string) error {
 		return fmt.Errorf("unclosed code block detected (%d ``` markers, expected even number)", openCount)
 	}
 
-	// Check for mixed code block styles (shouldn't mix ``` and ~~~)
-	tripleBacktick := strings.Count(content, "```")
-	tripleTilde := strings.Count(content, "~~~")
-
-	if tripleBacktick > 0 && tripleTilde > 0 {
-		// This is valid but could be confusing
-		// Just a warning, not an error
-	}
+	// Note: mixing ``` and ~~~ is valid but could be confusing - just informational
 
 	return nil
 }

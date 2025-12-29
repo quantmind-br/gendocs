@@ -17,10 +17,10 @@ import (
 // CronjobHandler handles the cronjob analyze command
 type CronjobHandler struct {
 	*BaseHandler
-	config    config.CronjobConfig
-	gitLabCfg config.GitLabConfig
+	config      config.CronjobConfig
+	gitLabCfg   config.GitLabConfig
 	analyzerCfg config.AnalyzerConfig
-	gitlab    *gitlab.Client
+	gitlab      *gitlab.Client
 }
 
 // NewCronjobHandler creates a new cronjob handler
@@ -56,7 +56,7 @@ type ProcessedResult struct {
 
 // FailedProject represents a project that failed to process
 type FailedProject struct {
-	Name string
+	Name  string
 	Error error
 }
 
@@ -106,7 +106,7 @@ func (h *CronjobHandler) Handle(ctx context.Context) error {
 		if err := h.processProject(ctx, project); err != nil {
 			result.ErrorCount++
 			result.FailedProjects = append(result.FailedProjects, FailedProject{
-				Name: project.PathWithNamespace,
+				Name:  project.PathWithNamespace,
 				Error: err,
 			})
 			h.Logger.Error(fmt.Sprintf("Failed to process %s: %v", project.PathWithNamespace, err))
@@ -135,7 +135,7 @@ func (h *CronjobHandler) processProject(ctx context.Context, project gitlab.Proj
 	if err := os.MkdirAll(tempDir, 0755); err != nil {
 		return fmt.Errorf("failed to create temp dir: %w", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	// Clone repository
 	if err := h.cloneRepository(ctx, project, tempDir); err != nil {

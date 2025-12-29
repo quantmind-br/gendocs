@@ -9,9 +9,9 @@ import (
 func TestLoadAnalyzerConfig_DefaultValues(t *testing.T) {
 	// Setup: Clean environment
 	os.Clearenv()
-	os.Setenv("ANALYZER_LLM_PROVIDER", "openai")
-	os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
-	os.Setenv("ANALYZER_LLM_API_KEY", "test-key")
+	_ = os.Setenv("ANALYZER_LLM_PROVIDER", "openai")
+	_ = os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
+	_ = os.Setenv("ANALYZER_LLM_API_KEY", "test-key")
 
 	cfg, err := LoadAnalyzerConfig(".", map[string]interface{}{})
 	if err != nil {
@@ -42,7 +42,7 @@ func TestLoadAnalyzerConfig_CLIOverridesAll(t *testing.T) {
 
 	// Create project config
 	projectConfig := filepath.Join(tmpDir, ".ai", "config.yaml")
-	os.MkdirAll(filepath.Dir(projectConfig), 0755)
+	_ = os.MkdirAll(filepath.Dir(projectConfig), 0755)
 	projectConfigContent := `
 analyzer:
   max_workers: 4
@@ -50,21 +50,21 @@ analyzer:
     provider: anthropic
     model: claude-3
 `
-	os.WriteFile(projectConfig, []byte(projectConfigContent), 0644)
+	_ = os.WriteFile(projectConfig, []byte(projectConfigContent), 0644)
 
 	// Setup environment
 	os.Clearenv()
-	os.Setenv("ANALYZER_MAX_WORKERS", "8")
-	os.Setenv("ANALYZER_LLM_PROVIDER", "openai")
-	os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
-	os.Setenv("ANALYZER_LLM_API_KEY", "test-key")
+	_ = os.Setenv("ANALYZER_MAX_WORKERS", "8")
+	_ = os.Setenv("ANALYZER_LLM_PROVIDER", "openai")
+	_ = os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
+	_ = os.Setenv("ANALYZER_LLM_API_KEY", "test-key")
 
 	// CLI overrides should win
 	cliOverrides := map[string]interface{}{
-		"max_workers":    16,
-		"llm.provider":   "gemini",
-		"llm.model":      "gemini-pro",
-		"llm.api_key":    "cli-key",
+		"max_workers":  16,
+		"llm.provider": "gemini",
+		"llm.model":    "gemini-pro",
+		"llm.api_key":  "cli-key",
 	}
 
 	cfg, err := LoadAnalyzerConfig(tmpDir, cliOverrides)
@@ -88,27 +88,27 @@ func TestLoadAnalyzerConfig_ProjectOverridesGlobal(t *testing.T) {
 
 	// Create global config
 	homeDir := t.TempDir()
-	os.Setenv("HOME", homeDir)
+	_ = os.Setenv("HOME", homeDir)
 	globalConfig := filepath.Join(homeDir, ".gendocs.yaml")
 	globalConfigContent := `
 analyzer:
   max_workers: 2
 `
-	os.WriteFile(globalConfig, []byte(globalConfigContent), 0644)
+	_ = os.WriteFile(globalConfig, []byte(globalConfigContent), 0644)
 
 	// Create project config
 	projectConfig := filepath.Join(tmpDir, ".ai", "config.yaml")
-	os.MkdirAll(filepath.Dir(projectConfig), 0755)
+	_ = os.MkdirAll(filepath.Dir(projectConfig), 0755)
 	projectConfigContent := `
 analyzer:
   max_workers: 4
 `
-	os.WriteFile(projectConfig, []byte(projectConfigContent), 0644)
+	_ = os.WriteFile(projectConfig, []byte(projectConfigContent), 0644)
 
 	// Setup minimal environment
-	os.Setenv("ANALYZER_LLM_PROVIDER", "openai")
-	os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
-	os.Setenv("ANALYZER_LLM_API_KEY", "test-key")
+	_ = os.Setenv("ANALYZER_LLM_PROVIDER", "openai")
+	_ = os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
+	_ = os.Setenv("ANALYZER_LLM_API_KEY", "test-key")
 
 	cfg, err := LoadAnalyzerConfig(tmpDir, map[string]interface{}{})
 	if err != nil {
@@ -125,8 +125,8 @@ analyzer:
 func TestLoadAnalyzerConfig_MissingAPIKey(t *testing.T) {
 	// Setup: No API key
 	os.Clearenv()
-	os.Setenv("ANALYZER_LLM_PROVIDER", "openai")
-	os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
+	_ = os.Setenv("ANALYZER_LLM_PROVIDER", "openai")
+	_ = os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
 	// No API key set
 
 	_, err := LoadAnalyzerConfig(".", map[string]interface{}{})
@@ -142,9 +142,9 @@ func TestLoadAnalyzerConfig_MissingAPIKey(t *testing.T) {
 
 func TestLoadAnalyzerConfig_InvalidProvider(t *testing.T) {
 	os.Clearenv()
-	os.Setenv("ANALYZER_LLM_PROVIDER", "invalid-provider")
-	os.Setenv("ANALYZER_LLM_MODEL", "some-model")
-	os.Setenv("ANALYZER_LLM_API_KEY", "test-key")
+	_ = os.Setenv("ANALYZER_LLM_PROVIDER", "invalid-provider")
+	_ = os.Setenv("ANALYZER_LLM_MODEL", "some-model")
+	_ = os.Setenv("ANALYZER_LLM_API_KEY", "test-key")
 
 	_, err := LoadAnalyzerConfig(".", map[string]interface{}{})
 	if err == nil {
@@ -154,9 +154,9 @@ func TestLoadAnalyzerConfig_InvalidProvider(t *testing.T) {
 
 func TestLoadAnalyzerConfig_ExclusionFlags(t *testing.T) {
 	os.Clearenv()
-	os.Setenv("ANALYZER_LLM_PROVIDER", "openai")
-	os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
-	os.Setenv("ANALYZER_LLM_API_KEY", "test-key")
+	_ = os.Setenv("ANALYZER_LLM_PROVIDER", "openai")
+	_ = os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
+	_ = os.Setenv("ANALYZER_LLM_API_KEY", "test-key")
 
 	cliOverrides := map[string]interface{}{
 		"exclude_code_structure": true,
@@ -197,7 +197,7 @@ func TestLoadAnalyzerConfig_YAMLParsing(t *testing.T) {
 
 	// Create project config with nested structure
 	projectConfig := filepath.Join(tmpDir, ".ai", "config.yaml")
-	os.MkdirAll(filepath.Dir(projectConfig), 0755)
+	_ = os.MkdirAll(filepath.Dir(projectConfig), 0755)
 	projectConfigContent := `
 analyzer:
   max_workers: 8
@@ -213,7 +213,7 @@ analyzer:
     max_tokens: 16384
     temperature: 0.5
 `
-	os.WriteFile(projectConfig, []byte(projectConfigContent), 0644)
+	_ = os.WriteFile(projectConfig, []byte(projectConfigContent), 0644)
 
 	// Minimal env setup
 	os.Clearenv()
@@ -254,17 +254,17 @@ func TestLoadAnalyzerConfig_InvalidYAML(t *testing.T) {
 
 	// Create invalid YAML
 	projectConfig := filepath.Join(tmpDir, ".ai", "config.yaml")
-	os.MkdirAll(filepath.Dir(projectConfig), 0755)
+	_ = os.MkdirAll(filepath.Dir(projectConfig), 0755)
 	invalidYAML := `
 analyzer:
   this is not: valid: yaml: syntax
 `
-	os.WriteFile(projectConfig, []byte(invalidYAML), 0644)
+	_ = os.WriteFile(projectConfig, []byte(invalidYAML), 0644)
 
 	os.Clearenv()
-	os.Setenv("ANALYZER_LLM_PROVIDER", "openai")
-	os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
-	os.Setenv("ANALYZER_LLM_API_KEY", "test-key")
+	_ = os.Setenv("ANALYZER_LLM_PROVIDER", "openai")
+	_ = os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
+	_ = os.Setenv("ANALYZER_LLM_API_KEY", "test-key")
 
 	_, err := LoadAnalyzerConfig(tmpDir, map[string]interface{}{})
 	// May or may not error depending on viper's YAML parser tolerance
@@ -272,8 +272,8 @@ analyzer:
 }
 
 func TestGetEnvVar_Success(t *testing.T) {
-	os.Setenv("TEST_VAR", "test-value")
-	defer os.Unsetenv("TEST_VAR")
+	_ = os.Setenv("TEST_VAR", "test-value")
+	defer func() { _ = os.Unsetenv("TEST_VAR") }()
 
 	value, err := GetEnvVar("TEST_VAR", "Test variable")
 	if err != nil {
@@ -286,7 +286,7 @@ func TestGetEnvVar_Success(t *testing.T) {
 }
 
 func TestGetEnvVar_Missing(t *testing.T) {
-	os.Unsetenv("MISSING_VAR")
+	_ = os.Unsetenv("MISSING_VAR")
 
 	_, err := GetEnvVar("MISSING_VAR", "Missing variable")
 	if err == nil {
@@ -295,8 +295,8 @@ func TestGetEnvVar_Missing(t *testing.T) {
 }
 
 func TestGetEnvVarOrDefault_WithValue(t *testing.T) {
-	os.Setenv("TEST_VAR", "actual-value")
-	defer os.Unsetenv("TEST_VAR")
+	_ = os.Setenv("TEST_VAR", "actual-value")
+	defer func() { _ = os.Unsetenv("TEST_VAR") }()
 
 	value := GetEnvVarOrDefault("TEST_VAR", "default-value")
 	if value != "actual-value" {
@@ -305,7 +305,7 @@ func TestGetEnvVarOrDefault_WithValue(t *testing.T) {
 }
 
 func TestGetEnvVarOrDefault_WithoutValue(t *testing.T) {
-	os.Unsetenv("MISSING_VAR")
+	_ = os.Unsetenv("MISSING_VAR")
 
 	value := GetEnvVarOrDefault("MISSING_VAR", "default-value")
 	if value != "default-value" {
@@ -315,10 +315,10 @@ func TestGetEnvVarOrDefault_WithoutValue(t *testing.T) {
 
 func TestLoadAnalyzerConfig_BaseURL(t *testing.T) {
 	os.Clearenv()
-	os.Setenv("ANALYZER_LLM_PROVIDER", "openai")
-	os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
-	os.Setenv("ANALYZER_LLM_API_KEY", "test-key")
-	os.Setenv("ANALYZER_LLM_BASE_URL", "https://custom.openai.com")
+	_ = os.Setenv("ANALYZER_LLM_PROVIDER", "openai")
+	_ = os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
+	_ = os.Setenv("ANALYZER_LLM_API_KEY", "test-key")
+	_ = os.Setenv("ANALYZER_LLM_BASE_URL", "https://custom.openai.com")
 
 	cfg, err := LoadAnalyzerConfig(".", map[string]interface{}{})
 	if err != nil {
@@ -336,9 +336,9 @@ func TestLoadAnalyzerConfig_AllProviders(t *testing.T) {
 	for _, provider := range providers {
 		t.Run(provider, func(t *testing.T) {
 			os.Clearenv()
-			os.Setenv("ANALYZER_LLM_PROVIDER", provider)
-			os.Setenv("ANALYZER_LLM_MODEL", "test-model")
-			os.Setenv("ANALYZER_LLM_API_KEY", "test-key")
+			_ = os.Setenv("ANALYZER_LLM_PROVIDER", provider)
+			_ = os.Setenv("ANALYZER_LLM_MODEL", "test-model")
+			_ = os.Setenv("ANALYZER_LLM_API_KEY", "test-key")
 
 			cfg, err := LoadAnalyzerConfig(".", map[string]interface{}{})
 			if err != nil {
@@ -354,9 +354,9 @@ func TestLoadAnalyzerConfig_AllProviders(t *testing.T) {
 
 func TestLoadAnalyzerConfig_RepoPath(t *testing.T) {
 	os.Clearenv()
-	os.Setenv("ANALYZER_LLM_PROVIDER", "openai")
-	os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
-	os.Setenv("ANALYZER_LLM_API_KEY", "test-key")
+	_ = os.Setenv("ANALYZER_LLM_PROVIDER", "openai")
+	_ = os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
+	_ = os.Setenv("ANALYZER_LLM_API_KEY", "test-key")
 
 	testPath := "/custom/repo/path"
 	cliOverrides := map[string]interface{}{
@@ -375,9 +375,9 @@ func TestLoadAnalyzerConfig_RepoPath(t *testing.T) {
 
 func TestLoadAnalyzerConfig_DebugFlag(t *testing.T) {
 	os.Clearenv()
-	os.Setenv("ANALYZER_LLM_PROVIDER", "openai")
-	os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
-	os.Setenv("ANALYZER_LLM_API_KEY", "test-key")
+	_ = os.Setenv("ANALYZER_LLM_PROVIDER", "openai")
+	_ = os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
+	_ = os.Setenv("ANALYZER_LLM_API_KEY", "test-key")
 
 	cliOverrides := map[string]interface{}{
 		"debug": true,
@@ -390,6 +390,243 @@ func TestLoadAnalyzerConfig_DebugFlag(t *testing.T) {
 
 	if !cfg.Debug {
 		t.Error("Expected Debug to be true")
+	}
+}
+
+func TestLoadDocumenterConfig_DefaultValues(t *testing.T) {
+	os.Clearenv()
+	_ = os.Setenv("DOCUMENTER_LLM_PROVIDER", "openai")
+	_ = os.Setenv("DOCUMENTER_LLM_MODEL", "gpt-4")
+	_ = os.Setenv("DOCUMENTER_LLM_API_KEY", "test-key")
+
+	cfg, err := LoadDocumenterConfig(".", map[string]interface{}{})
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	if cfg.LLM.Provider != "openai" {
+		t.Errorf("Expected provider 'openai', got '%s'", cfg.LLM.Provider)
+	}
+
+	if cfg.LLM.Model != "gpt-4" {
+		t.Errorf("Expected model 'gpt-4', got '%s'", cfg.LLM.Model)
+	}
+
+	if cfg.LLM.APIKey != "test-key" {
+		t.Errorf("Expected API key 'test-key', got '%s'", cfg.LLM.APIKey)
+	}
+}
+
+func TestLoadDocumenterConfig_FallbackToAnalyzer(t *testing.T) {
+	os.Clearenv()
+	_ = os.Setenv("ANALYZER_LLM_PROVIDER", "anthropic")
+	_ = os.Setenv("ANALYZER_LLM_MODEL", "claude-3")
+	_ = os.Setenv("ANALYZER_LLM_API_KEY", "analyzer-key")
+
+	cfg, err := LoadDocumenterConfig(".", map[string]interface{}{})
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	if cfg.LLM.Provider != "anthropic" {
+		t.Errorf("Expected provider 'anthropic' (fallback), got '%s'", cfg.LLM.Provider)
+	}
+
+	if cfg.LLM.Model != "claude-3" {
+		t.Errorf("Expected model 'claude-3' (fallback), got '%s'", cfg.LLM.Model)
+	}
+
+	if cfg.LLM.APIKey != "analyzer-key" {
+		t.Errorf("Expected API key 'analyzer-key' (fallback), got '%s'", cfg.LLM.APIKey)
+	}
+}
+
+func TestLoadDocumenterConfig_YAMLParsing(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	projectConfig := filepath.Join(tmpDir, ".ai", "config.yaml")
+	_ = os.MkdirAll(filepath.Dir(projectConfig), 0755)
+	projectConfigContent := `
+documenter:
+  llm:
+    provider: anthropic
+    model: claude-3-sonnet
+    api_key: yaml-doc-key
+    timeout: 200
+`
+	_ = os.WriteFile(projectConfig, []byte(projectConfigContent), 0644)
+
+	os.Clearenv()
+
+	cfg, err := LoadDocumenterConfig(tmpDir, map[string]interface{}{})
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	if cfg.LLM.Provider != "anthropic" {
+		t.Errorf("Expected provider 'anthropic', got '%s'", cfg.LLM.Provider)
+	}
+
+	if cfg.LLM.Model != "claude-3-sonnet" {
+		t.Errorf("Expected model 'claude-3-sonnet', got '%s'", cfg.LLM.Model)
+	}
+
+	if cfg.LLM.APIKey != "yaml-doc-key" {
+		t.Errorf("Expected API key 'yaml-doc-key', got '%s'", cfg.LLM.APIKey)
+	}
+
+	if cfg.LLM.Timeout != 200 {
+		t.Errorf("Expected timeout 200, got %d", cfg.LLM.Timeout)
+	}
+}
+
+func TestLoadDocumenterConfig_MissingAPIKey(t *testing.T) {
+	os.Clearenv()
+	_ = os.Setenv("DOCUMENTER_LLM_PROVIDER", "openai")
+	_ = os.Setenv("DOCUMENTER_LLM_MODEL", "gpt-4")
+
+	_, err := LoadDocumenterConfig(".", map[string]interface{}{})
+	if err == nil {
+		t.Fatal("Expected error for missing API key, got nil")
+	}
+}
+
+func TestLoadAIRulesConfig_DefaultValues(t *testing.T) {
+	os.Clearenv()
+	_ = os.Setenv("AI_RULES_LLM_PROVIDER", "openai")
+	_ = os.Setenv("AI_RULES_LLM_MODEL", "gpt-4")
+	_ = os.Setenv("AI_RULES_LLM_API_KEY", "test-key")
+
+	cfg, err := LoadAIRulesConfig(".", map[string]interface{}{})
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	if cfg.LLM.Provider != "openai" {
+		t.Errorf("Expected provider 'openai', got '%s'", cfg.LLM.Provider)
+	}
+
+	if cfg.LLM.Model != "gpt-4" {
+		t.Errorf("Expected model 'gpt-4', got '%s'", cfg.LLM.Model)
+	}
+
+	if cfg.LLM.Timeout != 240 {
+		t.Errorf("Expected default timeout 240, got %d", cfg.LLM.Timeout)
+	}
+}
+
+func TestLoadAIRulesConfig_FallbackToAnalyzer(t *testing.T) {
+	os.Clearenv()
+	_ = os.Setenv("ANALYZER_LLM_PROVIDER", "gemini")
+	_ = os.Setenv("ANALYZER_LLM_MODEL", "gemini-pro")
+	_ = os.Setenv("ANALYZER_LLM_API_KEY", "analyzer-key")
+
+	cfg, err := LoadAIRulesConfig(".", map[string]interface{}{})
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	if cfg.LLM.Provider != "gemini" {
+		t.Errorf("Expected provider 'gemini' (fallback), got '%s'", cfg.LLM.Provider)
+	}
+
+	if cfg.LLM.Model != "gemini-pro" {
+		t.Errorf("Expected model 'gemini-pro' (fallback), got '%s'", cfg.LLM.Model)
+	}
+
+	if cfg.LLM.APIKey != "analyzer-key" {
+		t.Errorf("Expected API key 'analyzer-key' (fallback), got '%s'", cfg.LLM.APIKey)
+	}
+}
+
+func TestLoadAIRulesConfig_YAMLParsing(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	projectConfig := filepath.Join(tmpDir, ".ai", "config.yaml")
+	_ = os.MkdirAll(filepath.Dir(projectConfig), 0755)
+	projectConfigContent := `
+ai_rules:
+  llm:
+    provider: openai
+    model: gpt-4o
+    api_key: yaml-ai-key
+  max_tokens_markdown: 16000
+  max_tokens_cursor: 8000
+`
+	_ = os.WriteFile(projectConfig, []byte(projectConfigContent), 0644)
+
+	os.Clearenv()
+
+	cfg, err := LoadAIRulesConfig(tmpDir, map[string]interface{}{})
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	if cfg.LLM.Provider != "openai" {
+		t.Errorf("Expected provider 'openai', got '%s'", cfg.LLM.Provider)
+	}
+
+	if cfg.LLM.Model != "gpt-4o" {
+		t.Errorf("Expected model 'gpt-4o', got '%s'", cfg.LLM.Model)
+	}
+
+	if cfg.LLM.APIKey != "yaml-ai-key" {
+		t.Errorf("Expected API key 'yaml-ai-key', got '%s'", cfg.LLM.APIKey)
+	}
+
+	if cfg.MaxTokensMarkdown != 16000 {
+		t.Errorf("Expected max_tokens_markdown 16000, got %d", cfg.MaxTokensMarkdown)
+	}
+
+	if cfg.MaxTokensCursor != 8000 {
+		t.Errorf("Expected max_tokens_cursor 8000, got %d", cfg.MaxTokensCursor)
+	}
+}
+
+func TestLoadAIRulesConfig_MissingAPIKey(t *testing.T) {
+	os.Clearenv()
+	_ = os.Setenv("AI_RULES_LLM_PROVIDER", "openai")
+	_ = os.Setenv("AI_RULES_LLM_MODEL", "gpt-4")
+
+	_, err := LoadAIRulesConfig(".", map[string]interface{}{})
+	if err == nil {
+		t.Fatal("Expected error for missing API key, got nil")
+	}
+}
+
+func TestSetNested_SimpleKey(t *testing.T) {
+	m := make(map[string]interface{})
+	setNested(m, "key", "value")
+
+	if m["key"] != "value" {
+		t.Errorf("Expected 'value', got '%v'", m["key"])
+	}
+}
+
+func TestSetNested_DottedKey(t *testing.T) {
+	m := make(map[string]interface{})
+	setNested(m, "llm.provider", "openai")
+
+	llmMap, ok := m["llm"].(map[string]interface{})
+	if !ok {
+		t.Fatal("Expected nested map at 'llm'")
+	}
+
+	if llmMap["provider"] != "openai" {
+		t.Errorf("Expected 'openai', got '%v'", llmMap["provider"])
+	}
+}
+
+func TestSetNested_DeepKey(t *testing.T) {
+	m := make(map[string]interface{})
+	setNested(m, "a.b.c.d", "deep-value")
+
+	aMap := m["a"].(map[string]interface{})
+	bMap := aMap["b"].(map[string]interface{})
+	cMap := bMap["c"].(map[string]interface{})
+
+	if cMap["d"] != "deep-value" {
+		t.Errorf("Expected 'deep-value', got '%v'", cMap["d"])
 	}
 }
 

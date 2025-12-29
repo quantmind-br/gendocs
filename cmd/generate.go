@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/user/gendocs/internal/config"
-	"github.com/user/gendocs/internal/errors"
 	"github.com/user/gendocs/internal/export"
 	"github.com/user/gendocs/internal/handlers"
 	"github.com/user/gendocs/internal/logging"
@@ -46,18 +45,14 @@ func init() {
 }
 
 func runReadme(cmd *cobra.Command, args []string) error {
-	// Create LLM config from environment with documenter defaults
-	cfg := config.DocumenterConfig{
-		BaseConfig: config.BaseConfig{
-			RepoPath: readmeRepoPath,
-			Debug:    debugFlag,
-		},
-		LLM: LLMConfigFromEnv("DOCUMENTER", LLMDefaults{
-			Retries:     2,
-			Timeout:     180,
-			MaxTokens:   8192,
-			Temperature: 0.0,
-		}),
+	cliOverrides := map[string]interface{}{
+		"repo_path": readmeRepoPath,
+		"debug":     debugFlag,
+	}
+
+	cfg, err := config.LoadDocumenterConfig(readmeRepoPath, cliOverrides)
+	if err != nil {
+		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
 	// Initialize logger using helper
@@ -65,7 +60,7 @@ func runReadme(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer logger.Sync()
+	defer func() { _ = logger.Sync() }()
 
 	showProgress := !verboseFlag
 	logger.Info("Starting README generation",
@@ -81,7 +76,7 @@ func runReadme(cmd *cobra.Command, args []string) error {
 		progress.Step("Generating README.md...")
 	}
 
-	handler := handlers.NewReadmeHandler(cfg, logger)
+	handler := handlers.NewReadmeHandler(*cfg, logger)
 
 	if err := handler.Handle(cmd.Context()); err != nil {
 		return HandleCommandError(err, progress, showProgress)
@@ -136,18 +131,14 @@ func init() {
 }
 
 func runAIRules(cmd *cobra.Command, args []string) error {
-	// Create LLM config from environment with AI rules defaults
-	cfg := config.AIRulesConfig{
-		BaseConfig: config.BaseConfig{
-			RepoPath: readmeRepoPath,
-			Debug:    debugFlag,
-		},
-		LLM: LLMConfigFromEnv("AI_RULES", LLMDefaults{
-			Retries:     2,
-			Timeout:     240,
-			MaxTokens:   8192,
-			Temperature: 0.0,
-		}),
+	cliOverrides := map[string]interface{}{
+		"repo_path": readmeRepoPath,
+		"debug":     debugFlag,
+	}
+
+	cfg, err := config.LoadAIRulesConfig(readmeRepoPath, cliOverrides)
+	if err != nil {
+		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
 	// Initialize logger using helper
@@ -155,7 +146,7 @@ func runAIRules(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer logger.Sync()
+	defer func() { _ = logger.Sync() }()
 
 	showProgress := !verboseFlag
 	logger.Info("Starting AI rules generation",
@@ -171,7 +162,7 @@ func runAIRules(cmd *cobra.Command, args []string) error {
 		progress.Step("Generating CLAUDE.md...")
 	}
 
-	handler := handlers.NewAIRulesHandler(cfg, logger)
+	handler := handlers.NewAIRulesHandler(*cfg, logger)
 
 	if err := handler.Handle(cmd.Context()); err != nil {
 		return HandleCommandError(err, progress, showProgress)
@@ -305,10 +296,6 @@ func exportToHTMLWithProgress(inputPath, outputPath string, showProgress bool) e
 	}
 
 	return nil
-}
-
-func exportToJSON(inputPath, outputPath string) error {
-	return exportToJSONWithProgress(inputPath, outputPath, false)
 }
 
 func exportToJSONWithProgress(inputPath, outputPath string, showProgress bool) error {

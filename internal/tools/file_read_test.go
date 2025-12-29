@@ -176,7 +176,7 @@ func TestFileReadTool_Execute_LineNumberTypes(t *testing.T) {
 	tmpDir := t.TempDir()
 	testFile := filepath.Join(tmpDir, "test.txt")
 	content := "line 1\nline 2\nline 3\nline 4\nline 5\n"
-	os.WriteFile(testFile, []byte(content), 0644)
+	_ = os.WriteFile(testFile, []byte(content), 0644)
 
 	tool := NewFileReadTool(3)
 
@@ -269,7 +269,7 @@ func TestFileReadTool_Execute_BeyondFileEnd(t *testing.T) {
 	tmpDir := t.TempDir()
 	testFile := filepath.Join(tmpDir, "test.txt")
 	content := "line 1\nline 2\nline 3\n"
-	os.WriteFile(testFile, []byte(content), 0644)
+	_ = os.WriteFile(testFile, []byte(content), 0644)
 
 	tool := NewFileReadTool(3)
 
@@ -297,7 +297,7 @@ func TestFileReadTool_Execute_ContextCanceled(t *testing.T) {
 	// Create temp file
 	tmpDir := t.TempDir()
 	testFile := filepath.Join(tmpDir, "test.txt")
-	os.WriteFile(testFile, []byte("test content\n"), 0644)
+	_ = os.WriteFile(testFile, []byte("test content\n"), 0644)
 
 	tool := NewFileReadTool(3)
 

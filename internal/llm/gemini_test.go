@@ -2,8 +2,6 @@ package llm
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -21,14 +19,13 @@ func TestGeminiClient_GenerateCompletion_Success(t *testing.T) {
 			t.Errorf("Expected API key 'test-key' in query, got '%s'", apiKey)
 		}
 
-		// Send NDJSON streaming response
+		// Send JSON array streaming response (Gemini format)
 		w.Header().Set("Content-Type", "application/json")
-		// Chunk 1: Partial text
-		fmt.Fprintln(w, `{"candidates":[{"content":{"parts":[{"text":"test response"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":12,"candidatesTokenCount":2,"totalTokenCount":14}}`)
-		// Chunk 2: More text
-		fmt.Fprintln(w, `{"candidates":[{"content":{"parts":[{"text":" from gemini"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":12,"candidatesTokenCount":4,"totalTokenCount":16}}`)
-		// Chunk 3: Final with finishReason
-		fmt.Fprintln(w, `{"candidates":[{"content":{"parts":[],"role":"model"},"finishReason":"STOP","index":0}],"usageMetadata":{"promptTokenCount":12,"candidatesTokenCount":6,"totalTokenCount":18}}`)
+		_, _ = w.Write([]byte(`[
+			{"candidates":[{"content":{"parts":[{"text":"test response"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":12,"candidatesTokenCount":2,"totalTokenCount":14}},
+			{"candidates":[{"content":{"parts":[{"text":" from gemini"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":12,"candidatesTokenCount":4,"totalTokenCount":16}},
+			{"candidates":[{"content":{"parts":[],"role":"model"},"finishReason":"STOP","index":0}],"usageMetadata":{"promptTokenCount":12,"candidatesTokenCount":6,"totalTokenCount":18}}
+		]`))
 	}))
 	defer server.Close()
 
@@ -70,12 +67,12 @@ func TestGeminiClient_GenerateCompletion_Success(t *testing.T) {
 func TestGeminiClient_GenerateCompletion_WithToolCalls(t *testing.T) {
 	// Setup mock server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Send NDJSON streaming response with function call
+		// Send JSON array streaming response with function call
 		w.Header().Set("Content-Type", "application/json")
-		// Chunk 1: Text response
-		fmt.Fprintln(w, `{"candidates":[{"content":{"parts":[{"text":"I'll list the files."}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":18,"candidatesTokenCount":4,"totalTokenCount":22}}`)
-		// Chunk 2: Function call (complete, not partial)
-		fmt.Fprintln(w, `{"candidates":[{"content":{"parts":[{"functionCall":{"name":"list_files","args":{"path":"src"}}}],"role":"model"},"finishReason":"STOP","index":0}],"usageMetadata":{"promptTokenCount":18,"candidatesTokenCount":10,"totalTokenCount":28}}`)
+		_, _ = w.Write([]byte(`[
+			{"candidates":[{"content":{"parts":[{"text":"I'll list the files."}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":18,"candidatesTokenCount":4,"totalTokenCount":22}},
+			{"candidates":[{"content":{"parts":[{"functionCall":{"name":"list_files","args":{"path":"src"}}}],"role":"model"},"finishReason":"STOP","index":0}],"usageMetadata":{"promptTokenCount":18,"candidatesTokenCount":10,"totalTokenCount":28}}
+		]`))
 	}))
 	defer server.Close()
 
@@ -130,7 +127,7 @@ func TestGeminiClient_GenerateCompletion_InvalidAPIKey(t *testing.T) {
 	// Setup mock server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"error": {"code": 400, "message": "API key not valid", "status": "INVALID_ARGUMENT"}}`))
+		_, _ = w.Write([]byte(`{"error": {"code": 400, "message": "API key not valid", "status": "INVALID_ARGUMENT"}}`))
 	}))
 	defer server.Close()
 
@@ -158,10 +155,12 @@ func TestGeminiClient_GenerateCompletion_InvalidAPIKey(t *testing.T) {
 func TestGeminiClient_GenerateCompletion_SafetyBlocked(t *testing.T) {
 	// Setup mock server - Gemini may block responses for safety reasons
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Send NDJSON streaming response with safety finish reason
+		// Send JSON array streaming response with safety finish reason
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, `{"candidates":[{"content":{"parts":[{"text":"I cannot"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":2,"totalTokenCount":12}}`)
-		fmt.Fprintln(w, `{"candidates":[{"content":{"parts":[],"role":"model"},"finishReason":"SAFETY","index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":3,"totalTokenCount":13}}`)
+		_, _ = w.Write([]byte(`[
+			{"candidates":[{"content":{"parts":[{"text":"I cannot"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":2,"totalTokenCount":12}},
+			{"candidates":[{"content":{"parts":[],"role":"model"},"finishReason":"SAFETY","index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":3,"totalTokenCount":13}}
+		]`))
 	}))
 	defer server.Close()
 
@@ -196,14 +195,16 @@ func TestGeminiClient_GenerateCompletion_RateLimitRetry(t *testing.T) {
 		// First call returns rate limit error
 		if callCount == 1 {
 			w.WriteHeader(http.StatusTooManyRequests)
-			w.Write([]byte(`{"error": {"code": 429, "message": "Resource exhausted", "status": "RESOURCE_EXHAUSTED"}}`))
+			_, _ = w.Write([]byte(`{"error": {"code": 429, "message": "Resource exhausted", "status": "RESOURCE_EXHAUSTED"}}`))
 			return
 		}
 
-		// Second call succeeds with streaming response
+		// Second call succeeds with JSON array streaming response
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, `{"candidates":[{"content":{"parts":[{"text":"success after"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":2,"totalTokenCount":12}}`)
-		fmt.Fprintln(w, `{"candidates":[{"content":{"parts":[{"text":" retry"}],"role":"model"},"finishReason":"STOP","index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":5,"totalTokenCount":15}}`)
+		_, _ = w.Write([]byte(`[
+			{"candidates":[{"content":{"parts":[{"text":"success after"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":2,"totalTokenCount":12}},
+			{"candidates":[{"content":{"parts":[{"text":" retry"}],"role":"model"},"finishReason":"STOP","index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":5,"totalTokenCount":15}}
+		]`))
 	}))
 	defer server.Close()
 
@@ -269,12 +270,9 @@ func TestGeminiClient_GetProvider(t *testing.T) {
 func TestGeminiClient_GenerateCompletion_NoCandidates(t *testing.T) {
 	// Setup mock server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		response := map[string]interface{}{
-			"candidates": []map[string]interface{}{},
-		}
-
+		// Send JSON array with empty candidates
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(response)
+		_, _ = w.Write([]byte(`[{"candidates":[]}]`))
 	}))
 	defer server.Close()
 
@@ -302,9 +300,9 @@ func TestGeminiClient_GenerateCompletion_NoCandidates(t *testing.T) {
 func TestGeminiClient_GenerateCompletion_MultipleParts(t *testing.T) {
 	// Test response with multiple text parts in a single chunk
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Send NDJSON streaming response with multiple parts in one chunk
+		// Send JSON array streaming response with multiple parts in one chunk
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, `{"candidates":[{"content":{"parts":[{"text":"First part. "},{"text":"Second part."}],"role":"model"},"finishReason":"STOP","index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":8,"totalTokenCount":18}}`)
+		_, _ = w.Write([]byte(`[{"candidates":[{"content":{"parts":[{"text":"First part. "},{"text":"Second part."}],"role":"model"},"finishReason":"STOP","index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":8,"totalTokenCount":18}}]`))
 	}))
 	defer server.Close()
 
@@ -336,22 +334,19 @@ func TestGeminiClient_GenerateCompletion_MultipleParts(t *testing.T) {
 }
 
 func TestGeminiClient_Streaming_MultipleChunks(t *testing.T) {
-	// Test large response split across multiple NDJSON chunks
+	// Test large response split across multiple JSON array chunks
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		// Send multiple text chunks
-		chunks := []string{
-			`{"candidates":[{"content":{"parts":[{"text":"This is"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":2,"totalTokenCount":12}}`,
-			`{"candidates":[{"content":{"parts":[{"text":" a large"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":3,"totalTokenCount":13}}`,
-			`{"candidates":[{"content":{"parts":[{"text":" response"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":4,"totalTokenCount":14}}`,
-			`{"candidates":[{"content":{"parts":[{"text":" split"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":5,"totalTokenCount":15}}`,
-			`{"candidates":[{"content":{"parts":[{"text":" across"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":6,"totalTokenCount":16}}`,
-			`{"candidates":[{"content":{"parts":[{"text":" multiple"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":7,"totalTokenCount":17}}`,
-			`{"candidates":[{"content":{"parts":[{"text":" chunks."}],"role":"model"},"finishReason":"STOP","index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":8,"totalTokenCount":18}}`,
-		}
-		for _, chunk := range chunks {
-			fmt.Fprintln(w, chunk)
-		}
+		// Send multiple text chunks as JSON array
+		_, _ = w.Write([]byte(`[
+			{"candidates":[{"content":{"parts":[{"text":"This is"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":2,"totalTokenCount":12}},
+			{"candidates":[{"content":{"parts":[{"text":" a large"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":3,"totalTokenCount":13}},
+			{"candidates":[{"content":{"parts":[{"text":" response"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":4,"totalTokenCount":14}},
+			{"candidates":[{"content":{"parts":[{"text":" split"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":5,"totalTokenCount":15}},
+			{"candidates":[{"content":{"parts":[{"text":" across"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":6,"totalTokenCount":16}},
+			{"candidates":[{"content":{"parts":[{"text":" multiple"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":7,"totalTokenCount":17}},
+			{"candidates":[{"content":{"parts":[{"text":" chunks."}],"role":"model"},"finishReason":"STOP","index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":8,"totalTokenCount":18}}
+		]`))
 	}))
 	defer server.Close()
 
@@ -386,9 +381,8 @@ func TestGeminiClient_Streaming_IncompleteStream(t *testing.T) {
 	// Test incomplete stream (connection closes without finishReason)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		// Send some text but never send finishReason
-		fmt.Fprintln(w, `{"candidates":[{"content":{"parts":[{"text":"Partial response"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":2,"totalTokenCount":12}}`)
-		// Connection closes here without finishReason
+		// Send some text but never send finishReason (valid JSON array though)
+		_, _ = w.Write([]byte(`[{"candidates":[{"content":{"parts":[{"text":"Partial response"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":2,"totalTokenCount":12}}]`))
 	}))
 	defer server.Close()
 
@@ -420,9 +414,8 @@ func TestGeminiClient_Streaming_MalformedChunk(t *testing.T) {
 	// Test malformed JSON in stream
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, `{"candidates":[{"content":{"parts":[{"text":"Valid chunk"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":2,"totalTokenCount":12}}`)
-		// Send malformed JSON
-		fmt.Fprintln(w, `{"candidates":[{"content":{"parts":[{"text":"broken`)
+		// Send malformed JSON array (broken)
+		_, _ = w.Write([]byte(`[{"candidates":[{"content":{"parts":[{"text":"broken`))
 	}))
 	defer server.Close()
 
@@ -449,9 +442,11 @@ func TestGeminiClient_Streaming_APIErrorInStream(t *testing.T) {
 	// Test API error in stream chunk
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, `{"candidates":[{"content":{"parts":[{"text":"Starting"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":1,"totalTokenCount":11}}`)
-		// Send chunk with error
-		fmt.Fprintln(w, `{"error":{"code":400,"message":"Invalid request","status":"INVALID_ARGUMENT"}}`)
+		// Send JSON array with error in chunk
+		_, _ = w.Write([]byte(`[
+			{"candidates":[{"content":{"parts":[{"text":"Starting"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":10,"candidatesTokenCount":1,"totalTokenCount":11}},
+			{"error":{"code":400,"message":"Invalid request","status":"INVALID_ARGUMENT"}}
+		]`))
 	}))
 	defer server.Close()
 
@@ -478,11 +473,12 @@ func TestGeminiClient_Streaming_FunctionCallComplete(t *testing.T) {
 	// Test that function calls arrive complete (not partial like Anthropic/OpenAI)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		// Text chunks
-		fmt.Fprintln(w, `{"candidates":[{"content":{"parts":[{"text":"I'll"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":15,"candidatesTokenCount":1,"totalTokenCount":16}}`)
-		fmt.Fprintln(w, `{"candidates":[{"content":{"parts":[{"text":" search"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":15,"candidatesTokenCount":2,"totalTokenCount":17}}`)
-		// Function call arrives complete in one chunk (not partial JSON)
-		fmt.Fprintln(w, `{"candidates":[{"content":{"parts":[{"functionCall":{"name":"search","args":{"query":"example","limit":10}}}],"role":"model"},"finishReason":"STOP","index":0}],"usageMetadata":{"promptTokenCount":15,"candidatesTokenCount":8,"totalTokenCount":23}}`)
+		// JSON array with text chunks and function call
+		_, _ = w.Write([]byte(`[
+			{"candidates":[{"content":{"parts":[{"text":"I'll"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":15,"candidatesTokenCount":1,"totalTokenCount":16}},
+			{"candidates":[{"content":{"parts":[{"text":" search"}],"role":"model"},"finishReason":null,"index":0}],"usageMetadata":{"promptTokenCount":15,"candidatesTokenCount":2,"totalTokenCount":17}},
+			{"candidates":[{"content":{"parts":[{"functionCall":{"name":"search","args":{"query":"example","limit":10}}}],"role":"model"},"finishReason":"STOP","index":0}],"usageMetadata":{"promptTokenCount":15,"candidatesTokenCount":8,"totalTokenCount":23}}
+		]`))
 	}))
 	defer server.Close()
 
@@ -542,8 +538,8 @@ func TestGeminiClient_Streaming_MultipleFunctionCalls(t *testing.T) {
 	// Test multiple function calls in a single chunk
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		// Multiple function calls in one chunk
-		fmt.Fprintln(w, `{"candidates":[{"content":{"parts":[{"functionCall":{"name":"search","args":{"query":"cats"}}},{"functionCall":{"name":"search","args":{"query":"dogs"}}}],"role":"model"},"finishReason":"STOP","index":0}],"usageMetadata":{"promptTokenCount":20,"candidatesTokenCount":10,"totalTokenCount":30}}`)
+		// JSON array with multiple function calls in one chunk
+		_, _ = w.Write([]byte(`[{"candidates":[{"content":{"parts":[{"functionCall":{"name":"search","args":{"query":"cats"}}},{"functionCall":{"name":"search","args":{"query":"dogs"}}}],"role":"model"},"finishReason":"STOP","index":0}],"usageMetadata":{"promptTokenCount":20,"candidatesTokenCount":10,"totalTokenCount":30}}]`))
 	}))
 	defer server.Close()
 

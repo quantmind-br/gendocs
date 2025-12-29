@@ -2,13 +2,13 @@
 //
 // The cache package implements an optimized file scanning system that uses two key optimizations:
 //
-// 1. Selective Hashing: Files are only re-hashed if their modification time (mtime) and size
-//    have changed since the last scan. This significantly reduces I/O and CPU overhead for
-//    incremental analysis where most files haven't changed.
+//  1. Selective Hashing: Files are only re-hashed if their modification time (mtime) and size
+//     have changed since the last scan. This significantly reduces I/O and CPU overhead for
+//     incremental analysis where most files haven't changed.
 //
-// 2. Parallel Hashing: When files do need hashing, they are processed concurrently using a
-//    worker pool pattern. This takes advantage of multi-core CPUs to speed up the CPU-bound
-//    hash computation.
+//  2. Parallel Hashing: When files do need hashing, they are processed concurrently using a
+//     worker pool pattern. This takes advantage of multi-core CPUs to speed up the CPU-bound
+//     hash computation.
 //
 // The combination of these optimizations can provide 3-5x speedup for incremental scans on
 // large repositories with many unchanged files.
@@ -41,11 +41,11 @@ const CacheFileName = ".ai/analysis_cache.json"
 // On subsequent scans, files with matching mtime and size can skip re-computation of their SHA256 hash.
 // This is particularly effective for incremental analysis where only a small subset of files change.
 type AnalysisCache struct {
-	Version      int                     `json:"version"`
-	LastAnalysis time.Time               `json:"last_analysis"`
-	GitCommit    string                  `json:"git_commit"`
-	Files        map[string]FileInfo     `json:"files"`
-	Agents       map[string]AgentStatus  `json:"agents"`
+	Version      int                    `json:"version"`
+	LastAnalysis time.Time              `json:"last_analysis"`
+	GitCommit    string                 `json:"git_commit"`
+	Files        map[string]FileInfo    `json:"files"`
+	Agents       map[string]AgentStatus `json:"agents"`
 }
 
 // FileInfo holds metadata about a file for change detection.
@@ -98,17 +98,6 @@ type hashFileResult struct {
 	relPath string // Relative path of the file (for mapping back to the file list)
 	hash    string // Computed SHA256 hash (empty if error occurred)
 	err     error  // Error if hashing failed (nil on success)
-}
-
-// fileMetadata holds file path and metadata collected during directory traversal.
-//
-// This struct is used internally by ScanFiles to collect file information before
-// deciding which files need hash computation.
-type fileMetadata struct {
-	relPath  string    // Relative path from repository root
-	fullPath string    // Absolute path to the file
-	modTime  time.Time // File modification time
-	size     int64     // File size in bytes
 }
 
 // DefaultMaxHashWorkers is the default maximum number of parallel hash workers.
@@ -166,11 +155,11 @@ func getMaxHashWorkers(maxHashWorkers int) int {
 //   - Results Channel: Buffered channel collecting hashFileResult objects as workers finish
 //
 // Workflow:
-//   1. Create worker pool (determined by getMaxHashWorkers())
-//   2. Dispatch all jobs to the job queue
-//   3. Workers pull jobs, compute hashes, send results
-//   4. Close job queue and wait for all workers to finish
-//   5. Collect results from the results channel into a map
+//  1. Create worker pool (determined by getMaxHashWorkers())
+//  2. Dispatch all jobs to the job queue
+//  3. Workers pull jobs, compute hashes, send results
+//  4. Close job queue and wait for all workers to finish
+//  5. Collect results from the results channel into a map
 //
 // Parameters:
 //   - jobs: Slice of file hashing jobs to process
@@ -351,7 +340,7 @@ func HashFile(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	hasher := sha256.New()
 	if _, err := io.Copy(hasher, file); err != nil {
@@ -366,37 +355,37 @@ func HashFile(path string) (string, error) {
 // This function is the core of the optimized file scanning system, combining two key optimizations:
 //
 // 1. SELECTIVE HASHING (Cache Hit Detection):
-//    - For each file, compare its mtime and size against the cached values
-//    - If both match: Skip hash computation, reuse cached hash (cache HIT)
-//    - If either differs: Mark file for hashing (cache MISS)
-//    - This dramatically reduces I/O for incremental scans where most files are unchanged
+//   - For each file, compare its mtime and size against the cached values
+//   - If both match: Skip hash computation, reuse cached hash (cache HIT)
+//   - If either differs: Mark file for hashing (cache MISS)
+//   - This dramatically reduces I/O for incremental scans where most files are unchanged
 //
 // 2. PARALLEL HASHING (Worker Pool):
-//    - All files marked as cache misses are hashed concurrently
-//    - Uses a worker pool pattern with bounded parallelism
-//    - Separates I/O-bound directory walking from CPU-bound hash computation
+//   - All files marked as cache misses are hashed concurrently
+//   - Uses a worker pool pattern with bounded parallelism
+//   - Separates I/O-bound directory walking from CPU-bound hash computation
 //
 // Three-Phase Architecture:
 //
-//   Phase 1 - File Discovery (I/O Bound):
-//     - Walk the directory tree using filepath.Walk()
-//     - Collect file metadata (path, mtime, size) for all files
-//     - No hash computation yet, just metadata gathering
-//     - This allows us to make cache hit/miss decisions for all files upfront
+//	Phase 1 - File Discovery (I/O Bound):
+//	  - Walk the directory tree using filepath.Walk()
+//	  - Collect file metadata (path, mtime, size) for all files
+//	  - No hash computation yet, just metadata gathering
+//	  - This allows us to make cache hit/miss decisions for all files upfront
 //
-//   Phase 2 - Cache Classification (In-Memory):
-//     - For each file, check if cached metadata exists
-//     - Compare mtime and size to determine cache hit vs miss
-//     - Separate files into two groups:
-//       * Cached: Reuse hash, update metrics
-//       * Needs Hashing: Add to parallel hashing batch
-//     - Build initial results map with cached hashes and placeholders
+//	Phase 2 - Cache Classification (In-Memory):
+//	  - For each file, check if cached metadata exists
+//	  - Compare mtime and size to determine cache hit vs miss
+//	  - Separate files into two groups:
+//	    * Cached: Reuse hash, update metrics
+//	    * Needs Hashing: Add to parallel hashing batch
+//	  - Build initial results map with cached hashes and placeholders
 //
-//   Phase 3 - Parallel Hashing (CPU Bound):
-//     - Batch hash all "needs hashing" files using parallelHashFiles()
-//     - Worker pool computes multiple hashes concurrently
-//     - Update the results map with computed hashes
-//     - This is where the CPU-intensive work happens in parallel
+//	Phase 3 - Parallel Hashing (CPU Bound):
+//	  - Batch hash all "needs hashing" files using parallelHashFiles()
+//	  - Worker pool computes multiple hashes concurrently
+//	  - Update the results map with computed hashes
+//	  - This is where the CPU-intensive work happens in parallel
 //
 // Performance Characteristics:
 //   - Best Case (all files cached): O(n) directory walk, no hash computations
@@ -417,15 +406,15 @@ func HashFile(path string) (string, error) {
 //
 // Example Usage:
 //
-//   // With cache and metrics
-//   cache, _ := LoadCache(repoPath)
-//   var metrics ScanMetrics
-//   files, err := ScanFiles(repoPath, nil, cache, &metrics, 0)
-//   fmt.Printf("Cache hit rate: %.1f%%\n",
-//       float64(metrics.CachedFiles)/float64(metrics.TotalFiles)*100)
+//	// With cache and metrics
+//	cache, _ := LoadCache(repoPath)
+//	var metrics ScanMetrics
+//	files, err := ScanFiles(repoPath, nil, cache, &metrics, 0)
+//	fmt.Printf("Cache hit rate: %.1f%%\n",
+//	    float64(metrics.CachedFiles)/float64(metrics.TotalFiles)*100)
 //
-//   // Without cache (backward compatible)
-//   files, err := ScanFiles(repoPath, nil, nil, nil, 0)
+//	// Without cache (backward compatible)
+//	files, err := ScanFiles(repoPath, nil, nil, nil, 0)
 func ScanFiles(repoPath string, ignorePatterns []string, cache *AnalysisCache, metrics *ScanMetrics, maxHashWorkers int) (map[string]FileInfo, error) {
 	// Phase 1: Walk directory tree and collect file metadata (no hashing yet)
 	//
@@ -719,30 +708,38 @@ func agentNeedsRun(changedFiles []string, patterns []string, lastStatus AgentSta
 }
 
 func matchPattern(filename, pattern string) bool {
-	// Handle patterns like "*handler*.go"
+	// Handle patterns like "*handler*.go", "*_test.go", etc.
 	if strings.Contains(pattern, "*") {
 		// Simple glob matching
 		pattern = strings.ToLower(pattern)
 		filename = strings.ToLower(filepath.Base(filename))
 
-		// Handle *.ext patterns
-		if strings.HasPrefix(pattern, "*.") {
+		// Handle *.ext patterns (e.g., "*.go")
+		if strings.HasPrefix(pattern, "*.") && !strings.Contains(pattern[1:], "*") {
 			ext := strings.TrimPrefix(pattern, "*")
 			return strings.HasSuffix(filename, ext)
 		}
 
-		// Handle *keyword*.ext patterns
-		if strings.HasPrefix(pattern, "*") && strings.Contains(pattern[1:], "*") {
-			parts := strings.Split(pattern, "*")
-			for _, part := range parts {
-				if part != "" && !strings.Contains(filename, part) {
-					return false
-				}
-			}
-			return true
+		// Handle *keyword*.ext patterns (e.g., "*handler*.go")
+		if strings.HasPrefix(pattern, "*") && strings.HasSuffix(pattern, "*") && strings.Contains(pattern[1:], "*") {
+			// Extract the middle part
+			middle := strings.Trim(pattern, "*")
+			return strings.Contains(filename, middle)
 		}
 
-		// Handle *keyword* patterns
+		// Handle *suffix patterns (e.g., "*_test.go", "_test.go")
+		if strings.HasPrefix(pattern, "*") && !strings.HasSuffix(pattern, "*") {
+			suffix := strings.TrimPrefix(pattern, "*")
+			return strings.HasSuffix(filename, suffix)
+		}
+
+		// Handle prefix* patterns (e.g., "test_*")
+		if strings.HasSuffix(pattern, "*") && !strings.HasPrefix(pattern, "*") {
+			prefix := strings.TrimSuffix(pattern, "*")
+			return strings.HasPrefix(filename, prefix)
+		}
+
+		// Handle *keyword* patterns (e.g., "*test*")
 		if strings.HasPrefix(pattern, "*") && strings.HasSuffix(pattern, "*") {
 			keyword := strings.Trim(pattern, "*")
 			return strings.Contains(filename, keyword)
@@ -750,7 +747,7 @@ func matchPattern(filename, pattern string) bool {
 	}
 
 	// Exact match (for files like go.mod)
-	return strings.ToLower(filepath.Base(filename)) == strings.ToLower(pattern)
+	return strings.EqualFold(filepath.Base(filename), pattern)
 }
 
 func shouldIgnore(relPath, name string, patterns []string) bool {
@@ -761,8 +758,22 @@ func shouldIgnore(relPath, name string, patterns []string) bool {
 	}
 
 	for _, pattern := range append(defaultIgnore, patterns...) {
-		if name == pattern || strings.HasPrefix(relPath, pattern+"/") {
+		// Exact name match
+		if name == pattern {
 			return true
+		}
+
+		// Directory prefix match (e.g., ".git/objects")
+		if strings.HasPrefix(relPath, pattern+"/") {
+			return true
+		}
+
+		// Glob pattern matching for filenames
+		if strings.Contains(pattern, "*") {
+			// Check if the filename matches the glob pattern
+			if matchPattern(name, pattern) {
+				return true
+			}
 		}
 	}
 

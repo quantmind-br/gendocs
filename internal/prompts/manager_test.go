@@ -123,14 +123,14 @@ func TestNewManager_LoadFromDirectory(t *testing.T) {
 test_system: "System prompt"
 test_user: "User prompt"
 `
-	os.WriteFile(filepath.Join(tmpDir, "analyzer.yaml"), []byte(analyzerYAML), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "analyzer.yaml"), []byte(analyzerYAML), 0644)
 
 	// Create documenter.yml
 	documenterYML := `
 doc_system: "Doc system prompt"
 doc_user: "Doc user prompt"
 `
-	os.WriteFile(filepath.Join(tmpDir, "documenter.yml"), []byte(documenterYML), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "documenter.yml"), []byte(documenterYML), 0644)
 
 	// Load manager
 	mgr, err := NewManager(tmpDir)
@@ -155,7 +155,7 @@ func TestNewManager_InvalidYAML(t *testing.T) {
 test: this is not
   valid: yaml: structure
 `
-	os.WriteFile(filepath.Join(tmpDir, "invalid.yaml"), []byte(invalidYAML), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "invalid.yaml"), []byte(invalidYAML), 0644)
 
 	_, err := NewManager(tmpDir)
 	if err == nil {
@@ -177,12 +177,12 @@ func TestNewManager_IgnoresNonYAMLFiles(t *testing.T) {
 	yamlContent := `
 prompt1: "value1"
 `
-	os.WriteFile(filepath.Join(tmpDir, "prompts.yaml"), []byte(yamlContent), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "prompts.yaml"), []byte(yamlContent), 0644)
 
 	// Create non-YAML files (should be ignored)
-	os.WriteFile(filepath.Join(tmpDir, "readme.md"), []byte("# README"), 0644)
-	os.WriteFile(filepath.Join(tmpDir, "script.sh"), []byte("#!/bin/bash"), 0644)
-	os.WriteFile(filepath.Join(tmpDir, "data.json"), []byte("{}"), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "readme.md"), []byte("# README"), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "script.sh"), []byte("#!/bin/bash"), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "data.json"), []byte("{}"), 0644)
 
 	mgr, err := NewManager(tmpDir)
 	if err != nil {
@@ -204,12 +204,12 @@ func TestNewManager_IgnoresSubdirectories(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create YAML in root
-	os.WriteFile(filepath.Join(tmpDir, "root.yaml"), []byte("root_prompt: value\n"), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, "root.yaml"), []byte("root_prompt: value\n"), 0644)
 
 	// Create subdirectory with YAML (should be ignored by Walk behavior)
 	subdir := filepath.Join(tmpDir, "subdir")
-	os.MkdirAll(subdir, 0755)
-	os.WriteFile(filepath.Join(subdir, "sub.yaml"), []byte("sub_prompt: value\n"), 0644)
+	_ = os.MkdirAll(subdir, 0755)
+	_ = os.WriteFile(filepath.Join(subdir, "sub.yaml"), []byte("sub_prompt: value\n"), 0644)
 
 	mgr, err := NewManager(tmpDir)
 	if err != nil {

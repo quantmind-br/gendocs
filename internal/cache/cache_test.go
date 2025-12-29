@@ -306,7 +306,7 @@ func TestScanFiles_MultipleFilesMixedCache(t *testing.T) {
 		"newfile.go": "package newfile\n",
 	}
 
-	var expectedHashes map[string]string = make(map[string]string)
+	expectedHashes := make(map[string]string)
 	for name, content := range files {
 		path := filepath.Join(tmpDir, name)
 		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
@@ -503,7 +503,7 @@ func TestHashFile(t *testing.T) {
 	}
 
 	// Expected SHA256 hash of "Hello, World!\n"
-	expectedHash := "d9014c4624844aa5bac3147735bad58b4084bf2e074596a9f7e4e22a348a102b"
+	expectedHash := "c98c24b677eff44860afea6f493bbaec5bb1c4cbb209c6fc2bbb47f66ff2ad31"
 
 	hash, err := HashFile(testFile)
 	if err != nil {

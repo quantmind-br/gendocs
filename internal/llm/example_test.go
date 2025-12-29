@@ -55,8 +55,8 @@ func Example_customHighThroughput() {
 
 		// Connection pooling for high throughput
 		// Increase pool sizes to handle more concurrent connections
-		MaxIdleConns:        500,  // Larger global pool (default: 100)
-		MaxIdleConnsPerHost: 50,   // More connections per host (default: 10)
+		MaxIdleConns:        500,               // Larger global pool (default: 100)
+		MaxIdleConnsPerHost: 50,                // More connections per host (default: 10)
 		IdleConnTimeout:     120 * time.Second, // Keep connections alive longer (default: 90s)
 
 		// Timeout settings
@@ -90,12 +90,12 @@ func Example_customMemoryConstrained() {
 
 		// Connection pooling for memory efficiency
 		// Reduce pool sizes to minimize memory footprint
-		MaxIdleConns:        20,  // Smaller global pool (default: 100)
-		MaxIdleConnsPerHost: 5,   // Fewer connections per host (default: 10)
+		MaxIdleConns:        20,               // Smaller global pool (default: 100)
+		MaxIdleConnsPerHost: 5,                // Fewer connections per host (default: 10)
 		IdleConnTimeout:     30 * time.Second, // Shorter timeout to free resources faster (default: 90s)
 
 		// Timeout settings
-		TLSHandshakeTimeout:   5 * time.Second,  // Faster timeout
+		TLSHandshakeTimeout:   5 * time.Second, // Faster timeout
 		ExpectContinueTimeout: 1 * time.Second,
 	}
 

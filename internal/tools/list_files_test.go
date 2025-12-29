@@ -61,8 +61,8 @@ func TestListFilesTool_Execute_Success(t *testing.T) {
 
 	for _, f := range files {
 		fullPath := filepath.Join(tmpDir, f)
-		os.MkdirAll(filepath.Dir(fullPath), 0755)
-		os.WriteFile(fullPath, []byte("content"), 0644)
+		_ = os.MkdirAll(filepath.Dir(fullPath), 0755)
+		_ = os.WriteFile(fullPath, []byte("content"), 0644)
 	}
 
 	tool := NewListFilesTool(3)
@@ -138,8 +138,8 @@ func TestListFilesTool_Execute_EmptyDirectory(t *testing.T) {
 func TestListFilesTool_Execute_OnlyDirectories(t *testing.T) {
 	// Create directory with only subdirectories (no files)
 	tmpDir := t.TempDir()
-	os.MkdirAll(filepath.Join(tmpDir, "dir1"), 0755)
-	os.MkdirAll(filepath.Join(tmpDir, "dir2/subdir"), 0755)
+	_ = os.MkdirAll(filepath.Join(tmpDir, "dir1"), 0755)
+	_ = os.MkdirAll(filepath.Join(tmpDir, "dir2/subdir"), 0755)
 
 	tool := NewListFilesTool(3)
 	result, err := tool.Execute(context.Background(), map[string]interface{}{
@@ -199,7 +199,7 @@ func TestListFilesTool_Execute_FileAsDirectory(t *testing.T) {
 	// Try to list files from a file path (not a directory)
 	tmpDir := t.TempDir()
 	testFile := filepath.Join(tmpDir, "test.txt")
-	os.WriteFile(testFile, []byte("content"), 0644)
+	_ = os.WriteFile(testFile, []byte("content"), 0644)
 
 	tool := NewListFilesTool(3)
 
@@ -231,12 +231,12 @@ func TestListFilesTool_Execute_DeepNesting(t *testing.T) {
 	deepPath := tmpDir
 	for i := 0; i < 10; i++ {
 		deepPath = filepath.Join(deepPath, "level")
-		os.MkdirAll(deepPath, 0755)
+		_ = os.MkdirAll(deepPath, 0755)
 	}
 
 	// Create file at the deepest level
 	deepFile := filepath.Join(deepPath, "deep.txt")
-	os.WriteFile(deepFile, []byte("content"), 0644)
+	_ = os.WriteFile(deepFile, []byte("content"), 0644)
 
 	tool := NewListFilesTool(3)
 	result, err := tool.Execute(context.Background(), map[string]interface{}{
@@ -274,7 +274,7 @@ func TestListFilesTool_Execute_SpecialCharactersInFilenames(t *testing.T) {
 
 	for _, f := range specialFiles {
 		fullPath := filepath.Join(tmpDir, f)
-		os.WriteFile(fullPath, []byte("content"), 0644)
+		_ = os.WriteFile(fullPath, []byte("content"), 0644)
 	}
 
 	tool := NewListFilesTool(3)
@@ -312,7 +312,7 @@ func TestListFilesTool_Execute_RelativePaths(t *testing.T) {
 
 	// Create file
 	file := "testfile.txt"
-	os.WriteFile(filepath.Join(tmpDir, file), []byte("content"), 0644)
+	_ = os.WriteFile(filepath.Join(tmpDir, file), []byte("content"), 0644)
 
 	tool := NewListFilesTool(3)
 	result, err := tool.Execute(context.Background(), map[string]interface{}{
@@ -348,7 +348,7 @@ func TestListFilesTool_Execute_ManyFiles(t *testing.T) {
 	expectedCount := 100
 	for i := 0; i < expectedCount; i++ {
 		filename := filepath.Join(tmpDir, "file"+string(rune('0'+i%10))+".txt")
-		os.WriteFile(filename, []byte("content"), 0644)
+		_ = os.WriteFile(filename, []byte("content"), 0644)
 	}
 
 	tool := NewListFilesTool(3)

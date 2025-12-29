@@ -27,7 +27,7 @@ func BenchmarkSequentialRequests_Optimized(b *testing.B) {
 	// Create test server
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"result": "success"}`))
+		_, _ = w.Write([]byte(`{"result": "success"}`))
 	}))
 	defer server.Close()
 
@@ -40,14 +40,14 @@ func BenchmarkSequentialRequests_Optimized(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		req, err := http.NewRequest("GET", server.URL, nil)
 		if err != nil {
-			b.Fatalf("Failed to create request: %v", err)
+			b.Error("Failed to create request:", err) //nolint:testinggoroutine
 		}
 
 		resp, err := client.Do(req)
 		if err != nil {
-			b.Fatalf("Request failed: %v", err)
+			b.Error("Request failed:", err) //nolint:testinggoroutine
 		}
-		resp.Body.Close()
+		_ = resp.Body.Close()
 	}
 }
 
@@ -56,7 +56,7 @@ func BenchmarkSequentialRequests_Unoptimized(b *testing.B) {
 	// Create test server
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"result": "success"}`))
+		_, _ = w.Write([]byte(`{"result": "success"}`))
 	}))
 	defer server.Close()
 
@@ -76,14 +76,14 @@ func BenchmarkSequentialRequests_Unoptimized(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		req, err := http.NewRequest("GET", server.URL, nil)
 		if err != nil {
-			b.Fatalf("Failed to create request: %v", err)
+			b.Error("Failed to create request:", err) //nolint:testinggoroutine
 		}
 
 		resp, err := client.Do(req)
 		if err != nil {
-			b.Fatalf("Request failed: %v", err)
+			b.Error("Request failed:", err) //nolint:testinggoroutine
 		}
-		resp.Body.Close()
+		_ = resp.Body.Close()
 	}
 }
 
@@ -94,7 +94,7 @@ func BenchmarkConcurrentRequests_Optimized(b *testing.B) {
 		// Simulate API latency
 		time.Sleep(10 * time.Millisecond)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"result": "success"}`))
+		_, _ = w.Write([]byte(`{"result": "success"}`))
 	}))
 	defer server.Close()
 
@@ -108,14 +108,14 @@ func BenchmarkConcurrentRequests_Optimized(b *testing.B) {
 		for pb.Next() {
 			req, err := http.NewRequest("GET", server.URL, nil)
 			if err != nil {
-				b.Fatalf("Failed to create request: %v", err)
+				b.Error("Failed to create request:", err) //nolint:testinggoroutine
 			}
 
 			resp, err := client.Do(req)
 			if err != nil {
-				b.Fatalf("Request failed: %v", err)
+				b.Error("Request failed:", err) //nolint:testinggoroutine
 			}
-			resp.Body.Close()
+			_ = resp.Body.Close()
 		}
 	})
 }
@@ -127,7 +127,7 @@ func BenchmarkConcurrentRequests_Unoptimized(b *testing.B) {
 		// Simulate API latency
 		time.Sleep(10 * time.Millisecond)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"result": "success"}`))
+		_, _ = w.Write([]byte(`{"result": "success"}`))
 	}))
 	defer server.Close()
 
@@ -148,14 +148,14 @@ func BenchmarkConcurrentRequests_Unoptimized(b *testing.B) {
 		for pb.Next() {
 			req, err := http.NewRequest("GET", server.URL, nil)
 			if err != nil {
-				b.Fatalf("Failed to create request: %v", err)
+				b.Error("Failed to create request:", err) //nolint:testinggoroutine
 			}
 
 			resp, err := client.Do(req)
 			if err != nil {
-				b.Fatalf("Request failed: %v", err)
+				b.Error("Request failed:", err) //nolint:testinggoroutine
 			}
-			resp.Body.Close()
+			_ = resp.Body.Close()
 		}
 	})
 }
@@ -197,7 +197,7 @@ func benchmarkConcurrentRequests(b *testing.B, numGoroutines int, optimized bool
 		// Simulate API latency
 		time.Sleep(10 * time.Millisecond)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"result": "success"}`))
+		_, _ = w.Write([]byte(`{"result": "success"}`))
 	}))
 	defer server.Close()
 
@@ -228,14 +228,14 @@ func benchmarkConcurrentRequests(b *testing.B, numGoroutines int, optimized bool
 				defer wg.Done()
 				req, err := http.NewRequest("GET", server.URL, nil)
 				if err != nil {
-					b.Fatalf("Failed to create request: %v", err)
+					b.Error("Failed to create request:", err) //nolint:testinggoroutine
 				}
 
 				resp, err := client.Do(req)
 				if err != nil {
-					b.Fatalf("Request failed: %v", err)
+					b.Error("Request failed:", err) //nolint:testinggoroutine
 				}
-				resp.Body.Close()
+				_ = resp.Body.Close()
 			}()
 		}
 
@@ -246,10 +246,10 @@ func benchmarkConcurrentRequests(b *testing.B, numGoroutines int, optimized bool
 // BenchmarkConnectionPoolSettings benchmarks different connection pool configurations
 func BenchmarkConnectionPoolSettings_HighThroughput(b *testing.B) {
 	config := &RetryConfig{
-		MaxIdleConns:        200,
-		MaxIdleConnsPerHost: 20,
-		IdleConnTimeout:     120 * time.Second,
-		TLSHandshakeTimeout: 15 * time.Second,
+		MaxIdleConns:          200,
+		MaxIdleConnsPerHost:   20,
+		IdleConnTimeout:       120 * time.Second,
+		TLSHandshakeTimeout:   15 * time.Second,
 		ExpectContinueTimeout: 2 * time.Second,
 	}
 
@@ -259,10 +259,10 @@ func BenchmarkConnectionPoolSettings_HighThroughput(b *testing.B) {
 // BenchmarkConnectionPoolSettings_MemoryConstrained benchmarks memory-constrained configuration
 func BenchmarkConnectionPoolSettings_MemoryConstrained(b *testing.B) {
 	config := &RetryConfig{
-		MaxIdleConns:        20,
-		MaxIdleConnsPerHost: 2,
-		IdleConnTimeout:     30 * time.Second,
-		TLSHandshakeTimeout: 5 * time.Second,
+		MaxIdleConns:          20,
+		MaxIdleConnsPerHost:   2,
+		IdleConnTimeout:       30 * time.Second,
+		TLSHandshakeTimeout:   5 * time.Second,
 		ExpectContinueTimeout: 500 * time.Millisecond,
 	}
 
@@ -280,7 +280,7 @@ func benchmarkWithConfig(b *testing.B, config *RetryConfig) {
 	// Create test server
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"result": "success"}`))
+		_, _ = w.Write([]byte(`{"result": "success"}`))
 	}))
 	defer server.Close()
 
@@ -293,14 +293,14 @@ func benchmarkWithConfig(b *testing.B, config *RetryConfig) {
 		for pb.Next() {
 			req, err := http.NewRequest("GET", server.URL, nil)
 			if err != nil {
-				b.Fatalf("Failed to create request: %v", err)
+				b.Error("Failed to create request:", err) //nolint:testinggoroutine
 			}
 
 			resp, err := client.Do(req)
 			if err != nil {
-				b.Fatalf("Request failed: %v", err)
+				b.Error("Request failed:", err) //nolint:testinggoroutine
 			}
-			resp.Body.Close()
+			_ = resp.Body.Close()
 		}
 	})
 }
@@ -353,7 +353,7 @@ func BenchmarkGetConnectionStats(b *testing.B) {
 func BenchmarkCloseIdleConnections(b *testing.B) {
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"result": "success"}`))
+		_, _ = w.Write([]byte(`{"result": "success"}`))
 	}))
 	defer server.Close()
 
@@ -364,9 +364,9 @@ func BenchmarkCloseIdleConnections(b *testing.B) {
 		req, _ := http.NewRequest("GET", server.URL, nil)
 		resp, err := client.Do(req)
 		if err != nil {
-			b.Fatalf("Request failed: %v", err)
+			b.Error("Request failed:", err) //nolint:testinggoroutine
 		}
-		resp.Body.Close()
+		_ = resp.Body.Close()
 	}
 
 	b.ResetTimer()

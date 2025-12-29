@@ -29,8 +29,8 @@ type AnalyzerAgent struct {
 	logger        *logging.Logger
 	workerPool    *worker_pool.WorkerPool
 
-	progress      ProgressReporter
-	cacheCleanup  func() // Cleanup function for LLM cache
+	progress     ProgressReporter
+	cacheCleanup func() // Cleanup function for LLM cache
 }
 
 // NewAnalyzerAgent creates a new analyzer agent
@@ -276,35 +276,6 @@ func (aa *AnalyzerAgent) Run(ctx context.Context) (*AnalysisResult, error) {
 	}
 
 	return analysisResult, nil
-}
-
-// createTask creates a task for the worker pool
-func (aa *AnalyzerAgent) createTask(ctx context.Context, factory *llm.Factory, name string, creator AgentCreator, outputPath string) (worker_pool.Task, string) {
-	task := func(ctx context.Context) (interface{}, error) {
-		aa.logger.Info(fmt.Sprintf("Creating %s", name))
-
-		// Create agent
-		agent, err := creator(aa.config.LLM, aa.config.RepoPath, factory, aa.promptManager, aa.logger)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create %s: %w", name, err)
-		}
-
-		// Run agent
-		output, err := agent.Run(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("%s failed: %w", name, err)
-		}
-
-		// Save output
-		if err := agent.SaveOutput(output, outputPath); err != nil {
-			return nil, fmt.Errorf("failed to save %s output: %w", name, err)
-		}
-
-		aa.logger.Info(fmt.Sprintf("%s completed successfully", name))
-		return output, nil
-	}
-
-	return task, outputPath
 }
 
 func (aa *AnalyzerAgent) createTaskWithProgress(ctx context.Context, factory *llm.Factory, name string, creator AgentCreator, outputPath string) (worker_pool.Task, string) {

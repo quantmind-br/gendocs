@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package llm
@@ -231,7 +232,7 @@ func TestOpenAIStreaming_AgentWorkflow(t *testing.T) {
 			// First call: LLM requests tool use
 			fmt.Fprintln(w, "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\"},\"finish_reason\":null}]}")
 			fmt.Fprintln(w, "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"id\":\"call_1\",\"type\":\"function\",\"function\":{\"name\":\"search\",\"arguments\":\"\"}}]},\"finish_reason\":null}]}")
-			fmt.Fprintln(w, "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"{\\\"query\\\":\\\"golang\\"}}]},\"finish_reason\":null}]}")
+			fmt.Fprintln(w, "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"index\":0,\"delta\":{\"tool_calls\":[{\"index\":0,\"function\":{\"arguments\":\"{\\\"query\\\":\\\"golang\\\"}\"}}]},\"finish_reason\":null}]}")
 			fmt.Fprintln(w, "data: {\"id\":\"chatcmpl-1\",\"object\":\"chat.completion.chunk\",\"choices\":[{\"index\":0,\"delta\":{},\"finish_reason\":\"tool_calls\"}]}")
 			fmt.Fprintln(w, "data: [DONE]")
 

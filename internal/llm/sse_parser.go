@@ -10,9 +10,9 @@ import (
 
 // SSEEvent represents a single Server-Sent Event
 type SSEEvent struct {
-	Event string   // Event type (optional, empty if not specified)
-	Data  []byte   // Concatenated data lines
-	ID    string   // Event ID (optional)
+	Event string // Event type (optional, empty if not specified)
+	Data  []byte // Concatenated data lines
+	ID    string // Event ID (optional)
 }
 
 // SSEParser parses Server-Sent Events (SSE) streams
@@ -35,6 +35,7 @@ func NewSSEParser(reader io.Reader) *SSEParser {
 // Returns io.EOF when the stream is complete
 // Returns io.ErrUnexpectedEOF if the stream ends mid-event
 func (p *SSEParser) NextEvent() (SSEEvent, error) {
+	debug := false // Set to true to enable debug logging
 	for {
 		line, err := p.reader.ReadBytes('\n')
 		if err != nil {
@@ -45,15 +46,23 @@ func (p *SSEParser) NextEvent() (SSEEvent, error) {
 			return SSEEvent{}, err
 		}
 
-		// Remove trailing \r if present (Windows line endings)
-		line = bytes.TrimSuffix(line, []byte{'\r'})
-		// Remove trailing \n
+		if debug {
+			fmt.Printf("DEBUG: ReadBytes returned: %v\n", line)
+		}
+
+		// Remove trailing \n first (from ReadBytes delimiter)
 		line = bytes.TrimSuffix(line, []byte{'\n'})
+		// Then remove trailing \r if present (Windows line endings CRLF)
+		line = bytes.TrimSuffix(line, []byte{'\r'})
+
+		if debug {
+			fmt.Printf("DEBUG: After trimming: %v (len=%d)\n", line, len(line))
+		}
 
 		// Empty line marks the end of an event
 		if len(line) == 0 {
-			// If we have accumulated data, return the event
-			if p.buffer.Len() > 0 || p.eventType != "" {
+			// If we have accumulated data, an event type, or an ID, return the event
+			if p.buffer.Len() > 0 || p.eventType != "" || p.eventID != "" {
 				event := SSEEvent{
 					Event: p.eventType,
 					Data:  p.buffer.Bytes(),

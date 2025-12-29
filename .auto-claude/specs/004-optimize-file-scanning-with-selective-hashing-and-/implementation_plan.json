@@ -2,8 +2,8 @@
   "feature": "Optimize file scanning with selective hashing and parallel processing",
   "description": "The cache.ScanFiles() function calculates SHA256 hashes for every file sequentially, which becomes a bottleneck for large repositories. Many files haven't changed and don't need re-hashing.",
   "created_at": "2025-12-29T03:58:22.725Z",
-  "updated_at": "2025-12-29T04:00:00.000Z",
-  "status": "completed",
+  "updated_at": "2025-12-29T14:37:37.998Z",
+  "status": "done",
   "planStatus": "completed",
   "spec_file": "spec.md",
   "phases": [

@@ -141,11 +141,9 @@ func MergeConfigs(repoPath string, section string, defaults interface{}, cliOver
 		sectionConfig = v.AllSettings()
 	}
 
-	// Apply CLI overrides (highest precedence)
 	for key, value := range cliOverrides {
 		if value != nil {
-			// Convert key from snake_case to dot notation if needed
-			sectionConfig[key] = value
+			setNested(sectionConfig, key, value)
 		}
 	}
 
@@ -194,6 +192,92 @@ func LoadAnalyzerConfig(repoPath string, cliOverrides map[string]interface{}) (*
 	}
 
 	return cfg, nil
+}
+
+func LoadDocumenterConfig(repoPath string, cliOverrides map[string]interface{}) (*DocumenterConfig, error) {
+	configMap, err := MergeConfigs(repoPath, "documenter", &DocumenterConfig{}, cliOverrides)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg := &DocumenterConfig{
+		BaseConfig: BaseConfig{
+			RepoPath: getString(configMap, "repo_path", "."),
+			Debug:    getBool(configMap, "debug", false),
+		},
+	}
+
+	cfg.LLM = LLMConfig{
+		Provider:    getString(configMap, "llm.provider", getEnvWithFallback("DOCUMENTER_LLM_PROVIDER", "ANALYZER_LLM_PROVIDER", "openai")),
+		Model:       getString(configMap, "llm.model", getEnvWithFallback("DOCUMENTER_LLM_MODEL", "ANALYZER_LLM_MODEL", "gpt-4o")),
+		APIKey:      getString(configMap, "llm.api_key", getEnvWithFallback("DOCUMENTER_LLM_API_KEY", "ANALYZER_LLM_API_KEY", "")),
+		BaseURL:     getString(configMap, "llm.base_url", getEnvOrDefault("DOCUMENTER_LLM_BASE_URL", "")),
+		Retries:     getInt(configMap, "llm.retries", getEnvIntOrDefault("DOCUMENTER_AGENT_RETRIES", 2)),
+		Timeout:     getInt(configMap, "llm.timeout", getEnvIntOrDefault("DOCUMENTER_LLM_TIMEOUT", 180)),
+		MaxTokens:   getInt(configMap, "llm.max_tokens", getEnvIntOrDefault("DOCUMENTER_LLM_MAX_TOKENS", 8192)),
+		Temperature: getFloat64(configMap, "llm.temperature", getEnvFloatOrDefault("DOCUMENTER_LLM_TEMPERATURE", 0.0)),
+	}
+
+	if err := validateLLMConfig(&cfg.LLM, "DOCUMENTER"); err != nil {
+		return nil, err
+	}
+
+	return cfg, nil
+}
+
+func LoadAIRulesConfig(repoPath string, cliOverrides map[string]interface{}) (*AIRulesConfig, error) {
+	configMap, err := MergeConfigs(repoPath, "ai_rules", &AIRulesConfig{}, cliOverrides)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg := &AIRulesConfig{
+		BaseConfig: BaseConfig{
+			RepoPath: getString(configMap, "repo_path", "."),
+			Debug:    getBool(configMap, "debug", false),
+		},
+	}
+
+	cfg.LLM = LLMConfig{
+		Provider:    getString(configMap, "llm.provider", getEnvWithFallback("AI_RULES_LLM_PROVIDER", "ANALYZER_LLM_PROVIDER", "openai")),
+		Model:       getString(configMap, "llm.model", getEnvWithFallback("AI_RULES_LLM_MODEL", "ANALYZER_LLM_MODEL", "gpt-4o")),
+		APIKey:      getString(configMap, "llm.api_key", getEnvWithFallback("AI_RULES_LLM_API_KEY", "ANALYZER_LLM_API_KEY", "")),
+		BaseURL:     getString(configMap, "llm.base_url", getEnvOrDefault("AI_RULES_LLM_BASE_URL", "")),
+		Retries:     getInt(configMap, "llm.retries", getEnvIntOrDefault("AI_RULES_AGENT_RETRIES", 2)),
+		Timeout:     getInt(configMap, "llm.timeout", getEnvIntOrDefault("AI_RULES_LLM_TIMEOUT", 240)),
+		MaxTokens:   getInt(configMap, "llm.max_tokens", getEnvIntOrDefault("AI_RULES_LLM_MAX_TOKENS", 8192)),
+		Temperature: getFloat64(configMap, "llm.temperature", getEnvFloatOrDefault("AI_RULES_LLM_TEMPERATURE", 0.0)),
+	}
+
+	cfg.MaxTokensMarkdown = getInt(configMap, "max_tokens_markdown", 0)
+	cfg.MaxTokensCursor = getInt(configMap, "max_tokens_cursor", 0)
+
+	if err := validateLLMConfig(&cfg.LLM, "AI_RULES"); err != nil {
+		return nil, err
+	}
+
+	return cfg, nil
+}
+
+func setNested(m map[string]interface{}, dottedKey string, value interface{}) {
+	parts := strings.Split(dottedKey, ".")
+	if len(parts) == 1 {
+		m[dottedKey] = value
+		return
+	}
+
+	current := m
+	for i := 0; i < len(parts)-1; i++ {
+		part := parts[i]
+		if next, ok := current[part].(map[string]interface{}); ok {
+			current = next
+		} else {
+			newMap := make(map[string]interface{})
+			current[part] = newMap
+			current = newMap
+		}
+	}
+	current[parts[len(parts)-1]] = value
 }
 
 // Helper functions for type-safe config access
@@ -281,6 +365,16 @@ func getFloat64(m map[string]interface{}, key string, defaultValue float64) floa
 
 func getEnvOrDefault(key, defaultValue string) string {
 	if val := os.Getenv(key); val != "" {
+		return val
+	}
+	return defaultValue
+}
+
+func getEnvWithFallback(primaryKey, fallbackKey, defaultValue string) string {
+	if val := os.Getenv(primaryKey); val != "" {
+		return val
+	}
+	if val := os.Getenv(fallbackKey); val != "" {
 		return val
 	}
 	return defaultValue

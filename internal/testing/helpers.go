@@ -164,7 +164,7 @@ func AssertFileContains(t *testing.T, path, expected string) {
 func containsString(haystack, needle string) bool {
 	return len(haystack) >= len(needle) &&
 		(haystack == needle || len(needle) == 0 ||
-		 findSubstring(haystack, needle))
+			findSubstring(haystack, needle))
 }
 
 func findSubstring(s, substr string) bool {

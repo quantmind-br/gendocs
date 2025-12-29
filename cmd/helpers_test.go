@@ -15,14 +15,14 @@ func TestInitLogger_CurrentDirectory(t *testing.T) {
 	// Create a temp directory to avoid polluting the actual repo
 	tmpDir := t.TempDir()
 	originalDir, _ := os.Getwd()
-	os.Chdir(tmpDir)
-	defer os.Chdir(originalDir)
+	_ = os.Chdir(tmpDir)
+	defer func() { _ = os.Chdir(originalDir) }()
 
 	logger, err := InitLogger(".", false, false)
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
-	defer logger.Sync()
+	defer func() { _ = logger.Sync() }()
 
 	// Verify log directory was created at .ai/logs
 	if _, err := os.Stat(filepath.Join(tmpDir, ".ai", "logs")); os.IsNotExist(err) {
@@ -34,13 +34,13 @@ func TestInitLogger_CurrentDirectory(t *testing.T) {
 func TestInitLogger_CustomRepoPath(t *testing.T) {
 	tmpDir := t.TempDir()
 	repoPath := filepath.Join(tmpDir, "my-repo")
-	os.MkdirAll(repoPath, 0755)
+	_ = os.MkdirAll(repoPath, 0755)
 
 	logger, err := InitLogger(repoPath, false, false)
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
-	defer logger.Sync()
+	defer func() { _ = logger.Sync() }()
 
 	// Verify log directory was created at repoPath/.ai/logs
 	logDir := filepath.Join(repoPath, ".ai", "logs")
@@ -53,15 +53,15 @@ func TestInitLogger_CustomRepoPath(t *testing.T) {
 func TestInitLogger_DebugFlag(t *testing.T) {
 	tmpDir := t.TempDir()
 	originalDir, _ := os.Getwd()
-	os.Chdir(tmpDir)
-	defer os.Chdir(originalDir)
+	_ = os.Chdir(tmpDir)
+	defer func() { _ = os.Chdir(originalDir) }()
 
 	// With debug = true
 	logger, err := InitLogger(".", true, false)
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
-	defer logger.Sync()
+	defer func() { _ = logger.Sync() }()
 
 	// Logger should be created successfully with debug enabled
 	// The actual caller info is internal to the logger; we just verify creation
@@ -74,15 +74,15 @@ func TestInitLogger_DebugFlag(t *testing.T) {
 func TestInitLogger_VerboseFlag(t *testing.T) {
 	tmpDir := t.TempDir()
 	originalDir, _ := os.Getwd()
-	os.Chdir(tmpDir)
-	defer os.Chdir(originalDir)
+	_ = os.Chdir(tmpDir)
+	defer func() { _ = os.Chdir(originalDir) }()
 
 	// With verbose = true (showProgress = false, console enabled)
 	logger, err := InitLogger(".", false, true)
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
-	defer logger.Sync()
+	defer func() { _ = logger.Sync() }()
 
 	if logger == nil {
 		t.Error("Expected logger to be created with verbose flag")
@@ -106,14 +106,14 @@ func TestInitLogger_AllFlagCombinations(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			tmpDir := t.TempDir()
 			originalDir, _ := os.Getwd()
-			os.Chdir(tmpDir)
-			defer os.Chdir(originalDir)
+			_ = os.Chdir(tmpDir)
+			defer func() { _ = os.Chdir(originalDir) }()
 
 			logger, err := InitLogger(".", tc.debug, tc.verbose)
 			if err != nil {
 				t.Fatalf("Expected no error for %s, got %v", tc.name, err)
 			}
-			defer logger.Sync()
+			defer func() { _ = logger.Sync() }()
 
 			if logger == nil {
 				t.Errorf("Expected logger to be created for %s", tc.name)
@@ -129,10 +129,10 @@ func TestLLMConfigFromEnv_PrefixedVariables(t *testing.T) {
 	defer os.Clearenv()
 
 	// Set prefixed env vars
-	os.Setenv("DOCUMENTER_LLM_PROVIDER", "openai")
-	os.Setenv("DOCUMENTER_LLM_MODEL", "gpt-4")
-	os.Setenv("DOCUMENTER_LLM_API_KEY", "doc-api-key")
-	os.Setenv("DOCUMENTER_LLM_BASE_URL", "https://custom.openai.com")
+	_ = os.Setenv("DOCUMENTER_LLM_PROVIDER", "openai")
+	_ = os.Setenv("DOCUMENTER_LLM_MODEL", "gpt-4")
+	_ = os.Setenv("DOCUMENTER_LLM_API_KEY", "doc-api-key")
+	_ = os.Setenv("DOCUMENTER_LLM_BASE_URL", "https://custom.openai.com")
 
 	defaults := LLMDefaults{
 		Retries:     3,
@@ -175,9 +175,9 @@ func TestLLMConfigFromEnv_FallbackToAnalyzer(t *testing.T) {
 	defer os.Clearenv()
 
 	// Only set ANALYZER_* fallback vars (no DOCUMENTER_* vars)
-	os.Setenv("ANALYZER_LLM_PROVIDER", "anthropic")
-	os.Setenv("ANALYZER_LLM_MODEL", "claude-3")
-	os.Setenv("ANALYZER_LLM_API_KEY", "analyzer-key")
+	_ = os.Setenv("ANALYZER_LLM_PROVIDER", "anthropic")
+	_ = os.Setenv("ANALYZER_LLM_MODEL", "claude-3")
+	_ = os.Setenv("ANALYZER_LLM_API_KEY", "analyzer-key")
 
 	defaults := LLMDefaults{
 		Retries:     2,
@@ -206,12 +206,12 @@ func TestLLMConfigFromEnv_PrefixOverridesAnalyzer(t *testing.T) {
 	defer os.Clearenv()
 
 	// Set both prefixed and ANALYZER_* vars
-	os.Setenv("AI_RULES_LLM_PROVIDER", "gemini")
-	os.Setenv("AI_RULES_LLM_MODEL", "gemini-pro")
-	os.Setenv("AI_RULES_LLM_API_KEY", "ai-rules-key")
-	os.Setenv("ANALYZER_LLM_PROVIDER", "openai")
-	os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
-	os.Setenv("ANALYZER_LLM_API_KEY", "analyzer-key")
+	_ = os.Setenv("AI_RULES_LLM_PROVIDER", "gemini")
+	_ = os.Setenv("AI_RULES_LLM_MODEL", "gemini-pro")
+	_ = os.Setenv("AI_RULES_LLM_API_KEY", "ai-rules-key")
+	_ = os.Setenv("ANALYZER_LLM_PROVIDER", "openai")
+	_ = os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
+	_ = os.Setenv("ANALYZER_LLM_API_KEY", "analyzer-key")
 
 	defaults := LLMDefaults{}
 
@@ -278,9 +278,9 @@ func TestLLMConfigFromEnv_PartialFallback(t *testing.T) {
 	defer os.Clearenv()
 
 	// Set only provider from prefix, rest from ANALYZER_*
-	os.Setenv("DOCUMENTER_LLM_PROVIDER", "gemini")
-	os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
-	os.Setenv("ANALYZER_LLM_API_KEY", "analyzer-key")
+	_ = os.Setenv("DOCUMENTER_LLM_PROVIDER", "gemini")
+	_ = os.Setenv("ANALYZER_LLM_MODEL", "gpt-4")
+	_ = os.Setenv("ANALYZER_LLM_API_KEY", "analyzer-key")
 
 	defaults := LLMDefaults{}
 
@@ -313,7 +313,7 @@ func TestLLMConfigFromEnv_DifferentPrefixes(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.prefix, func(t *testing.T) {
 			os.Clearenv()
-			os.Setenv(tc.envKey, tc.expected)
+			_ = os.Setenv(tc.envKey, tc.expected)
 
 			cfg := LLMConfigFromEnv(tc.prefix, LLMDefaults{})
 
@@ -353,7 +353,7 @@ func TestHandleCommandError_AIDocGenError_NoProgress(t *testing.T) {
 
 	result := HandleCommandError(docErr, nil, false)
 
-	w.Close()
+	_ = w.Close()
 	os.Stderr = oldStderr
 
 	// Read captured output

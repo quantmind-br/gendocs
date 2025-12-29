@@ -192,11 +192,11 @@ func cleanLLMOutput(output string) string {
 			lower := strings.ToLower(trimmed)
 			// Skip lines that look like preambles or tool outputs
 			if strings.HasPrefix(lower, "okay,") ||
-			   strings.HasPrefix(lower, "here's") ||
-			   strings.HasPrefix(lower, "here is") ||
-			   strings.Contains(trimmed, "```tool_outputs") ||
-			   strings.Contains(trimmed, "{\"read_file_response\"") ||
-			   (strings.HasPrefix(trimmed, "*") && strings.Contains(trimmed, "**")) {
+				strings.HasPrefix(lower, "here's") ||
+				strings.HasPrefix(lower, "here is") ||
+				strings.Contains(trimmed, "```tool_outputs") ||
+				strings.Contains(trimmed, "{\"read_file_response\"") ||
+				(strings.HasPrefix(trimmed, "*") && strings.Contains(trimmed, "**")) {
 				continue
 			}
 			// Found a line that doesn't match preamble patterns

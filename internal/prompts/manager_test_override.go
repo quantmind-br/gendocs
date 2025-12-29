@@ -27,7 +27,7 @@ documenter_user_prompt: "User doc prompt"
 ai_rules_system_prompt: "System rules prompt"
 ai_rules_user_prompt: "User rules prompt"
 `
-	os.WriteFile(filepath.Join(systemDir, "analyzer.yaml"), []byte(systemYAML), 0644)
+	_ = os.WriteFile(filepath.Join(systemDir, "analyzer.yaml"), []byte(systemYAML), 0644)
 
 	// Create manager with no project overrides
 	mgr, err := NewManagerWithOverrides(systemDir, "")
@@ -73,7 +73,7 @@ ai_rules_system_prompt: "System rules prompt"
 ai_rules_user_prompt: "User rules prompt"
 test_only_system: "Only in system"
 `
-	os.WriteFile(filepath.Join(systemDir, "analyzer.yaml"), []byte(systemYAML), 0644)
+	_ = os.WriteFile(filepath.Join(systemDir, "analyzer.yaml"), []byte(systemYAML), 0644)
 
 	// Create project prompts directory with overrides
 	projectDir := t.TempDir()
@@ -83,7 +83,7 @@ structure_analyzer_system: "CUSTOM structure prompt"
 documenter_system_prompt: "CUSTOM doc prompt"
 test_only_project: "Only in project"
 `
-	os.WriteFile(filepath.Join(projectDir, "custom.yaml"), []byte(projectYAML), 0644)
+	_ = os.WriteFile(filepath.Join(projectDir, "custom.yaml"), []byte(projectYAML), 0644)
 
 	// Create manager with overrides
 	mgr, err := NewManagerWithOverrides(systemDir, projectDir)
@@ -162,14 +162,14 @@ documenter_user_prompt: "System"
 ai_rules_system_prompt: "System"
 ai_rules_user_prompt: "System"
 `
-	os.WriteFile(filepath.Join(systemDir, "analyzer.yaml"), []byte(systemYAML), 0644)
+	_ = os.WriteFile(filepath.Join(systemDir, "analyzer.yaml"), []byte(systemYAML), 0644)
 
 	projectDir := t.TempDir()
 	projectYAML := `
 structure_analyzer_system: "Custom"
 documenter_system_prompt: "Custom"
 `
-	os.WriteFile(filepath.Join(projectDir, "custom.yaml"), []byte(projectYAML), 0644)
+	_ = os.WriteFile(filepath.Join(projectDir, "custom.yaml"), []byte(projectYAML), 0644)
 
 	mgr, err := NewManagerWithOverrides(systemDir, projectDir)
 	if err != nil {
@@ -221,7 +221,7 @@ documenter_user_prompt: "System"
 ai_rules_system_prompt: "System"
 ai_rules_user_prompt: "System"
 `
-	os.WriteFile(filepath.Join(systemDir, "analyzer.yaml"), []byte(systemYAML), 0644)
+	_ = os.WriteFile(filepath.Join(systemDir, "analyzer.yaml"), []byte(systemYAML), 0644)
 
 	// Use nonexistent project directory
 	projectDir := filepath.Join(t.TempDir(), "nonexistent")
@@ -251,7 +251,7 @@ func TestNewManagerWithOverrides_MissingRequiredPrompt(t *testing.T) {
 structure_analyzer_system: "System"
 # Missing other required prompts
 `
-	os.WriteFile(filepath.Join(systemDir, "incomplete.yaml"), []byte(incompleteYAML), 0644)
+	_ = os.WriteFile(filepath.Join(systemDir, "incomplete.yaml"), []byte(incompleteYAML), 0644)
 
 	_, err := NewManagerWithOverrides(systemDir, "")
 	if err == nil {

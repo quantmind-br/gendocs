@@ -133,7 +133,7 @@ func (frt *FileReadTool) Execute(ctx context.Context, params map[string]interfac
 		if err != nil {
 			return nil, &ModelRetryError{Message: fmt.Sprintf("Failed to open file: %v", err)}
 		}
-		defer file.Close()
+		defer func() { _ = file.Close() }()
 
 		scanner := bufio.NewScanner(file)
 		// Increase scanner buffer for long lines

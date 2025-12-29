@@ -1,7 +1,6 @@
 package llm
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -23,16 +22,16 @@ type GeminiClient struct {
 
 // geminiRequest represents the request body for Gemini API
 type geminiRequest struct {
-	Contents       []geminiContent    `json:"contents"`
-	Tools          []geminiTool       `json:"tools,omitempty"`
-	GenerationConfig geminiGenerationConfig `json:"generationConfig,omitempty"`
-	SystemInstruction *geminiContent  `json:"systemInstruction,omitempty"`
+	Contents          []geminiContent        `json:"contents"`
+	Tools             []geminiTool           `json:"tools,omitempty"`
+	GenerationConfig  geminiGenerationConfig `json:"generationConfig,omitempty"`
+	SystemInstruction *geminiContent         `json:"systemInstruction,omitempty"`
 }
 
 // geminiContent represents content in Gemini format
 type geminiContent struct {
-	Role  string           `json:"role,omitempty"`
-	Parts []geminiPart     `json:"parts"`
+	Role  string       `json:"role,omitempty"`
+	Parts []geminiPart `json:"parts"`
 }
 
 // geminiPart represents a part of content
@@ -64,21 +63,8 @@ type geminiFunctionDeclaration struct {
 
 // geminiGenerationConfig represents generation configuration
 type geminiGenerationConfig struct {
-	Temperature float64 `json:"temperature,omitempty"`
-	MaxOutputTokens int  `json:"maxOutputTokens,omitempty"`
-}
-
-// geminiResponse represents the response from Gemini API
-type geminiResponse struct {
-	Candidates []geminiCandidate `json:"candidates"`
-	UsageMetadata geminiUsageMetadata `json:"usageMetadata,omitempty"`
-	Error      *geminiError      `json:"error,omitempty"`
-}
-
-// geminiCandidate represents a candidate response
-type geminiCandidate struct {
-	Content   geminiContent `json:"content"`
-	FinishReason string     `json:"finishReason,omitempty"`
+	Temperature     float64 `json:"temperature,omitempty"`
+	MaxOutputTokens int     `json:"maxOutputTokens,omitempty"`
 }
 
 // geminiUsageMetadata represents token usage
@@ -97,9 +83,9 @@ type geminiError struct {
 
 // geminiStreamChunk represents a single streaming response chunk (NDJSON line)
 type geminiStreamChunk struct {
-	Candidates     []geminiStreamCandidate `json:"candidates"`
-	UsageMetadata  *geminiUsageMetadata    `json:"usageMetadata,omitempty"`
-	Error          *geminiError            `json:"error,omitempty"`
+	Candidates    []geminiStreamCandidate `json:"candidates"`
+	UsageMetadata *geminiUsageMetadata    `json:"usageMetadata,omitempty"`
+	Error         *geminiError            `json:"error,omitempty"`
 }
 
 // geminiStreamCandidate represents a candidate in a streaming chunk
@@ -117,8 +103,9 @@ type geminiStreamContent struct {
 
 // geminiStreamPart represents a part in streaming content
 type geminiStreamPart struct {
-	Text         string                      `json:"text,omitempty"`
-	FunctionCall *geminiStreamFunctionCall   `json:"functionCall,omitempty"`
+	Text             string                    `json:"text,omitempty"`
+	FunctionCall     *geminiStreamFunctionCall `json:"functionCall,omitempty"`
+	ThoughtSignature string                    `json:"thoughtSignature,omitempty"` // Required for Gemini 2.0+/3.0 function calling
 }
 
 // geminiStreamFunctionCall represents a function call in streaming
@@ -129,11 +116,12 @@ type geminiStreamFunctionCall struct {
 
 // geminiAccumulator builds CompletionResponse from streaming chunks
 type geminiAccumulator struct {
-	textBuilder  strings.Builder
-	toolCalls    []ToolCall
-	usage        geminiUsageMetadata
-	finishReason string
-	complete     bool
+	textBuilder   strings.Builder
+	toolCalls     []ToolCall
+	usage         geminiUsageMetadata
+	finishReason  string
+	complete      bool
+	hasCandidates bool
 }
 
 // newGeminiAccumulator creates a new accumulator
@@ -153,6 +141,7 @@ func (a *geminiAccumulator) HandleChunk(chunk geminiStreamChunk) error {
 		return nil
 	}
 
+	a.hasCandidates = true
 	candidate := chunk.Candidates[0]
 
 	// Check for safety block
@@ -172,9 +161,11 @@ func (a *geminiAccumulator) HandleChunk(chunk geminiStreamChunk) error {
 		}
 		if part.FunctionCall != nil {
 			// Function calls arrive complete in Gemini (no partial JSON)
+			// Preserve thoughtSignature for Gemini 2.0+/3.0 multi-turn function calling
 			a.toolCalls = append(a.toolCalls, ToolCall{
-				Name:      part.FunctionCall.Name,
-				Arguments: part.FunctionCall.Args,
+				Name:             part.FunctionCall.Name,
+				Arguments:        part.FunctionCall.Args,
+				ThoughtSignature: part.ThoughtSignature, // Required for subsequent API calls
 				RawFunctionCall: map[string]interface{}{
 					"name": part.FunctionCall.Name,
 					"args": part.FunctionCall.Args,
@@ -195,7 +186,7 @@ func (a *geminiAccumulator) HandleChunk(chunk geminiStreamChunk) error {
 // Build constructs the final CompletionResponse
 func (a *geminiAccumulator) Build() CompletionResponse {
 	return CompletionResponse{
-		Content: a.textBuilder.String(),
+		Content:   a.textBuilder.String(),
 		ToolCalls: a.toolCalls,
 		Usage: TokenUsage{
 			InputTokens:  a.usage.PromptTokenCount,
@@ -254,7 +245,7 @@ func (c *GeminiClient) GenerateCompletion(ctx context.Context, req CompletionReq
 	if err != nil {
 		return CompletionResponse{}, fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Check for error status
 	if resp.StatusCode != http.StatusOK {
@@ -266,39 +257,30 @@ func (c *GeminiClient) GenerateCompletion(ctx context.Context, req CompletionReq
 	return c.parseStreamingResponse(resp.Body)
 }
 
-// parseStreamingResponse parses Gemini's NDJSON stream and builds the response
+// parseStreamingResponse parses Gemini's streaming response (JSON array format)
 func (c *GeminiClient) parseStreamingResponse(body io.ReadCloser) (CompletionResponse, error) {
-	scanner := bufio.NewScanner(body)
+	// Gemini streaming API returns a JSON array of chunks: [{...}, {...}, ...]
+	// Read entire response and parse as array
+	data, err := io.ReadAll(body)
+	if err != nil {
+		return CompletionResponse{}, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	var chunks []geminiStreamChunk
+	if err := json.Unmarshal(data, &chunks); err != nil {
+		return CompletionResponse{}, fmt.Errorf("failed to parse stream response: %w", err)
+	}
+
 	accumulator := newGeminiAccumulator()
 
-	for scanner.Scan() {
-		line := scanner.Bytes()
-
-		// Skip empty lines
-		if len(line) == 0 {
-			continue
-		}
-
-		// Parse JSON line (NDJSON format)
-		var chunk geminiStreamChunk
-		if err := json.Unmarshal(line, &chunk); err != nil {
-			return CompletionResponse{}, fmt.Errorf("failed to parse stream chunk: %w", err)
-		}
-
-		// Handle chunk
+	for _, chunk := range chunks {
 		if err := accumulator.HandleChunk(chunk); err != nil {
 			return CompletionResponse{}, fmt.Errorf("chunk handling error: %w", err)
 		}
-
-		// Check if stream is complete
-		if accumulator.IsComplete() {
-			break
-		}
 	}
 
-	// Check for scanner errors
-	if err := scanner.Err(); err != nil {
-		return CompletionResponse{}, fmt.Errorf("stream reading error: %w", err)
+	if !accumulator.hasCandidates {
+		return CompletionResponse{}, fmt.Errorf("no candidates returned")
 	}
 
 	return accumulator.Build(), nil
@@ -437,48 +419,8 @@ func (c *GeminiClient) convertRequest(req CompletionRequest) geminiRequest {
 		Contents: contents,
 		Tools:    tools,
 		GenerationConfig: geminiGenerationConfig{
-			Temperature:    req.Temperature,
+			Temperature:     req.Temperature,
 			MaxOutputTokens: req.MaxTokens,
 		},
 	}
-}
-
-// convertResponse converts Gemini response to internal format
-func (c *GeminiClient) convertResponse(resp geminiResponse) CompletionResponse {
-	result := CompletionResponse{
-		Usage: TokenUsage{
-			InputTokens:  resp.UsageMetadata.PromptTokenCount,
-			OutputTokens: resp.UsageMetadata.CandidatesTokenCount,
-			TotalTokens:  resp.UsageMetadata.TotalTokenCount,
-		},
-	}
-
-	if len(resp.Candidates) == 0 {
-		return result
-	}
-
-	candidate := resp.Candidates[0]
-	var textContent string
-	var toolCalls []ToolCall
-
-	for _, part := range candidate.Content.Parts {
-		if part.Text != "" {
-			textContent += part.Text
-		}
-		if part.FunctionCall != nil {
-			name, _ := part.FunctionCall["name"].(string)
-			args, _ := part.FunctionCall["args"].(map[string]interface{})
-			toolCalls = append(toolCalls, ToolCall{
-				Name:             name,
-				Arguments:        args,
-				RawFunctionCall:  part.FunctionCall,
-				ThoughtSignature: part.ThoughtSignature, // Capture thought signature from part level
-			})
-		}
-	}
-
-	result.Content = textContent
-	result.ToolCalls = toolCalls
-
-	return result
 }

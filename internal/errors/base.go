@@ -6,14 +6,17 @@ import (
 
 // AIDocGenError is the base error type for all application errors
 type AIDocGenError struct {
-	Message  string         // Human-readable error message
-	Context  *ErrorContext  // Rich error context
-	Cause    error          // Underlying error (for wrapping)
-	ExitCode ExitCode       // Exit code for CLI
+	Message  string        // Human-readable error message
+	Context  *ErrorContext // Rich error context
+	Cause    error         // Underlying error (for wrapping)
+	ExitCode ExitCode      // Exit code for CLI
 }
 
-// Error returns the error message
+// Error returns the error message with cause if present
 func (e *AIDocGenError) Error() string {
+	if e.Cause != nil {
+		return fmt.Sprintf("%s: %v", e.Message, e.Cause)
+	}
 	return e.Message
 }
 
@@ -25,6 +28,10 @@ func (e *AIDocGenError) Unwrap() error {
 // GetUserMessage returns a user-friendly error message with context
 func (e *AIDocGenError) GetUserMessage() string {
 	msg := fmt.Sprintf("ERROR: %s", e.Message)
+
+	if e.Cause != nil {
+		msg += fmt.Sprintf("\nCause: %v", e.Cause)
+	}
 
 	if e.Context != nil {
 		msg += e.Context.Format()

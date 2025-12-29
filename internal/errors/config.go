@@ -40,7 +40,7 @@ func NewMissingEnvVarError(varName, description string) *MissingEnvVarError {
 					"description": description,
 				},
 				Suggestions: []string{
-					fmt.Sprintf("Run 'gendocs config' to set up configuration interactively"),
+					"Run 'gendocs config' to set up configuration interactively",
 					fmt.Sprintf("Export the variable: export %s='your-value'", varName),
 					fmt.Sprintf("Add to .ai/config.yaml under analyzer.llm.%s", yamlKey),
 					"Check .env.example for required variables",

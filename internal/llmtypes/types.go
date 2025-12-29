@@ -2,7 +2,7 @@ package llmtypes
 
 // Message represents a chat message
 type Message struct {
-	Role      string     // "system", "user", "assistant", "tool"
+	Role      string // "system", "user", "assistant", "tool"
 	Content   string
 	ToolID    string     // ID of the tool that was called (for role="tool")
 	ToolCalls []ToolCall // Tool calls made by assistant (for role="assistant")

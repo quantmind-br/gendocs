@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/bubbles/textinput"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -67,16 +66,15 @@ func (s Step) String() string {
 
 // Model holds the TUI state
 type Model struct {
-	Step            Step
-	Provider        string
-	APIKey          string
-	Model           string
-	BaseURL         string
-	Quitting        bool
-	ConfigPath      string
-	SavedConfig     bool
-	Err             error
-	detectedEnvVars map[string]string // Environment variables detected at startup
+	Step        Step
+	Provider    string
+	APIKey      string
+	Model       string
+	BaseURL     string
+	Quitting    bool
+	ConfigPath  string
+	SavedConfig bool
+	Err         error
 	// Text inputs for user input (exported fields)
 	APIKeyInput  textinput.Model
 	ModelInput   textinput.Model
@@ -92,44 +90,7 @@ type ConfigResult struct {
 
 // Init initializes the model
 func (m Model) Init() tea.Cmd {
-	m.detectedEnvVars = detectEnvironmentVariables()
 	return textinput.Blink
-}
-
-// detectEnvironmentVariables scans for common config environment variables
-func detectEnvironmentVariables() map[string]string {
-	detected := make(map[string]string)
-
-	envVars := []string{
-		"ANALYZER_LLM_PROVIDER",
-		"ANALYZER_LLM_MODEL",
-		"ANALYZER_LLM_API_KEY",
-		"DOCUMENTER_LLM_PROVIDER",
-		"DOCUMENTER_LLM_MODEL",
-		"DOCUMENTER_LLM_API_KEY",
-		"GITLAB_OAUTH_TOKEN",
-	}
-
-	for _, key := range envVars {
-		if val := os.Getenv(key); val != "" {
-			// Mask API keys for display
-			if strings.Contains(key, "API_KEY") || strings.Contains(key, "TOKEN") {
-				detected[key] = maskSecret(val)
-			} else {
-				detected[key] = val
-			}
-		}
-	}
-
-	return detected
-}
-
-// maskSecret masks sensitive strings for display
-func maskSecret(s string) string {
-	if len(s) <= 8 {
-		return "***"
-	}
-	return s[:4] + "..." + s[len(s)-4:]
 }
 
 // Update handles messages
@@ -204,7 +165,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "y", "Y":
 			if m.Step == StepConfirm {
-				m.saveConfig()
+				configPath, err := m.saveConfig()
+				m.ConfigPath = configPath
+				m.Err = err
+				m.SavedConfig = err == nil
 				m.Step = StepComplete
 			}
 		case "n", "N":
@@ -212,12 +176,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.Step = StepProvider
 			}
 		case "esc":
-			if m.Step == StepModel {
+			switch m.Step {
+			case StepModel:
 				m.Step = StepAPIKey
 				m.APIKeyInput.Focus()
 				m.ModelInput.Blur()
 				m.BaseURLInput.Blur()
-			} else if m.Step == StepBaseURL {
+			case StepBaseURL:
 				m.Step = StepModel
 				m.APIKeyInput.Blur()
 				m.ModelInput.Focus()
@@ -280,11 +245,12 @@ func (m Model) View() string {
 
 	// Help text
 	s += "\n\n"
-	if m.Step == StepProvider {
+	switch m.Step {
+	case StepProvider:
 		s += "1-3: Select provider  |  Enter: Continue  |  q: Quit"
-	} else if m.Step == StepConfirm {
+	case StepConfirm:
 		s += "y: Yes (save)  |  n: No (go back)  |  q: Quit"
-	} else {
+	default:
 		s += "Type input  |  Enter: Continue  |  Esc: Go back  |  q: Quit"
 	}
 
@@ -312,12 +278,6 @@ func (m Model) renderProviderSelection() string {
 		s += fmt.Sprintf("%s %s. %s (%s)\n", prefix, p.key, p.name, p.model)
 	}
 
-	// Show detected environment provider if available
-	envKey := "ANALYZER_LLM_PROVIDER"
-	if detected, ok := m.detectedEnvVars[envKey]; ok {
-		s += fmt.Sprintf("\n💡 Found %s=%s in environment\n", envKey, detected)
-	}
-
 	return s
 }
 
@@ -325,13 +285,6 @@ func (m Model) renderAPIKeyInput() string {
 	s := fmt.Sprintf("Enter your API key for %s:\n\n%s\n\n",
 		highlightStyle.Render(m.Provider),
 		m.APIKeyInput.View())
-
-	// Show detected environment variable if available
-	envKey := "ANALYZER_LLM_API_KEY"
-	if detected, ok := m.detectedEnvVars[envKey]; ok {
-		s += fmt.Sprintf("\n💡 Found %s=%s in environment\n", envKey, detected)
-		s += "   (Will be used if you leave this empty)\n"
-	}
 
 	s += "\n(Press Enter when done)"
 	return s
@@ -356,12 +309,6 @@ func (m Model) renderModelInput() string {
 		highlightStyle.Render(defaultModel),
 		m.ModelInput.View())
 
-	// Show detected environment variable if available
-	envKey := "ANALYZER_LLM_MODEL"
-	if detected, ok := m.detectedEnvVars[envKey]; ok {
-		s += fmt.Sprintf("\n\n💡 Found %s=%s in environment", envKey, detected)
-	}
-
 	return s
 }
 
@@ -381,14 +328,13 @@ func (m Model) renderConfirm() string {
 	return s
 }
 
-func (m Model) saveConfig() {
+func (m Model) saveConfig() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		m.Err = err
-		return
+		return "", err
 	}
 
-	m.ConfigPath = filepath.Join(homeDir, ".gendocs.yaml")
+	configPath := filepath.Join(homeDir, ".gendocs.yaml")
 
 	// Create YAML configuration
 	configYAML := fmt.Sprintf("# Gendocs Global Configuration\nanalyzer:\n  llm:\n    provider: %s\n    api_key: %s\n    model: %s\n",
@@ -398,12 +344,11 @@ func (m Model) saveConfig() {
 		configYAML += fmt.Sprintf("    base_url: %s\n", m.BaseURL)
 	}
 
-	if err := os.WriteFile(m.ConfigPath, []byte(configYAML), 0600); err != nil {
-		m.Err = err
-		return
+	if err := os.WriteFile(configPath, []byte(configYAML), 0600); err != nil {
+		return "", err
 	}
 
-	m.SavedConfig = true
+	return configPath, nil
 }
 
 func getProviderFromKey(key string) string {
