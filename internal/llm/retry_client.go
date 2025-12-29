@@ -84,16 +84,16 @@ type RetryConfig struct {
 // DefaultRetryConfig returns default retry configuration with optimized connection pooling
 func DefaultRetryConfig() *RetryConfig {
 	return &RetryConfig{
-		MaxAttempts:       5,
-		Multiplier:        1,
-		MaxWaitPerAttempt: 60 * time.Second,
-		MaxTotalWait:      300 * time.Second,
+		MaxAttempts:           5,
+		Multiplier:            1,
+		MaxWaitPerAttempt:     60 * time.Second,
+		MaxTotalWait:          300 * time.Second,
 		// Connection pooling defaults optimized for LLM APIs
-		MaxIdleConns:        100,
-		MaxIdleConnsPerHost: 10,
-		IdleConnTimeout:     90 * time.Second,
-		TLSHandshakeTimeout: 10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
+		MaxIdleConns:           100,
+		MaxIdleConnsPerHost:    10,
+		IdleConnTimeout:        90 * time.Second,
+		TLSHandshakeTimeout:    10 * time.Second,
+		ExpectContinueTimeout:  1 * time.Second,
 	}
 }
 
