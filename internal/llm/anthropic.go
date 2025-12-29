@@ -12,6 +12,220 @@ import (
 	"github.com/user/gendocs/internal/config"
 )
 
+// anthropicStreamEvent represents the base type for streaming events
+type anthropicStreamEvent struct {
+	Type string `json:"type"`
+}
+
+// anthropicMessageStartEvent is the first event in a stream
+type anthropicMessageStartEvent struct {
+	Type    string                 `json:"type"`
+	Message anthropicStreamMessage `json:"message"`
+}
+
+// anthropicStreamMessage represents message metadata in stream
+type anthropicStreamMessage struct {
+	ID         string                `json:"id"`
+	Type       string                `json:"type"`
+	Role       string                `json:"role"`
+	Content    []anthropicContentBlock `json:"content"`
+	Model      string                `json:"model"`
+	StopReason *string               `json:"stop_reason"`
+	Usage      anthropicUsage        `json:"usage"`
+}
+
+// anthropicContentBlockStartEvent signals the start of a content block
+type anthropicContentBlockStartEvent struct {
+	Type         string                 `json:"type"`
+	Index        int                    `json:"index"`
+	ContentBlock anthropicContentBlock  `json:"content_block"`
+}
+
+// anthropicContentBlockDeltaEvent contains incremental content
+type anthropicContentBlockDeltaEvent struct {
+	Type  string           `json:"type"`
+	Index int              `json:"index"`
+	Delta anthropicDelta   `json:"delta"`
+}
+
+// anthropicDelta represents incremental content (text or JSON)
+type anthropicDelta struct {
+	Type        string `json:"type"`
+	Text        string `json:"text,omitempty"`
+	PartialJSON string `json:"partial_json,omitempty"`
+}
+
+// anthropicContentBlockStopEvent signals the end of a content block
+type anthropicContentBlockStopEvent struct {
+	Type  string `json:"type"`
+	Index int    `json:"index"`
+}
+
+// anthropicMessageDeltaEvent contains final metadata
+type anthropicMessageDeltaEvent struct {
+	Type  string                `json:"type"`
+	Delta anthropicStopDelta    `json:"delta"`
+	Usage anthropicUsage        `json:"usage"`
+}
+
+// anthropicStopDelta represents stop information
+type anthropicStopDelta struct {
+	StopReason   string `json:"stop_reason"`
+	StopSequence string `json:"stop_sequence,omitempty"`
+}
+
+// anthropicMessageStopEvent signals stream completion
+type anthropicMessageStopEvent struct {
+	Type string `json:"type"`
+}
+
+// anthropicStreamErrorEvent represents an error in the stream
+type anthropicStreamErrorEvent struct {
+	Type  string          `json:"type"`
+	Error anthropicError `json:"error"`
+}
+
+// anthropicAccumulator builds CompletionResponse from streaming events
+type anthropicAccumulator struct {
+	contentBlocks []anthropicContentBlock
+	currentIndex  int
+	partialJSON   strings.Builder
+	usage         anthropicUsage
+	stopReason    string
+	complete      bool
+}
+
+// newAnthropicAccumulator creates a new accumulator
+func newAnthropicAccumulator() *anthropicAccumulator {
+	return &anthropicAccumulator{
+		contentBlocks: []anthropicContentBlock{},
+	}
+}
+
+// HandleEvent processes a single streaming event
+func (a *anthropicAccumulator) HandleEvent(eventType string, data []byte) error {
+	switch eventType {
+	case "message_start":
+		var event anthropicMessageStartEvent
+		if err := ParseSSEData(data, &event); err != nil {
+			return fmt.Errorf("failed to parse message_start: %w", err)
+		}
+		a.usage = event.Message.Usage
+
+	case "content_block_start":
+		var event anthropicContentBlockStartEvent
+		if err := ParseSSEData(data, &event); err != nil {
+			return fmt.Errorf("failed to parse content_block_start: %w", err)
+		}
+		// Initialize the content block
+		if event.ContentBlock.Type == "text" {
+			event.ContentBlock.Text = ""
+		} else if event.ContentBlock.Type == "tool_use" {
+			event.ContentBlock.Input = nil
+		}
+		a.contentBlocks = append(a.contentBlocks, event.ContentBlock)
+		a.currentIndex = event.Index
+
+	case "content_block_delta":
+		var event anthropicContentBlockDeltaEvent
+		if err := ParseSSEData(data, &event); err != nil {
+			return fmt.Errorf("failed to parse content_block_delta: %w", err)
+		}
+
+		if event.Index >= len(a.contentBlocks) {
+			return fmt.Errorf("delta index %d out of range (len=%d)", event.Index, len(a.contentBlocks))
+		}
+
+		block := &a.contentBlocks[event.Index]
+		if event.Delta.Type == "text_delta" && block.Type == "text" {
+			block.Text += event.Delta.Text
+		} else if event.Delta.Type == "input_json_delta" && block.Type == "tool_use" {
+			a.partialJSON.WriteString(event.Delta.PartialJSON)
+		}
+
+	case "content_block_stop":
+		var event anthropicContentBlockStopEvent
+		if err := ParseSSEData(data, &event); err != nil {
+			return fmt.Errorf("failed to parse content_block_stop: %w", err)
+		}
+
+		// If this is a tool_use block, parse the accumulated JSON
+		if event.Index < len(a.contentBlocks) && a.contentBlocks[event.Index].Type == "tool_use" {
+			if a.partialJSON.Len() > 0 {
+				var input map[string]interface{}
+				if err := json.Unmarshal([]byte(a.partialJSON.String()), &input); err != nil {
+					return fmt.Errorf("failed to parse tool input JSON: %w", err)
+				}
+				a.contentBlocks[event.Index].Input = input
+				a.partialJSON.Reset()
+			}
+		}
+
+	case "message_delta":
+		var event anthropicMessageDeltaEvent
+		if err := ParseSSEData(data, &event); err != nil {
+			return fmt.Errorf("failed to parse message_delta: %w", err)
+		}
+		a.usage.OutputTokens = event.Usage.OutputTokens
+		a.stopReason = event.Delta.StopReason
+
+	case "message_stop":
+		var event anthropicMessageStopEvent
+		if err := ParseSSEData(data, &event); err != nil {
+			return fmt.Errorf("failed to parse message_stop: %w", err)
+		}
+		a.complete = true
+
+	case "error":
+		var event anthropicStreamErrorEvent
+		if err := ParseSSEData(data, &event); err != nil {
+			return fmt.Errorf("failed to parse error event: %w", err)
+		}
+		return fmt.Errorf("API error: %s", event.Error.Message)
+
+	default:
+		// Unknown event type - ignore
+	}
+
+	return nil
+}
+
+// Build constructs the final CompletionResponse
+func (a *anthropicAccumulator) Build() CompletionResponse {
+	result := CompletionResponse{
+		Usage: TokenUsage{
+			InputTokens:  a.usage.InputTokens,
+			OutputTokens: a.usage.OutputTokens,
+			TotalTokens:  a.usage.InputTokens + a.usage.OutputTokens,
+		},
+	}
+
+	// Extract content and tool calls
+	var textContent strings.Builder
+	var toolCalls []ToolCall
+
+	for _, block := range a.contentBlocks {
+		if block.Type == "text" {
+			textContent.WriteString(block.Text)
+		} else if block.Type == "tool_use" {
+			toolCalls = append(toolCalls, ToolCall{
+				Name:      block.Name,
+				Arguments: block.Input,
+			})
+		}
+	}
+
+	result.Content = textContent.String()
+	result.ToolCalls = toolCalls
+
+	return result
+}
+
+// IsComplete returns true if message_stop event was received
+func (a *anthropicAccumulator) IsComplete() bool {
+	return a.complete
+}
+
 // AnthropicClient implements LLMClient for Anthropic Claude
 type AnthropicClient struct {
 	*BaseLLMClient
@@ -135,29 +349,42 @@ func (c *AnthropicClient) GenerateCompletion(ctx context.Context, req Completion
 	}
 	defer resp.Body.Close()
 
-	// Read response
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return CompletionResponse{}, fmt.Errorf("failed to read response: %w", err)
-	}
-
 	// Check for error status
 	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
 		return CompletionResponse{}, fmt.Errorf("API error: status %d, body: %s", resp.StatusCode, string(body))
 	}
 
-	// Parse response
-	var anResp anthropicResponse
-	if err := json.Unmarshal(body, &anResp); err != nil {
-		return CompletionResponse{}, fmt.Errorf("failed to parse response: %w", err)
+	// Parse streaming response
+	return c.parseStreamingResponse(resp.Body)
+}
+
+// parseStreamingResponse parses Anthropic's SSE stream and builds the response
+func (c *AnthropicClient) parseStreamingResponse(body io.ReadCloser) (CompletionResponse, error) {
+	parser := NewSSEParser(body)
+	accumulator := newAnthropicAccumulator()
+
+	for {
+		event, err := parser.NextEvent()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return CompletionResponse{}, fmt.Errorf("stream parsing error: %w", err)
+		}
+
+		// Handle event
+		if err := accumulator.HandleEvent(event.Event, event.Data); err != nil {
+			return CompletionResponse{}, fmt.Errorf("event handling error: %w", err)
+		}
+
+		// Check if stream is complete
+		if accumulator.IsComplete() {
+			break
+		}
 	}
 
-	// Check for API error
-	if anResp.Error != nil {
-		return CompletionResponse{}, fmt.Errorf("API error: %s", anResp.Error.Message)
-	}
-
-	return c.convertResponse(anResp), nil
+	return accumulator.Build(), nil
 }
 
 // SupportsTools returns true
@@ -251,7 +478,7 @@ func (c *AnthropicClient) convertRequest(req CompletionRequest) anthropicRequest
 		MaxTokens:   req.MaxTokens,
 		Temperature: req.Temperature,
 		Tools:       tools,
-		Stream:      false,
+		Stream:      true, // Enable streaming response
 	}
 }
 
