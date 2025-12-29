@@ -14,7 +14,7 @@
       "id": "phase-1",
       "name": "Design HTTP request helper",
       "description": "Design the signature and structure for a generic HTTP request handler that eliminates duplication across LLM clients",
-      "status": "pending",
+      "status": "completed",
       "subtasks": [
         {
           "id": "phase-1-subtask-1",
@@ -45,9 +45,15 @@
           "id": "phase-1-subtask-3",
           "name": "Identify provider-specific logic",
           "description": "Confirm that provider-specific logic (convertRequest, convertResponse, API error field checks) will remain in each client implementation",
-          "status": "pending",
+          "status": "completed",
           "estimatedMinutes": 5,
-          "files_involved": []
+          "files_involved": [
+            "internal/llm/openai.go",
+            "internal/llm/anthropic.go",
+            "internal/llm/gemini.go"
+          ],
+          "notes": "Created comprehensive provider-specific-logic-confirmation.md documenting:\n- 5 categories of provider-specific logic that must remain\n- Request format conversion (convertRequest) for each provider\n- Response format conversion (convertResponse) for each provider\n- API authentication mechanisms (Bearer token, x-api-key, URL param)\n- URL construction patterns for each provider\n- Additional response validation (error field checks, safety blocks)\n- Summary table showing what stays vs. what gets extracted\n- Verification that provider-specific behavior is preserved",
+          "updated_at": "2025-12-29T04:10:00.000000+00:00"
         }
       ]
     },
@@ -362,5 +368,5 @@
     "No breaking changes to public APIs"
   ],
   "spec_file": "spec.md",
-  "last_updated": "2025-12-29T04:03:40.138630+00:00"
+  "last_updated": "2025-12-29T04:10:00.000000+00:00"
 }

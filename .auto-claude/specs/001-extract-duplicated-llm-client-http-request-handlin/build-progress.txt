@@ -3,7 +3,7 @@
 ## Summary
 Extracting duplicated HTTP request handling logic from OpenAI, Anthropic, and Gemini LLM clients into a shared helper function in BaseLLMClient.
 
-## Status: Phase 1 - Subtask 2 Complete
+## Status: Phase 1 - Subtask 3 Complete (Phase 1 Complete!)
 
 ### Phase 1: Design HTTP Request Helper
 
@@ -74,10 +74,104 @@ func (c *BaseLLMClient) doHTTPRequest(
 **Verification Criteria:**
 - 10 specific criteria covering signature, behavior, error handling, and resource cleanup
 
+#### ✅ Subtask 3: Identify Provider-Specific Logic (Completed)
+Created comprehensive provider-specific-logic-confirmation.md documenting:
+
+**5 Categories of Provider-Specific Logic Confirmed:**
+
+1. **Request Format Conversion** (convertRequest methods)
+   - OpenAI: openaiRequest with message array + tools
+   - Anthropic: anthropicRequest with content blocks structure
+   - Gemini: geminiRequest with contents/parts structure
+
+2. **Response Format Conversion** (convertResponse methods)
+   - OpenAI: Extracts from Choices[] array
+   - Anthropic: Extracts from Content[] blocks
+   - Gemini: Extracts from Candidates[].Content.Parts[]
+
+3. **API Authentication**
+   - OpenAI: Authorization: Bearer token header
+   - Anthropic: x-api-key header + anthropic-version
+   - Gemini: API key in URL query parameter
+
+4. **URL Construction**
+   - OpenAI: {baseURL}/chat/completions
+   - Anthropic: {baseURL}/v1/messages
+   - Gemini: {baseURL}/v1beta/{model}:generateContent?key={apiKey}
+
+5. **Additional Response Validation**
+   - OpenAI: Checks openaiResponse.Error field
+   - Anthropic: Checks anthropicResponse.Error field
+   - Gemini: Checks error + empty candidates + safety blocks
+
+**Summary Table:**
+- Clear mapping of what stays in each client vs. what gets extracted
+- All provider-specific logic confirmed to remain intact
+- Only truly duplicated HTTP handling will be centralized
+
+**Verification:**
+- ✅ Provider-specific request/response conversion preserved
+- ✅ Provider authentication mechanisms maintained
+- ✅ Provider-specific error checking stays in place
+- ✅ Only duplicated HTTP handling extracted
+- ✅ Each provider can evolve independently
+- ✅ No breaking changes to public interfaces
+- ✅ Test compatibility maintained
+
+**Function Signature:**
+```go
+func (c *BaseLLMClient) doHTTPRequest(
+    ctx context.Context,
+    method string,
+    url string,
+    headers map[string]string,
+    body interface{},
+) ([]byte, error)
+```
+
+**Key Design Decisions:**
+- **Location**: BaseLLMClient method to access retryClient
+- **Body Parameter**: interface{} type for provider-specific request structs
+- **Headers Parameter**: map[string]string for flexibility
+- **Return Type**: Raw []byte to allow provider-specific parsing
+
+**Implementation Behavior:**
+1. Marshal request body to JSON
+2. Create HTTP request with context
+3. Set headers from map
+4. Execute with retryClient.Do
+5. Read response body
+6. Validate status code (200 OK)
+7. Return raw bytes for provider-specific parsing
+
+**Error Handling:**
+- `"failed to marshal request: %w"`
+- `"failed to create request: %w"`
+- `"request failed: %w"`
+- `"failed to read response: %w"`
+- `"API error: status %d, body: %s"`
+
+**Benefits:**
+- ~70 lines of code reduction
+- Single source of truth for HTTP handling
+- Consistent error messages and retry behavior
+- Provider-specific logic preserved
+
+**Verification Criteria:**
+- 10 specific criteria covering signature, behavior, error handling, and resource cleanup
+
+### Phase 1 Status: ✅ COMPLETE
+
+All three design subtasks completed:
+1. ✅ Pattern analysis documented (pattern-analysis.md)
+2. ✅ Helper function signature designed (helper-function-design.md)
+3. ✅ Provider-specific logic confirmed (provider-specific-logic-confirmation.md)
+
 ### Next Steps
 1. ✅ Subtask 1: Document pattern (COMPLETED)
 2. ✅ Subtask 2: Design helper function signature (COMPLETED)
-3. ⏳ Subtask 3: Identify provider-specific logic (already documented in pattern-analysis.md)
+3. ✅ Subtask 3: Identify provider-specific logic (COMPLETED)
+4. ⏳ **Phase 2: Implement HTTP request helper** (NEXT)
 
 ### Implementation Plan Created
 - ✅ 6 phases defined with 19 subtasks
