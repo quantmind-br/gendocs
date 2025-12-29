@@ -205,9 +205,10 @@ Working on Phase 3 (Integrate with LLM Client Layer).
 - Subtask 3-1: Create caching LLM client decorator ✅
 - Subtask 3-2: Update LLM factory to support caching ✅
 - Subtask 3-3: Add cache configuration to config system ✅
+- Subtask 3-4: Integrate caching in agent creation ✅
 
 **Remaining Subtasks:**
-- Subtask 3-4: Integrate caching in agent creation
+- None (Phase 3 Complete!)
 
 ### Recent Implementation Work
 ✅ **Subtask 3-2: Update LLM factory to support caching** (COMPLETED 2025-12-29)
@@ -247,6 +248,39 @@ Working on Phase 3 (Integrate with LLM Client Layer).
 - All fields include mapstructure tags for YAML configuration support
 - Implementation follows design specifications and existing code patterns
 - Ready for subtask 3-4 (Integrate caching in agent creation)
+
+✅ **Subtask 3-4: Integrate caching in agent creation** (COMPLETED 2025-12-29)
+- Added `setupCaches()` helper function in `internal/agents/sub_agents.go`:
+  - Checks if caching is enabled via `llmCfg.Cache.IsEnabled()`
+  - Creates memory cache with configured max size
+  - Creates disk cache with configured path, TTL, and 100MB max size
+  - Loads existing disk cache on startup
+  - Starts background auto-save goroutine (5-minute interval)
+  - Returns cleanup function to stop auto-save gracefully
+  - Logs cache configuration when enabled
+  - Returns no-op cleanup when caching disabled
+- Updated `internal/agents/analyzer.go`:
+  - Added `cacheCleanup func()` field to AnalyzerAgent struct
+  - Modified `NewAnalyzerAgent()` to call `setupCaches()` and pass cache instances to `NewFactory()`
+  - Added `defer aa.cacheCleanup()` in `Run()` method to ensure cleanup on exit
+  - Error handling with warning log if cache setup fails
+- Updated `internal/agents/documenter.go`:
+  - Modified `Run()` method to call `setupCaches()` locally
+  - Passes cache instances to `NewFactory()`
+  - Defers cleanup function to ensure cache is saved on exit
+  - Error handling with warning log if cache setup fails
+- Updated `internal/agents/ai_rules_generator.go`:
+  - Same pattern as documenter.go
+  - Caches are initialized in `Run()` method
+  - Cleanup deferred until method completion
+- All agents now support LLM response caching when enabled via configuration:
+  - Set `cache.enabled: true` in `.ai/config.yaml`
+  - Configure `cache.max_size` (default: 1000 entries)
+  - Configure `cache.ttl` in days (default: 7)
+  - Configure `cache.cache_path` (default: ".ai/llm_cache.json")
+- Caching gracefully degrades on errors (logs warning, continues without cache)
+- Factory functions in `factory.go` require no changes (use factory passed as parameter)
+- **Phase 3 (Integrate with LLM Client Layer) now COMPLETE!** 🎉
 
 ### Implementation Notes
 - Subtask 2-1 actually implemented the basic structures for 2-2, 2-3, 2-4, and 2-5 as well
