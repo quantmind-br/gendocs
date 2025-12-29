@@ -1,0 +1,20 @@
+{
+  "discovered_files": {
+    "./internal/agents": {
+      "description": "Test isolation verification: Before refactoring, verify which types/functions are actually used by tests. In this case, integration tests used SubAgent from sub_agents.go (unchanged during refactoring), not the refactored agents (AnalyzerAgent, DocumenterAgent, AIRulesGeneratorAgent). This meant zero test impact, providing confidence to proceed with the refactoring.",
+      "category": "testing-strategy",
+      "discovered_at": "2025-12-29T04:20:13.552919+00:00"
+    },
+    "./internal/agents/documenter.go,./internal/agents/ai_rules_generator.go": {
+      "description": "Identical agent pattern: DocumenterAgent and AIRulesGeneratorAgent follow the exact same implementation pattern - both load analysis documents from .ai/docs directory, create agents via factory functions, render prompts with analysis content embedded, and save output to files. This suggests an opportunity for future refactoring to extract a common base or use code generation.",
+      "category": "design-patterns",
+      "discovered_at": "2025-12-29T04:20:13.547774+00:00"
+    },
+    "./internal/agents/analyzer.go": {
+      "description": "Function type as dependency injection: AgentCreator is a function type used by AnalyzerAgent's createTask helper method to accept different agent constructors (CreateStructureAnalyzer, CreateDependencyAnalyzer, etc.). This provides flexibility for dynamic agent creation while maintaining type safety, enabling concurrent execution of heterogeneous agents through a common interface.",
+      "category": "design-patterns",
+      "discovered_at": "2025-12-29T04:20:13.550030+00:00"
+    }
+  },
+  "last_updated": "2025-12-29T04:20:13.552923+00:00"
+}
