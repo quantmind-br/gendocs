@@ -172,7 +172,8 @@ func HashFile(path string) (string, error) {
 }
 
 // ScanFiles scans repository files and returns their info
-func ScanFiles(repoPath string, ignorePatterns []string) (map[string]FileInfo, error) {
+// If cache is provided, it will skip hashing files whose mtime and size haven't changed
+func ScanFiles(repoPath string, ignorePatterns []string, cache *AnalysisCache) (map[string]FileInfo, error) {
 	files := make(map[string]FileInfo)
 
 	err := filepath.Walk(repoPath, func(path string, info os.FileInfo, err error) error {
@@ -207,17 +208,35 @@ func ScanFiles(repoPath string, ignorePatterns []string) (map[string]FileInfo, e
 			return nil
 		}
 
-		// Calculate hash
-		hash, err := HashFile(path)
-		if err != nil {
-			// Skip files we can't read
-			return nil
+		// Get file metadata
+		modTime := info.ModTime()
+		fileSize := info.Size()
+
+		// Check if we can reuse cached hash
+		var hash string
+		if cache != nil {
+			if cachedFile, exists := cache.Files[relPath]; exists {
+				// If mtime and size match, reuse the cached hash
+				if cachedFile.Modified.Equal(modTime) && cachedFile.Size == fileSize {
+					hash = cachedFile.Hash
+				}
+			}
+		}
+
+		// Calculate hash if not found in cache or file changed
+		if hash == "" {
+			var err error
+			hash, err = HashFile(path)
+			if err != nil {
+				// Skip files we can't read
+				return nil
+			}
 		}
 
 		files[relPath] = FileInfo{
 			Hash:     hash,
-			Modified: info.ModTime(),
-			Size:     info.Size(),
+			Modified: modTime,
+			Size:     fileSize,
 		}
 
 		return nil

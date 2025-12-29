@@ -1,0 +1,86 @@
+# Build Progress: Optimize file scanning with selective hashing and parallel processing
+
+## Status: Planning Complete
+**Created:** 2025-12-29
+**Last Updated:** 2025-12-29
+
+---
+
+## Summary
+
+This implementation will optimize the `cache.ScanFiles()` function to:
+1. Skip hashing files whose mtime and size haven't changed (selective hashing)
+2. Parallelize file hashing using a worker pool
+
+Target improvement: 3-5x faster for incremental scans on large repositories.
+
+---
+
+## Current Phase: Ready to Start
+
+### Completed Tasks
+- [x] Read and analyzed spec.md
+- [x] Reviewed existing ScanFiles implementation in internal/cache/cache.go
+- [x] Reviewed ScanFiles usage in internal/agents/analyzer.go
+- [x] Created detailed implementation plan with 4 phases and 12 subtasks
+
+### Implementation Plan Structure
+
+**Phase 1: Add mtime-based selective hashing optimization** (3 subtasks)
+- Refactor ScanFiles to accept optional cache parameter
+- Add metrics tracking for cache hits/misses
+- Update analyzer.go to pass cache to ScanFiles
+
+**Phase 2: Add parallel file hashing** (3 subtasks)
+- Create parallel hash worker implementation
+- Integrate parallel hashing into ScanFiles
+- Add configurable parallelism limit
+
+**Phase 3: Add comprehensive testing** (3 subtasks)
+- Create unit tests for selective hashing
+- Create benchmarks for performance
+- Add integration tests
+
+**Phase 4: Documentation and cleanup** (3 subtasks)
+- Add code comments and documentation
+- Update README and documentation
+- Final code review and validation
+
+---
+
+## Key Technical Decisions
+
+1. **Selective Hashing Strategy**: Use mtime AND size to determine if a file has changed (both must match to skip hashing)
+2. **Backward Compatibility**: Cache parameter is optional (can be nil), maintaining existing API
+3. **Parallelization Strategy**: Separate file walking (I/O bound) from hashing (CPU bound) into two phases
+4. **Worker Count**: Default to runtime.NumCPU() but make configurable, with sensible max limit
+
+---
+
+## Files to Modify
+
+- `internal/cache/cache.go` - Main implementation file
+- `internal/agents/analyzer.go` - Update to pass cache to ScanFiles
+- `internal/config/models.go` - Add MaxHashWorkers configuration
+- `internal/cache/cache_test.go` - Create unit tests
+- `internal/cache/cache_bench_test.go` - Create benchmarks
+- `internal/cache/cache_integration_test.go` - Create integration tests
+- `README.md` - Update documentation
+
+---
+
+## Next Steps
+
+1. Begin Phase 1, Subtask 1: Refactor ScanFiles to accept optional cache parameter
+2. Implement selective hashing logic
+3. Add metrics tracking
+4. Create comprehensive tests
+
+---
+
+## Notes
+
+- Current ScanFiles implementation: Lines 174-227 in internal/cache/cache.go
+- Current usage: Line 57 in internal/agents/analyzer.go
+- FileInfo already has Modified (mtime) and Size fields, so no schema changes needed
+- HashFile function (lines 158-172) will be reused by parallel workers

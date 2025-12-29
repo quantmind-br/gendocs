@@ -53,16 +53,16 @@ func (aa *AnalyzerAgent) Run(ctx context.Context) (*AnalysisResult, error) {
 	var currentFiles map[string]cache.FileInfo
 	var scanErr error
 
-	// Always scan files for cache update
-	currentFiles, scanErr = cache.ScanFiles(aa.config.RepoPath, nil)
-	if scanErr != nil {
-		aa.logger.Warn(fmt.Sprintf("Failed to scan files: %v", scanErr))
-	}
-
-	// Always load/create cache (needed for saving later)
+	// Always load/create cache (needed for selective hashing)
 	analysisCache, _ = cache.LoadCache(aa.config.RepoPath)
 	if analysisCache == nil {
 		analysisCache = cache.NewCache()
+	}
+
+	// Always scan files for cache update (with cache for selective hashing)
+	currentFiles, scanErr = cache.ScanFiles(aa.config.RepoPath, nil, analysisCache)
+	if scanErr != nil {
+		aa.logger.Warn(fmt.Sprintf("Failed to scan files: %v", scanErr))
 	}
 
 	if !aa.config.Force && scanErr == nil {
