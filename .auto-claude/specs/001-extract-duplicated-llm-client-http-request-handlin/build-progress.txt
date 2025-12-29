@@ -3,7 +3,7 @@
 ## Summary
 Extracting duplicated HTTP request handling logic from OpenAI, Anthropic, and Gemini LLM clients into a shared helper function in BaseLLMClient.
 
-## Status: Phase 2 - Subtask 4 Complete
+## Status: Phase 2 - Subtask 5 Complete
 
 ### Phase 1: Design HTTP Request Helper
 
@@ -364,6 +364,44 @@ The implementation exactly matches the duplicated pattern from all three LLM cli
 - Phase 2, Subtask 6: Handle non-OK status codes (already implemented in subtask 1)
 
 **Note:** All Phase 2 subtasks (2-6) were completed as part of subtask 1 since the complete implementation includes all error handling. Each remaining subtask will be verified and marked complete.
+
+#### ✅ Subtask 5: Handle response reading errors (Completed)
+
+**Verification Summary:**
+Verified proper error wrapping for response body reading failures in the doHTTPRequest method:
+
+**Implementation Location:** Lines 144-147 of `internal/llm/client.go`
+
+```go
+// Read response body
+responseBody, err := io.ReadAll(resp.Body)
+if err != nil {
+    return nil, fmt.Errorf("failed to read response: %w", err)
+}
+```
+
+**Acceptance Criteria Met:**
+- ✅ Returns wrapped error with context 'failed to read response'
+- ✅ Uses `%w` verb for proper error wrapping (allows errors.Is/As to work)
+- ✅ Matches exact pattern from existing implementations (openai.go, anthropic.go, gemini.go)
+- ✅ Returns nil for bytes parameter on error (consistent with helper return type)
+- ✅ Uses `io.ReadAll` to read complete response body
+
+**Pattern Consistency:**
+The implementation matches the duplicated pattern from all three LLM clients:
+- OpenAI: Line 142 - `fmt.Errorf("failed to read response: %w", err)`
+- Anthropic: Line 141 - `fmt.Errorf("failed to read response: %w", err)`
+- Gemini: Line 144 - `fmt.Errorf("failed to read response: %w", err)`
+- **New Helper:** Line 146 - `fmt.Errorf("failed to read response: %w", err)`
+
+**Note:** The only difference from the existing clients is that the helper returns `nil` (for `[]byte`) instead of `CompletionResponse{}` because the helper function signature returns `[]byte, error` instead of `CompletionResponse, error`.
+
+**Files Modified:**
+- No code changes required (already correctly implemented in subtask 1)
+- Updated `implementation_plan.json` to mark subtask as completed
+
+**Next Subtask:**
+- Phase 2, Subtask 6: Handle non-OK status codes (already implemented in subtask 1)
 
 ### Implementation Plan Created
 - ✅ 6 phases defined with 19 subtasks
