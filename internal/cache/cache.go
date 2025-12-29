@@ -100,6 +100,17 @@ type hashFileResult struct {
 	err     error  // Error if hashing failed (nil on success)
 }
 
+// fileMetadata holds file path and metadata collected during directory traversal.
+//
+// This struct is used internally by ScanFiles to collect file information before
+// deciding which files need hash computation.
+type fileMetadata struct {
+	relPath  string    // Relative path from repository root
+	fullPath string    // Absolute path to the file
+	modTime  time.Time // File modification time
+	size     int64     // File size in bytes
+}
+
 // DefaultMaxHashWorkers is the default maximum number of parallel hash workers.
 //
 // This constant provides a safety cap to prevent overwhelming the filesystem with
@@ -308,7 +319,10 @@ func (c *AnalysisCache) Save(repoPath string) error {
 		return fmt.Errorf("failed to create cache directory: %w", err)
 	}
 
-	data, err := json.MarshalIndent(c, "", "  ")
+	// Use json.Marshal instead of json.MarshalIndent for better performance
+	// The cache file is machine-readable, so pretty-printing adds unnecessary
+	// file size and encoding overhead. json.Unmarshal is indentation-agnostic.
+	data, err := json.Marshal(c)
 	if err != nil {
 		return fmt.Errorf("failed to marshal cache: %w", err)
 	}
@@ -403,29 +417,25 @@ func HashFile(path string) (string, error) {
 //
 // Example Usage:
 //
-//   // With cache and metrics
-//   cache, _ := LoadCache(repoPath)
-//   var metrics ScanMetrics
-//   files, err := ScanFiles(repoPath, nil, cache, &metrics, 0)
-//   fmt.Printf("Cache hit rate: %.1f%%\n",
-//       float64(metrics.CachedFiles)/float64(metrics.TotalFiles)*100)
+//	// With cache and metrics
+//	cache, _ := LoadCache(repoPath)
+//	var metrics ScanMetrics
+//	files, err := ScanFiles(repoPath, nil, cache, &metrics, 0)
+//	fmt.Printf("Cache hit rate: %.1f%%\n",
+//	    float64(metrics.CachedFiles)/float64(metrics.TotalFiles)*100)
 //
-//   // Without cache (backward compatible)
-//   files, err := ScanFiles(repoPath, nil, nil, nil, 0)
+//	// Without cache (backward compatible)
+//	files, err := ScanFiles(repoPath, nil, nil, nil, 0)
 func ScanFiles(repoPath string, ignorePatterns []string, cache *AnalysisCache, metrics *ScanMetrics, maxHashWorkers int) (map[string]FileInfo, error) {
 	// Phase 1: Walk directory tree and collect file metadata (no hashing yet)
 	//
-	// This phase is I/O bound as we read directory entries and file metadata from disk.
-	// We deliberately avoid any hash computation here to minimize I/O overhead.
-	// The fileMetadata struct allows us to collect all info needed for cache decisions.
-	type fileMetadata struct {
-		relPath  string
-		fullPath string
-		modTime  time.Time
-		size     int64
-	}
+	// This is I/O bound work. We gather mtime and size for all files first, before
+	// deciding which files need hash computation. This allows us to make cache hit/miss
+	// decisions for all files upfront, which is critical for efficient batching.
+	var allFiles []fileMetadata
+	var needsHashing []hashFileJob
 
-	var filesToProcess []fileMetadata
+	// Walk the directory tree
 	err := filepath.Walk(repoPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			if os.IsPermission(err) {
@@ -458,13 +468,8 @@ func ScanFiles(repoPath string, ignorePatterns []string, cache *AnalysisCache, m
 			return nil
 		}
 
-		// Track total files
-		if metrics != nil {
-			metrics.TotalFiles++
-		}
-
-		// Collect file metadata for processing
-		filesToProcess = append(filesToProcess, fileMetadata{
+		// Collect file metadata (no hash computation yet)
+		allFiles = append(allFiles, fileMetadata{
 			relPath:  relPath,
 			fullPath: path,
 			modTime:  info.ModTime(),
@@ -478,107 +483,93 @@ func ScanFiles(repoPath string, ignorePatterns []string, cache *AnalysisCache, m
 		return nil, err
 	}
 
-	// Phase 2: Separate files into cached and needs-hashing groups
+	// Phase 2: Classify files into cache hits and misses
 	//
-	// This phase examines each file discovered in Phase 1 and determines whether we can
-	// reuse the cached hash or need to compute a new one. The decision is based on:
-	//   1. Does the file exist in the cache?
-	//   2. If yes, do both mtime AND size match exactly?
-	//
-	// Files that pass both tests are cache hits and skip hash computation.
-	// Files that fail either test are cache misses and are added to the parallel hashing batch.
-	//
-	// We build the results map incrementally:
-	//   - Cache hits: Add immediately with their cached hash
-	//   - Cache misses: Add now with empty hash, will be filled in Phase 3
-	files := make(map[string]FileInfo)
-	var filesToHash []hashFileJob
+	// For each file, check if we have cached metadata. If the mtime and size match,
+	// we can skip hash computation (cache hit). Otherwise, we need to compute the hash.
+	// This is the core of the selective hashing optimization.
+	results := make(map[string]FileInfo)
 
-	for _, meta := range filesToProcess {
-		// Check if we can reuse cached hash
-		//
-		// Cache hit condition (both must be true):
-		//   1. File exists in cache
-		//   2. Cached mtime equals current mtime (using Equal() for time.Time comparison)
-		//   3. Cached size equals current size
-		//
-		// We require BOTH mtime and size to match because:
-		//   - mtime alone can have false positives (e.g., file touched without modification)
-		//   - size alone can have false positives (e.g., file changed but same size)
-		//   - Combined, they provide a very reliable change detection heuristic
-		var hash string
-		cached := false
+	for _, file := range allFiles {
+		if metrics != nil {
+			metrics.TotalFiles++
+		}
+
+		// Check if this is a cache hit
 		if cache != nil {
-			if cachedFile, exists := cache.Files[meta.relPath]; exists {
-				// If mtime and size match, reuse the cached hash
-				if cachedFile.Modified.Equal(meta.modTime) && cachedFile.Size == meta.size {
-					hash = cachedFile.Hash
-					cached = true
+			if cachedInfo, exists := cache.Files[file.relPath]; exists {
+				// Cache hit if both mtime and size match
+				if cachedInfo.Modified.Equal(file.modTime) && cachedInfo.Size == file.size {
+					// Cache HIT: reuse cached hash
+					results[file.relPath] = FileInfo{
+						Hash:     cachedInfo.Hash,
+						Modified: file.modTime,
+						Size:     file.size,
+					}
+					if metrics != nil {
+						metrics.CachedFiles++
+					}
+					continue
 				}
 			}
 		}
 
-		// Track metrics for cached files
-		if metrics != nil && cached {
-			metrics.CachedFiles++
+		// Cache MISS: file needs hashing
+		needsHashing = append(needsHashing, hashFileJob{
+			relPath:  file.relPath,
+			fullPath: file.fullPath,
+		})
+	}
+
+	// Phase 3: Parallel hash computation for cache misses
+	//
+	// Now we compute hashes for all files that weren't cache hits. This is CPU-bound
+	// work, so we use a worker pool to parallelize across multiple cores. The separation
+	// of Phase 2 (classification) from Phase 3 (hashing) is critical for efficiency:
+	// it allows us to batch all hash computations and process them in parallel.
+	if len(needsHashing) > 0 {
+		if metrics != nil {
+			metrics.HashedFiles = len(needsHashing)
 		}
 
-		// If not cached, add to parallel hashing batch
-		//
-		// Files that fail the cache hit test are collected into a batch for parallel hashing.
-		// This batching allows us to compute multiple hashes concurrently, significantly
-		// speeding up the process on multi-core systems.
-		if !cached {
-			filesToHash = append(filesToHash, hashFileJob{
-				relPath:  meta.relPath,
-				fullPath: meta.fullPath,
-			})
-		}
+		// Hash all files in parallel using worker pool
+		hashes := parallelHashFiles(needsHashing, maxHashWorkers)
 
-		// Initialize file entry (hash will be filled in after parallel hashing)
-		//
-		// We build the final results map in Phase 2, but cache misses get an empty hash
-		// that will be filled in during Phase 3. This allows us to have a single results
-		// map that gets progressively filled in, rather than merging multiple maps.
-		files[meta.relPath] = FileInfo{
-			Hash:     hash,
-			Modified: meta.modTime,
-			Size:     meta.size,
+		// Update results with computed hashes
+		for i, job := range needsHashing {
+			if hash, ok := hashes[job.relPath]; ok {
+				results[job.relPath] = FileInfo{
+					Hash:     hash,
+					Modified: fileModTimeFromJob(job, needsHashing, allFiles),
+					Size:     fileSizeFromJob(job, needsHashing, allFiles),
+				}
+			}
+			// If hashing failed, we skip the file (results won't contain it)
+			_ = i // Use i to avoid unused variable warning
 		}
 	}
 
-	// Phase 3: Batch hash all files that need it in parallel
-	//
-	// This is the CPU-intensive phase where we compute SHA256 hashes for all cache misses.
-	// The parallelHashFiles() function implements a worker pool that:
-	//   - Spawns multiple worker goroutines (limited by maxHashWorkers)
-	//   - Distributes file hashing jobs across workers
-	//   - Collects results into a map as workers complete
-	//
-	// After parallel hashing completes, we update the files map with the computed hashes.
-	// For any hash that failed (error), we leave it as empty string - that file will be
-	// treated as missing/errored in subsequent analysis.
-	//
-	// The batching approach ensures that we maximize parallelism while avoiding
-	// overwhelming the filesystem with too many concurrent reads.
-	if len(filesToHash) > 0 {
-		hashResults := parallelHashFiles(filesToHash, maxHashWorkers)
+	return results, nil
+}
 
-		// Update file entries with computed hashes
-		for relPath, hash := range hashResults {
-			if file, exists := files[relPath]; exists {
-				file.Hash = hash
-				files[relPath] = file
-			}
-
-			// Track metrics for hashed files
-			if metrics != nil {
-				metrics.HashedFiles++
-			}
+// Helper function to get modTime from a job
+func fileModTimeFromJob(job hashFileJob, jobs []hashFileJob, files []fileMetadata) time.Time {
+	for _, f := range files {
+		if f.relPath == job.relPath {
+			return f.modTime
 		}
 	}
+	return time.Time{}
+}
 
-	return files, nil
+// Helper function to get size from a job
+func fileSizeFromJob(job hashFileJob, jobs []hashFileJob, files []fileMetadata) int64 {
+	for _, f := range files {
+		if f.relPath == job.relPath {
+			return f.size
+		}
+	}
+	return 0
 }
 
 // DetectChanges compares current files with cached files
