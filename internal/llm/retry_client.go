@@ -11,23 +11,73 @@ import (
 	"time"
 )
 
-// RetryConfig holds retry and connection pooling configuration
+// RetryConfig holds retry and connection pooling configuration.
+//
+// The connection pooling settings are optimized for LLM API usage, where
+// requests to the same API endpoint are common. Keeping connections open
+// and reusing them significantly reduces latency by eliminating the need
+// for repeated TCP and TLS handshakes.
 type RetryConfig struct {
-	MaxAttempts       int           // Maximum number of retry attempts
-	Multiplier        int           // Exponential backoff multiplier
-	MaxWaitPerAttempt time.Duration // Maximum wait time per attempt
-	MaxTotalWait      time.Duration // Maximum total wait time
+	// Retry settings
+	MaxAttempts       int           // Maximum number of retry attempts (default: 5)
+	Multiplier        int           // Exponential backoff multiplier in seconds (default: 1)
+	MaxWaitPerAttempt time.Duration // Maximum wait time per retry attempt (default: 60s)
+	MaxTotalWait      time.Duration // Maximum total wait time across all retries (default: 300s)
 
-	// Connection pooling settings
-	MaxIdleConns        int           // Maximum number of idle connections across all hosts (default: 100)
-	MaxIdleConnsPerHost int           // Maximum number of idle connections per host (default: 10)
-	IdleConnTimeout     time.Duration // Maximum idle time for a connection (default: 90s)
-	TLSHandshakeTimeout time.Duration // Maximum time to wait for TLS handshake (default: 10s)
-	ExpectContinueTimeout time.Duration // Maximum time to wait for 100-continue response (default: 1s)
+	// Connection Pooling Settings
+	//
+	// These settings control how HTTP connections are managed and reused.
+	// Proper connection pooling is critical for LLM API performance because:
+	// - It reduces latency by reusing existing connections
+	// - It minimizes TCP/TLS handshake overhead
+	// - It improves throughput by maintaining connection pools to frequently-used hosts
+	//
+	// MaxIdleConns controls the maximum number of idle connections across ALL hosts.
+	// This is the global pool size. Increasing this allows more connections to be kept
+	// open simultaneously, useful when making requests to multiple different LLM providers.
+	// Higher values = more memory usage but better performance for concurrent requests.
+	// Default: 100, Range: 10-1000 recommended
+	MaxIdleConns int
 
-	// Transport allows providing a custom HTTP transport
+	// MaxIdleConnsPerHost controls the maximum number of idle connections PER HOST.
+	// This is the pool size for each unique hostname (e.g., "api.openai.com").
+	// LLM APIs typically benefit from higher values here because:
+	// - Multiple concurrent requests to the same API endpoint are common
+	// - Keeping multiple connections open allows for better request pipelining
+	// - It prevents connection churn under high load
+	// Default: 10, Range: 5-100 recommended. Set to 2-3x your expected concurrent request rate.
+	MaxIdleConnsPerHost int
+
+	// IdleConnTimeout controls how long an idle connection remains in the pool before
+	// being closed. Idle connections that exceed this duration are pruned to free resources.
+	// For LLM APIs with intermittent but bursty traffic, a longer timeout is beneficial
+	// because it keeps connections available between bursts of activity.
+	// Default: 90s, Range: 30s-300s recommended
+	IdleConnTimeout time.Duration
+
+	// TLSHandshakeTimeout specifies the maximum time to wait for a TLS handshake to complete.
+	// TLS handshakes establish the secure connection and happen on new connections or when
+	// a connection is being reused after a long idle period.
+	// Default: 10s, Range: 5s-30s recommended
+	TLSHandshakeTimeout time.Duration
+
+	// ExpectContinueTimeout specifies the maximum time to wait for a server's "100 Continue"
+	// response when sending a request with an Expect: 100-continue header.
+	// This is an optimization for requests with large bodies (common in LLM APIs).
+	// The timeout allows the server to indicate whether it will accept the request body
+	// before the client sends it, saving bandwidth if the request will be rejected.
+	// Default: 1s, Range: 1s-5s recommended
+	ExpectContinueTimeout time.Duration
+
+	// Transport allows providing a custom HTTP transport.
+	//
 	// If nil, a transport with optimized connection pooling settings will be created
-	// If set, it will be used directly and the connection pooling fields above will be ignored
+	// using the fields above. This is recommended for most use cases.
+	//
+	// If set, the custom transport will be used directly and the connection pooling
+	// fields above (MaxIdleConns, MaxIdleConnsPerHost, etc.) will be ignored.
+	// Use this when you need complete control over HTTP transport behavior,
+	// such as custom proxies, authentication, or advanced connection management.
 	Transport http.RoundTripper
 }
 
