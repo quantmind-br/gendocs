@@ -9,17 +9,18 @@ import (
 	"github.com/user/gendocs/internal/errors"
 	"github.com/user/gendocs/internal/handlers"
 	"github.com/user/gendocs/internal/logging"
+	"github.com/user/gendocs/internal/tui"
 )
 
 var (
-	repoPath            string
-	excludeStructure    bool
-	excludeDataFlow     bool
-	excludeDeps         bool
-	excludeReqFlow      bool
-	excludeAPI          bool
-	maxWorkers          int
-	forceAnalysis       bool
+	repoPath         string
+	excludeStructure bool
+	excludeDataFlow  bool
+	excludeDeps      bool
+	excludeReqFlow   bool
+	excludeAPI       bool
+	maxWorkers       int
+	forceAnalysis    bool
 )
 
 // analyzeCmd represents the analyze command
@@ -55,7 +56,6 @@ func init() {
 }
 
 func runAnalyze(cmd *cobra.Command, args []string) error {
-	// Build CLI overrides map
 	cliOverrides := map[string]interface{}{
 		"repo_path":              repoPath,
 		"exclude_code_structure": excludeStructure,
@@ -68,22 +68,23 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 		"force":                  forceAnalysis,
 	}
 
-	// Load configuration
 	cfg, err := config.LoadAnalyzerConfig(repoPath, cliOverrides)
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
-	// Initialize logger
 	logDir := ".ai/logs"
 	if cfg.RepoPath != "." {
 		logDir = cfg.RepoPath + "/.ai/logs"
 	}
+
+	showProgress := !verboseFlag
 	logCfg := &logging.Config{
-		LogDir:       logDir,
-		FileLevel:    logging.LevelFromString("info"),
-		ConsoleLevel: logging.LevelFromString("debug"),
-		EnableCaller: debugFlag,
+		LogDir:         logDir,
+		FileLevel:      logging.LevelFromString("info"),
+		ConsoleLevel:   logging.LevelFromString("debug"),
+		EnableCaller:   debugFlag,
+		ConsoleEnabled: !showProgress,
 	}
 
 	logger, err := logging.NewLogger(logCfg)
@@ -97,18 +98,35 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 		logging.Int("max_workers", cfg.MaxWorkers),
 	)
 
-	// Create and run AnalyzeHandler
 	handler := handlers.NewAnalyzeHandler(*cfg, logger)
 
-	if err := handler.Handle(cmd.Context()); err != nil {
-		// Handle error with proper exit code
+	var progress *tui.Progress
+	if showProgress {
+		progress = tui.NewProgress("Gendocs Analyze")
+		handler.SetProgressReporter(progress)
+		progress.Start()
+	}
+
+	err = handler.Handle(cmd.Context())
+
+	if showProgress {
+		progress.Stop()
+		progress.PrintSummary()
+	}
+
+	if err != nil {
 		if docErr, ok := err.(*errors.AIDocGenError); ok {
-			fmt.Fprintf(os.Stderr, "%s\n", docErr.GetUserMessage())
+			if !showProgress {
+				fmt.Fprintf(os.Stderr, "%s\n", docErr.GetUserMessage())
+			}
 			return docErr
 		}
 		return err
 	}
 
-	logger.Info("Analysis complete")
+	if !showProgress {
+		logger.Info("Analysis complete")
+	}
+
 	return nil
 }

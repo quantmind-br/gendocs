@@ -209,7 +209,17 @@ api_analyzer_user: |
 
   Examine the project at {{ .RepoPath }} to document the API.
 
-  Focus on:
+  IMPORTANT: First determine if this project exposes HTTP APIs. Look for:
+  - HTTP server setup (e.g., net/http, gin, echo, fiber, express, fastapi, flask, etc.)
+  - Route definitions or endpoint handlers
+  - REST/GraphQL/gRPC endpoints
+
+  If this is a CLI application, library, or tool WITHOUT HTTP APIs, immediately produce
+  a brief report stating that and document any programmatic APIs (exported functions/interfaces)
+  that consumers of the library/tool might use. Do NOT continue searching indefinitely for
+  HTTP endpoints that don't exist.
+
+  For projects WITH HTTP APIs, focus on:
   - All API endpoints (HTTP methods, paths, parameters)
   - Request formats and validation rules
   - Response formats and status codes
@@ -220,14 +230,17 @@ api_analyzer_user: |
 
   # API Analysis
 
+  ## Project Type
+  [Indicate if this is a web service, CLI, library, or other type]
+
   ## Endpoints Overview
-  [List all endpoints grouped by resource]
+  [List all endpoints grouped by resource, or state "No HTTP endpoints - this is a CLI/library"]
 
   ## Authentication
-  [Describe auth mechanisms]
+  [Describe auth mechanisms if applicable]
 
   ## Detailed Endpoints
-  For each endpoint:
+  For each endpoint (if any):
   ### Method /path
   - Description
   - Parameters
@@ -235,5 +248,8 @@ api_analyzer_user: |
   - Response format
   - Status codes
 
+  ## Programmatic API (for libraries/CLIs)
+  [Document exported functions, interfaces, or CLI commands if applicable]
+
   ## Common Patterns
-  [Shared patterns across endpoints]
+  [Shared patterns across endpoints or APIs]

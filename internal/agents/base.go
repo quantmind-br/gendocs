@@ -80,15 +80,14 @@ func (ba *BaseAgent) SetTemperature(temperature float64) {
 
 // RunOnce executes the agent once with the given user prompt
 func (ba *BaseAgent) RunOnce(ctx context.Context, userPrompt string) (string, error) {
-	// Build request
-	messages := []llm.Message{
+	// Initialize conversation history with the user prompt
+	// This ensures the prompt is preserved across all iterations
+	conversationHistory := []llm.Message{
 		{Role: "user", Content: userPrompt},
 	}
 
-	var conversationHistory []llm.Message
-
 	// Maximum iterations to prevent infinite loops
-	const maxIterations = 20
+	const maxIterations = 100
 	iterations := 0
 
 	// Tool calling loop
@@ -116,7 +115,7 @@ func (ba *BaseAgent) RunOnce(ctx context.Context, userPrompt string) (string, er
 
 		req := llm.CompletionRequest{
 			SystemPrompt: ba.systemPrompt,
-			Messages:     append(conversationHistory, messages...),
+			Messages:     conversationHistory,
 			Tools:        ba.convertTools(),
 			MaxTokens:    ba.maxTokens,
 			Temperature:  ba.temperature,
@@ -140,10 +139,11 @@ func (ba *BaseAgent) RunOnce(ctx context.Context, userPrompt string) (string, er
 			return resp.Content, nil
 		}
 
-		// Add assistant response to conversation history
+		// Add assistant response to conversation history (including tool calls)
 		conversationHistory = append(conversationHistory, llm.Message{
-			Role:    "assistant",
-			Content: resp.Content,
+			Role:      "assistant",
+			Content:   resp.Content,
+			ToolCalls: resp.ToolCalls,
 		})
 
 		// Execute tool calls
@@ -191,7 +191,6 @@ func (ba *BaseAgent) RunOnce(ctx context.Context, userPrompt string) (string, er
 		}
 
 		// Continue loop to get final response from LLM
-		messages = []llm.Message{} // Clear, using conversationHistory now
 	}
 }
 

@@ -36,9 +36,10 @@ type geminiContent struct {
 
 // geminiPart represents a part of content
 type geminiPart struct {
-	Text         string                 `json:"text,omitempty"`
-	FunctionCall map[string]interface{} `json:"functionCall,omitempty"`
+	Text             string                  `json:"text,omitempty"`
+	FunctionCall     map[string]interface{}  `json:"functionCall,omitempty"`
 	FunctionResponse *geminiFunctionResponse `json:"functionResponse,omitempty"`
+	ThoughtSignature string                  `json:"thoughtSignature,omitempty"` // Required for Gemini 3 function calling
 }
 
 // geminiFunctionResponse represents a function response
@@ -239,18 +240,45 @@ func (c *GeminiClient) convertRequest(req CompletionRequest) geminiRequest {
 					},
 				},
 			})
-		} else {
-			// Regular message
-			role := "user"
-			if msg.Role == "assistant" {
-				role = "model"
+		} else if msg.Role == "assistant" {
+			// Model/assistant message - include function calls if present
+			var parts []geminiPart
+
+			// Add text content if present
+			if msg.Content != "" {
+				parts = append(parts, geminiPart{Text: msg.Content})
 			}
-			// Skip empty content messages (avoid empty parts)
+
+			// Add function calls if present - include ThoughtSignature for Gemini 3
+			for _, tc := range msg.ToolCalls {
+				part := geminiPart{
+					ThoughtSignature: tc.ThoughtSignature, // Include thought signature at part level
+				}
+				if tc.RawFunctionCall != nil {
+					part.FunctionCall = tc.RawFunctionCall
+				} else {
+					part.FunctionCall = map[string]interface{}{
+						"name": tc.Name,
+						"args": tc.Arguments,
+					}
+				}
+				parts = append(parts, part)
+			}
+
+			// Only add the message if there are parts (text or function calls)
+			if len(parts) > 0 {
+				contents = append(contents, geminiContent{
+					Role:  "model",
+					Parts: parts,
+				})
+			}
+		} else if msg.Role == "user" {
+			// User message - skip empty content
 			if msg.Content == "" {
 				continue
 			}
 			contents = append(contents, geminiContent{
-				Role: role,
+				Role: "user",
 				Parts: []geminiPart{
 					{Text: msg.Content},
 				},
@@ -308,9 +336,13 @@ func (c *GeminiClient) convertResponse(resp geminiResponse) CompletionResponse {
 			textContent += part.Text
 		}
 		if part.FunctionCall != nil {
+			name, _ := part.FunctionCall["name"].(string)
+			args, _ := part.FunctionCall["args"].(map[string]interface{})
 			toolCalls = append(toolCalls, ToolCall{
-				Name:      part.FunctionCall["name"].(string),
-				Arguments: part.FunctionCall["args"].(map[string]interface{}),
+				Name:             name,
+				Arguments:        args,
+				RawFunctionCall:  part.FunctionCall,
+				ThoughtSignature: part.ThoughtSignature, // Capture thought signature from part level
 			})
 		}
 	}

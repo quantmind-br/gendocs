@@ -11,13 +11,12 @@ import (
 	"github.com/user/gendocs/internal/prompts"
 )
 
-// AnalyzeHandler handles the analyze command
 type AnalyzeHandler struct {
 	*BaseHandler
-	config config.AnalyzerConfig
+	config   config.AnalyzerConfig
+	progress agents.ProgressReporter
 }
 
-// NewAnalyzeHandler creates a new analyze handler
 func NewAnalyzeHandler(cfg config.AnalyzerConfig, logger *logging.Logger) *AnalyzeHandler {
 	return &AnalyzeHandler{
 		BaseHandler: &BaseHandler{
@@ -26,6 +25,10 @@ func NewAnalyzeHandler(cfg config.AnalyzerConfig, logger *logging.Logger) *Analy
 		},
 		config: cfg,
 	}
+}
+
+func (h *AnalyzeHandler) SetProgressReporter(p agents.ProgressReporter) {
+	h.progress = p
 }
 
 // Handle executes the analysis
@@ -51,10 +54,11 @@ func (h *AnalyzeHandler) Handle(ctx context.Context) error {
 		return errors.NewConfigurationError(fmt.Sprintf("failed to load prompts: %v", err))
 	}
 
-	// Create analyzer agent
 	analyzerAgent := agents.NewAnalyzerAgent(h.config, promptManager, h.Logger)
+	if h.progress != nil {
+		analyzerAgent.SetProgressReporter(h.progress)
+	}
 
-	// Run analysis
 	result, err := analyzerAgent.Run(ctx)
 	if err != nil {
 		return errors.NewAnalysisError("analysis execution failed", err)

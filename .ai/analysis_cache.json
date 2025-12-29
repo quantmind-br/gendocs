@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_analysis": "2025-12-24T18:02:57.373977382-03:00",
+  "last_analysis": "2025-12-27T21:55:55.014390924-03:00",
   "git_commit": "40527db",
   "files": {
     ".env.example": {
@@ -69,9 +69,9 @@
       "size": 6821
     },
     "cmd/analyze.go": {
-      "hash": "f28e4db05c265ff6795a4558fdfabc063c7fa02303c3eb4db95e96e6f9988bd8",
-      "modified": "2025-12-23T20:27:03.910069394-03:00",
-      "size": 3566
+      "hash": "b339c06edfac179a4cbabd9ba73e1081fc616a4ea829449bd545610179cf1a22",
+      "modified": "2025-12-27T21:54:03.893245094-03:00",
+      "size": 3785
     },
     "cmd/config.go": {
       "hash": "2b75aa56c8851a51db23ba600de18bb7f7c82194440ad93980f34f3cc96ba6b1",
@@ -84,14 +84,14 @@
       "size": 3908
     },
     "cmd/generate.go": {
-      "hash": "5c5edf605bb1ffa72d452e526a641cb0e465005e929ee2ce1690650156afc9ee",
-      "modified": "2025-12-23T15:18:01.104048455-03:00",
-      "size": 8132
+      "hash": "53477a2547587a8252e2c098b71eb205d0ce87c3c8f7e188fc6d01e976264833",
+      "modified": "2025-12-27T21:50:06.868050433-03:00",
+      "size": 9825
     },
     "cmd/root.go": {
-      "hash": "43645bd0a563ad205eecc4026b061a08d490b05daba4dd0742402f74aba6d5b8",
-      "modified": "2025-12-23T20:32:05.7866939-03:00",
-      "size": 800
+      "hash": "c11289d3edbc4af4fc6d5f33893b1f3238a4ad9464792420a7430fa89fdb9c46",
+      "modified": "2025-12-27T21:39:55.054899948-03:00",
+      "size": 892
     },
     "docs/ARCHITECTURE.md": {
       "hash": "2377a86347d99a87b82292c758e975e3fe5411d103285ef1b9d7aadac8583508",
@@ -154,9 +154,9 @@
       "size": 1549
     },
     "internal/agents/analyzer.go": {
-      "hash": "0c81b94514c01bf65bbf2d5461b3c728028f1dd3013deaeee4848418c6a1c6dd",
-      "modified": "2025-12-23T20:29:57.6718824-03:00",
-      "size": 13661
+      "hash": "6fbf2ff71f189bd43d58be85b183fbfc46bcac347900c428580b0e3899429dd8",
+      "modified": "2025-12-27T21:53:13.403377603-03:00",
+      "size": 15562
     },
     "internal/agents/analyzer_integration_test.go": {
       "hash": "22cb80450498d12aaa8a6595fdce0201a325c202ed18edcfffcf5b0013bf0c0a",
@@ -164,9 +164,9 @@
       "size": 10956
     },
     "internal/agents/base.go": {
-      "hash": "f995a59c2e07ff955d28817569ee0bb523c19570baaf1d8f9f0b96f62b8d1e0a",
-      "modified": "2025-12-23T20:09:11.038542736-03:00",
-      "size": 8352
+      "hash": "beb57e6cb99602e96a7a776ff1e8010f655d3a0cea71a50450edfc48be601e19",
+      "modified": "2025-12-27T09:09:30.328002626-03:00",
+      "size": 8393
     },
     "internal/agents/factory.go": {
       "hash": "3f781f82c4975f05dc6a0be9177fc2cc2887c12c4a079ecea551be9c7755839b",
@@ -259,9 +259,9 @@
       "size": 1856
     },
     "internal/handlers/analyze.go": {
-      "hash": "f3b0dfcf043d534f7069da06f3d288031596150d8ce4272bea6f75ef0896064b",
-      "modified": "2025-12-23T15:08:00.698616863-03:00",
-      "size": 2359
+      "hash": "de0fd1dc98fcd1375c24887b9d236edd56064d0aaf0e8cb2042f3bc0cae556e0",
+      "modified": "2025-12-27T21:53:46.625146597-03:00",
+      "size": 2423
     },
     "internal/handlers/base.go": {
       "hash": "ba1554d17f7c60607d28e5f18781bbeca1f551ea8d6e55b3974b43397dc63b2f",
@@ -279,9 +279,9 @@
       "size": 1830
     },
     "internal/llm/anthropic.go": {
-      "hash": "9d0370489972245c463ad53bb7c772f7ec2b4a4461822aa79d23a3ab1f5ec1ad",
-      "modified": "2025-12-23T13:51:12.417406159-03:00",
-      "size": 7704
+      "hash": "27f3f62fe8b67bdb80ffff90e2cfd88a8afb68768ead844059681179c1c3c983",
+      "modified": "2025-12-27T08:12:30.042926206-03:00",
+      "size": 8222
     },
     "internal/llm/anthropic_test.go": {
       "hash": "2291bf65d436c2b2eb91d98caac9bc11807d0510fdb4b8bf345c976e5b3fa949",
@@ -289,9 +289,9 @@
       "size": 9023
     },
     "internal/llm/client.go": {
-      "hash": "39cf1c0e224839f95f1471a2494783fe2ae85e4136671cea11aa72e5b08bed14",
-      "modified": "2025-12-23T13:25:11.423523225-03:00",
-      "size": 1812
+      "hash": "ebd1844f47c8abd20e0edafd1b84c512e3355d519134ca6c90e8c012722422b6",
+      "modified": "2025-12-27T08:57:58.825426634-03:00",
+      "size": 2082
     },
     "internal/llm/factory.go": {
       "hash": "73af1712d1681b0e182040b067fcd3a2dc33dd13ac273f57fcb9939afd14d67c",
@@ -299,9 +299,9 @@
       "size": 803
     },
     "internal/llm/gemini.go": {
-      "hash": "3b225d0163de7819a0082a22958d81e18560a2aaa69c64d67002fa3000b52953",
-      "modified": "2025-12-23T13:50:53.607987601-03:00",
-      "size": 9018
+      "hash": "4fa732b170a49faa1cabe2bca3d6bad6e4686d6bde4f357e8ebe34e53dda1b18",
+      "modified": "2025-12-27T08:58:18.247868151-03:00",
+      "size": 10166
     },
     "internal/llm/gemini_test.go": {
       "hash": "4f4ace60843162aec5e7d05c7996c155e056a4c337b1845d115ecf90fa551d4f",
@@ -324,9 +324,9 @@
       "size": 4366
     },
     "internal/logging/logger.go": {
-      "hash": "9c223dc5fb86a2eb4e04d58324c94918de24e70d91a1e21e9647f024eb280c5a",
-      "modified": "2025-12-22T17:51:32.628208327-03:00",
-      "size": 3838
+      "hash": "3cb86b9e946e0ccd882bfe4a6aef147d82d7b47ddf6e5cc0bb7953090c29ee95",
+      "modified": "2025-12-27T21:39:09.171849344-03:00",
+      "size": 4173
     },
     "internal/prompts/integration_test.go": {
       "hash": "4e91726e3ccee4da3c10a97befecaf31181ff663255d942110ab5f41d872ca4a",
@@ -393,6 +393,16 @@
       "modified": "2025-12-23T13:52:23.623999935-03:00",
       "size": 9928
     },
+    "internal/tui/progress.go": {
+      "hash": "3ae2526b0c3b3a0960f485bf497731d3605dd5c21c0bb5db28846175957299c5",
+      "modified": "2025-12-27T21:50:49.630948018-03:00",
+      "size": 7904
+    },
+    "internal/tui/styles.go": {
+      "hash": "8dfb0e091fe21880a84d16b7fb0e7324e512217e19e64f2b43d534c7049bf785",
+      "modified": "2025-12-27T21:51:36.817139195-03:00",
+      "size": 3032
+    },
     "internal/validation/markdown.go": {
       "hash": "972b66d462c81aeb0658b2f77057c3b8990aa1f30fdd341af1c2e6fe876c7e51",
       "modified": "2025-12-23T13:48:44.019135983-03:00",
@@ -419,9 +429,9 @@
       "size": 7558
     },
     "prompts/analyzer.yaml": {
-      "hash": "6109420c4ae4ebbac824caa6b932b5a71e6d2ad682214a43e8e2e3f53e3bbc22",
-      "modified": "2025-12-23T17:33:17.641633329-03:00",
-      "size": 8310
+      "hash": "e013aa8d58139d1c32b11715a36e4de4f45127e409b2ae1b35624ca2146a3302",
+      "modified": "2025-12-27T09:07:49.180737012-03:00",
+      "size": 9179
     },
     "prompts/documenter.yaml": {
       "hash": "44a6f31afce346295f8770333d6253295a466d939c3f25fafd1856ac1cc778fa",
@@ -446,24 +456,24 @@
   },
   "agents": {
     "api_analyzer": {
-      "last_run": "2025-12-24T18:02:57.374713348-03:00",
-      "success": false
+      "last_run": "2025-12-27T21:55:55.015319415-03:00",
+      "success": true
     },
     "data_flow_analyzer": {
-      "last_run": "2025-12-24T18:02:57.374713127-03:00",
-      "success": false
+      "last_run": "2025-12-27T21:55:55.015319315-03:00",
+      "success": true
     },
     "dependency_analyzer": {
-      "last_run": "2025-12-24T18:02:57.374713057-03:00",
-      "success": false
+      "last_run": "2025-12-27T21:55:55.015319254-03:00",
+      "success": true
     },
     "request_flow_analyzer": {
-      "last_run": "2025-12-24T18:02:57.374713228-03:00",
-      "success": false
+      "last_run": "2025-12-27T21:55:55.015319355-03:00",
+      "success": true
     },
     "structure_analyzer": {
-      "last_run": "2025-12-24T18:02:57.374712596-03:00",
-      "success": false
+      "last_run": "2025-12-27T21:55:55.015318222-03:00",
+      "success": true
     }
   }
 }

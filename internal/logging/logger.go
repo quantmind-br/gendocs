@@ -48,23 +48,25 @@ type Logger struct {
 
 // Config holds logger configuration
 type Config struct {
-	LogDir       string
-	FileLevel    zapcore.Level
-	ConsoleLevel zapcore.Level
-	EnableCaller bool
+	LogDir         string
+	FileLevel      zapcore.Level
+	ConsoleLevel   zapcore.Level
+	EnableCaller   bool
+	ConsoleEnabled bool
 }
 
 // DefaultConfig returns default logger configuration
 func DefaultConfig() *Config {
 	return &Config{
-		LogDir:       ".ai/logs",
-		FileLevel:    zapcore.InfoLevel,
-		ConsoleLevel: zapcore.DebugLevel,
-		EnableCaller: true,
+		LogDir:         ".ai/logs",
+		FileLevel:      zapcore.InfoLevel,
+		ConsoleLevel:   zapcore.DebugLevel,
+		EnableCaller:   true,
+		ConsoleEnabled: true,
 	}
 }
 
-// NewLogger creates a new logger with file and console output
+// NewLogger creates a new logger with file and optional console output
 func NewLogger(cfg *Config) (*Logger, error) {
 	if cfg == nil {
 		cfg = DefaultConfig()
@@ -82,12 +84,6 @@ func NewLogger(cfg *Config) (*Logger, error) {
 	fileEncoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
 	fileEncoder := zapcore.NewJSONEncoder(fileEncoderConfig)
 
-	// Console encoder (human-readable with colors)
-	consoleEncoderConfig := zap.NewDevelopmentEncoderConfig()
-	consoleEncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	consoleEncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	consoleEncoder := zapcore.NewConsoleEncoder(consoleEncoderConfig)
-
 	// File writer
 	logFile := filepath.Join(cfg.LogDir, "gendocs.log")
 	file, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -96,17 +92,34 @@ func NewLogger(cfg *Config) (*Logger, error) {
 	}
 	fileWriter := zapcore.AddSync(file)
 
-	// Console writer
-	consoleWriter := zapcore.AddSync(os.Stderr)
+	var core zapcore.Core
 
-	// Core with both outputs
-	core := zapcore.NewTee(
-		zapcore.NewCore(fileEncoder, fileWriter, cfg.FileLevel),
-		zapcore.NewCore(consoleEncoder, consoleWriter, cfg.ConsoleLevel),
-	)
+	if cfg.ConsoleEnabled {
+		// Console encoder (human-readable with colors)
+		consoleEncoderConfig := zap.NewDevelopmentEncoderConfig()
+		consoleEncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		consoleEncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+		consoleEncoder := zapcore.NewConsoleEncoder(consoleEncoderConfig)
+
+		// Console writer
+		consoleWriter := zapcore.AddSync(os.Stderr)
+
+		// Core with both outputs
+		core = zapcore.NewTee(
+			zapcore.NewCore(fileEncoder, fileWriter, cfg.FileLevel),
+			zapcore.NewCore(consoleEncoder, consoleWriter, cfg.ConsoleLevel),
+		)
+	} else {
+		// File-only logging when console is disabled
+		core = zapcore.NewCore(fileEncoder, fileWriter, cfg.FileLevel)
+	}
 
 	// Create logger
-	zapLogger := zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
+	opts := []zap.Option{zap.AddStacktrace(zapcore.ErrorLevel)}
+	if cfg.EnableCaller {
+		opts = append(opts, zap.AddCaller())
+	}
+	zapLogger := zap.New(core, opts...)
 
 	return &Logger{zap: zapLogger}, nil
 }

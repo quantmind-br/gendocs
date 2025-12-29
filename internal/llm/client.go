@@ -6,15 +6,18 @@ import (
 
 // Message represents a chat message
 type Message struct {
-	Role    string // "system", "user", "assistant", "tool"
-	Content string
-	ToolID  string // ID of the tool that was called (for role="tool")
+	Role      string     // "system", "user", "assistant", "tool"
+	Content   string
+	ToolID    string     // ID of the tool that was called (for role="tool")
+	ToolCalls []ToolCall // Tool calls made by assistant (for role="assistant")
 }
 
 // ToolCall represents a tool/function call from the LLM
 type ToolCall struct {
-	Name      string
-	Arguments map[string]interface{}
+	Name             string
+	Arguments        map[string]interface{}
+	RawFunctionCall  map[string]interface{} // Preserves complete function call data
+	ThoughtSignature string                 // Required for Gemini 3 function calling
 }
 
 // CompletionRequest is a request for LLM completion

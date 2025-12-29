@@ -51,3 +51,6 @@ temp/
 
 # OS
 Thumbs.db
+
+# Auto Claude data directory
+.auto-claude/

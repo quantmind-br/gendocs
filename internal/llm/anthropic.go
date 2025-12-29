@@ -190,26 +190,45 @@ func (c *AnthropicClient) convertRequest(req CompletionRequest) anthropicRequest
 				},
 			})
 		} else if msg.Role == "assistant" {
-			// Assistant message
-			contentBlock := anthropicContentBlock{
-				Type: "text",
-				Text: msg.Content,
-			}
-			messages = append(messages, anthropicMessage{
-				Role:    "assistant",
-				Content: []anthropicContentBlock{contentBlock},
-			})
-		}
-	}
+			// Assistant message - include text and tool_use blocks
+			var contentBlocks []anthropicContentBlock
 
-	// If no messages yet, add initial user message
-	if len(messages) == 0 {
-		messages = append(messages, anthropicMessage{
-			Role: "user",
-			Content: []anthropicContentBlock{
-				{Type: "text", Text: "Analyze this codebase."},
-			},
-		})
+			// Add text content if present
+			if msg.Content != "" {
+				contentBlocks = append(contentBlocks, anthropicContentBlock{
+					Type: "text",
+					Text: msg.Content,
+				})
+			}
+
+			// Add tool_use blocks if present
+			for _, tc := range msg.ToolCalls {
+				contentBlocks = append(contentBlocks, anthropicContentBlock{
+					Type:  "tool_use",
+					ID:    tc.Name, // Using name as ID for now
+					Name:  tc.Name,
+					Input: tc.Arguments,
+				})
+			}
+
+			// Only add message if there are content blocks
+			if len(contentBlocks) > 0 {
+				messages = append(messages, anthropicMessage{
+					Role:    "assistant",
+					Content: contentBlocks,
+				})
+			}
+		} else if msg.Role == "user" {
+			// User message
+			if msg.Content != "" {
+				messages = append(messages, anthropicMessage{
+					Role: "user",
+					Content: []anthropicContentBlock{
+						{Type: "text", Text: msg.Content},
+					},
+				})
+			}
+		}
 	}
 
 	// Build tools

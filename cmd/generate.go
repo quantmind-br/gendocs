@@ -12,6 +12,7 @@ import (
 	"github.com/user/gendocs/internal/export"
 	"github.com/user/gendocs/internal/handlers"
 	"github.com/user/gendocs/internal/logging"
+	"github.com/user/gendocs/internal/tui"
 )
 
 // generateCmd represents the generate command
@@ -22,7 +23,7 @@ var generateCmd = &cobra.Command{
 }
 
 var (
-	readmeRepoPath  string
+	readmeRepoPath string
 	autoExportHTML bool
 )
 
@@ -45,7 +46,6 @@ func init() {
 }
 
 func runReadme(cmd *cobra.Command, args []string) error {
-	// Build configuration
 	cfg := config.DocumenterConfig{
 		BaseConfig: config.BaseConfig{
 			RepoPath: readmeRepoPath,
@@ -63,7 +63,6 @@ func runReadme(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	// Set defaults from environment if not set
 	if cfg.LLM.Provider == "" {
 		cfg.LLM.Provider = os.Getenv("ANALYZER_LLM_PROVIDER")
 	}
@@ -74,16 +73,18 @@ func runReadme(cmd *cobra.Command, args []string) error {
 		cfg.LLM.APIKey = os.Getenv("ANALYZER_LLM_API_KEY")
 	}
 
-	// Initialize logger
 	logDir := ".ai/logs"
 	if readmeRepoPath != "." {
 		logDir = readmeRepoPath + "/.ai/logs"
 	}
+
+	showProgress := !verboseFlag
 	logCfg := &logging.Config{
-		LogDir:       logDir,
-		FileLevel:    logging.LevelFromString("info"),
-		ConsoleLevel: logging.LevelFromString("debug"),
-		EnableCaller: debugFlag,
+		LogDir:         logDir,
+		FileLevel:      logging.LevelFromString("info"),
+		ConsoleLevel:   logging.LevelFromString("debug"),
+		EnableCaller:   debugFlag,
+		ConsoleEnabled: !showProgress,
 	}
 
 	logger, err := logging.NewLogger(logCfg)
@@ -96,29 +97,62 @@ func runReadme(cmd *cobra.Command, args []string) error {
 		logging.String("repo_path", readmeRepoPath),
 	)
 
-	// Create and run ReadmeHandler
+	var progress *tui.SimpleProgress
+	if showProgress {
+		progress = tui.NewSimpleProgress("Gendocs Generate README")
+		progress.Start()
+		progress.Step("Loading analysis documents...")
+		progress.Info(fmt.Sprintf("Repository: %s", readmeRepoPath))
+		progress.Step("Generating README.md...")
+	}
+
 	handler := handlers.NewReadmeHandler(cfg, logger)
 
 	if err := handler.Handle(cmd.Context()); err != nil {
 		if docErr, ok := err.(*errors.AIDocGenError); ok {
-			fmt.Fprintf(os.Stderr, "%s\n", docErr.GetUserMessage())
+			if showProgress {
+				progress.Error(docErr.GetUserMessage())
+				progress.Failed(nil)
+			} else {
+				fmt.Fprintf(os.Stderr, "%s\n", docErr.GetUserMessage())
+			}
 			return docErr
+		}
+		if showProgress {
+			progress.Failed(err)
 		}
 		return err
 	}
 
-	logger.Info("README.md generation complete")
+	if showProgress {
+		progress.Success("README.md generated successfully")
+	} else {
+		logger.Info("README.md generation complete")
+	}
 
-	// Auto-export to HTML if requested
 	if autoExportHTML {
 		readmePath := filepath.Join(readmeRepoPath, "README.md")
 		htmlPath := filepath.Join(readmeRepoPath, "README.html")
 
-		fmt.Println("\nExporting to HTML...")
-		if err := exportToHTML(readmePath, htmlPath); err != nil {
-			// Don't fail the whole command, just warn
-			fmt.Fprintf(os.Stderr, "Warning: HTML export failed: %v\n", err)
+		if showProgress {
+			progress.Step("Exporting to HTML...")
+		} else {
+			fmt.Println("\nExporting to HTML...")
 		}
+
+		if err := exportToHTML(readmePath, htmlPath); err != nil {
+			if showProgress {
+				progress.Warning(fmt.Sprintf("HTML export failed: %v", err))
+			} else {
+				fmt.Fprintf(os.Stderr, "Warning: HTML export failed: %v\n", err)
+			}
+		} else if showProgress {
+			progress.Success(fmt.Sprintf("Exported to %s", htmlPath))
+		}
+	}
+
+	if showProgress {
+		progress.Done()
 	}
 
 	return nil
@@ -139,7 +173,6 @@ func init() {
 }
 
 func runAIRules(cmd *cobra.Command, args []string) error {
-	// Build configuration
 	cfg := config.AIRulesConfig{
 		BaseConfig: config.BaseConfig{
 			RepoPath: readmeRepoPath,
@@ -157,7 +190,6 @@ func runAIRules(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	// Set defaults from environment if not set
 	if cfg.LLM.Provider == "" {
 		cfg.LLM.Provider = os.Getenv("ANALYZER_LLM_PROVIDER")
 	}
@@ -168,16 +200,18 @@ func runAIRules(cmd *cobra.Command, args []string) error {
 		cfg.LLM.APIKey = os.Getenv("ANALYZER_LLM_API_KEY")
 	}
 
-	// Initialize logger
 	logDir := ".ai/logs"
 	if readmeRepoPath != "." {
 		logDir = readmeRepoPath + "/.ai/logs"
 	}
+
+	showProgress := !verboseFlag
 	logCfg := &logging.Config{
-		LogDir:       logDir,
-		FileLevel:    logging.LevelFromString("info"),
-		ConsoleLevel: logging.LevelFromString("debug"),
-		EnableCaller: debugFlag,
+		LogDir:         logDir,
+		FileLevel:      logging.LevelFromString("info"),
+		ConsoleLevel:   logging.LevelFromString("debug"),
+		EnableCaller:   debugFlag,
+		ConsoleEnabled: !showProgress,
 	}
 
 	logger, err := logging.NewLogger(logCfg)
@@ -190,18 +224,40 @@ func runAIRules(cmd *cobra.Command, args []string) error {
 		logging.String("repo_path", readmeRepoPath),
 	)
 
-	// Create and run AIRulesHandler
+	var progress *tui.SimpleProgress
+	if showProgress {
+		progress = tui.NewSimpleProgress("Gendocs Generate AI Rules")
+		progress.Start()
+		progress.Step("Loading analysis documents...")
+		progress.Info(fmt.Sprintf("Repository: %s", readmeRepoPath))
+		progress.Step("Generating CLAUDE.md...")
+	}
+
 	handler := handlers.NewAIRulesHandler(cfg, logger)
 
 	if err := handler.Handle(cmd.Context()); err != nil {
 		if docErr, ok := err.(*errors.AIDocGenError); ok {
-			fmt.Fprintf(os.Stderr, "%s\n", docErr.GetUserMessage())
+			if showProgress {
+				progress.Error(docErr.GetUserMessage())
+				progress.Failed(nil)
+			} else {
+				fmt.Fprintf(os.Stderr, "%s\n", docErr.GetUserMessage())
+			}
 			return docErr
+		}
+		if showProgress {
+			progress.Failed(err)
 		}
 		return err
 	}
 
-	logger.Info("AI rules generation complete")
+	if showProgress {
+		progress.Success("CLAUDE.md generated successfully")
+		progress.Done()
+	} else {
+		logger.Info("AI rules generation complete")
+	}
+
 	return nil
 }
 
@@ -243,51 +299,70 @@ func init() {
 }
 
 func runExport(cmd *cobra.Command, args []string) error {
-	// Determine input file path
 	inputPath := exportInput
 	if !filepath.IsAbs(inputPath) {
 		inputPath = filepath.Join(readmeRepoPath, inputPath)
 	}
 
-	// Check if input file exists
 	if _, err := os.Stat(inputPath); err != nil {
 		return fmt.Errorf("input file not found: %s", inputPath)
 	}
 
-	// Determine output file path
 	outputPath := exportOutput
 	if outputPath == "" {
-		// Default: replace extension with .html
 		ext := filepath.Ext(inputPath)
 		outputPath = strings.TrimSuffix(inputPath, ext) + ".html"
 	}
 
-	// Ensure output path is absolute
 	if !filepath.IsAbs(outputPath) {
 		outputPath = filepath.Join(readmeRepoPath, outputPath)
 	}
 
-	// Export based on format
+	showProgress := !verboseFlag
+
 	switch exportFormat {
 	case "html":
-		return exportToHTML(inputPath, outputPath)
+		return exportToHTMLWithProgress(inputPath, outputPath, showProgress)
 	default:
 		return fmt.Errorf("unsupported format: %s (supported: html)", exportFormat)
 	}
 }
 
 func exportToHTML(inputPath, outputPath string) error {
-	fmt.Printf("Exporting %s to %s...\n", inputPath, outputPath)
+	return exportToHTMLWithProgress(inputPath, outputPath, false)
+}
+
+func exportToHTMLWithProgress(inputPath, outputPath string, showProgress bool) error {
+	var progress *tui.SimpleProgress
+	if showProgress {
+		progress = tui.NewSimpleProgress("Gendocs Export")
+		progress.Start()
+		progress.Step(fmt.Sprintf("Exporting %s...", filepath.Base(inputPath)))
+	} else {
+		fmt.Printf("Exporting %s to %s...\n", inputPath, outputPath)
+	}
 
 	exporter, err := export.NewHTMLExporter()
 	if err != nil {
+		if showProgress {
+			progress.Failed(err)
+		}
 		return fmt.Errorf("failed to create exporter: %w", err)
 	}
 
 	if err := exporter.ExportToHTML(inputPath, outputPath); err != nil {
+		if showProgress {
+			progress.Failed(err)
+		}
 		return fmt.Errorf("export failed: %w", err)
 	}
 
-	fmt.Printf("✓ HTML exported to %s\n", outputPath)
+	if showProgress {
+		progress.Success(fmt.Sprintf("Exported to %s", outputPath))
+		progress.Done()
+	} else {
+		fmt.Printf("✓ HTML exported to %s\n", outputPath)
+	}
+
 	return nil
 }
