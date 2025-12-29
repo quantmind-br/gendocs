@@ -100,12 +100,31 @@ func (c *CachedLLMClient) GetProvider() string {
 	return fmt.Sprintf("cached-%s", c.client.GetProvider())
 }
 
-// GetStats returns statistics from both memory and disk cache
+// GetStats returns aggregated statistics from both memory and disk cache
 func (c *CachedLLMClient) GetStats() llmcache.CacheStats {
 	if c.memoryCache == nil {
 		return llmcache.CacheStats{}
 	}
-	return c.memoryCache.Stats()
+
+	// Get memory cache stats
+	memStats := c.memoryCache.Stats()
+
+	// Aggregate with disk cache stats if available
+	if c.diskCache != nil {
+		diskStats := c.diskCache.Stats()
+
+		// Combine statistics
+		memStats.Hits += diskStats.Hits
+		memStats.Misses += diskStats.Misses
+		memStats.Evictions += diskStats.Evictions
+		// Recalculate hit rate with combined data
+		total := memStats.Hits + memStats.Misses
+		if total > 0 {
+			memStats.HitRate = float64(memStats.Hits) / float64(total)
+		}
+	}
+
+	return memStats
 }
 
 // CleanupExpired removes expired entries from both caches

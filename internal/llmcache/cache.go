@@ -321,6 +321,7 @@ type DiskCacheData struct {
 	UpdatedAt time.Time                   `json:"updated_at"`
 	Entries   map[string]CachedResponse   `json:"entries"`
 	Stats     DiskCacheStats              `json:"stats"`
+	mu        sync.RWMutex                // Protects stats fields
 }
 
 // DiskCacheStats tracks disk cache statistics
@@ -328,6 +329,18 @@ type DiskCacheStats struct {
 	TotalEntries   int   `json:"total_entries"`
 	ExpiredEntries int   `json:"expired_entries"`
 	TotalSizeBytes int64 `json:"total_size_bytes"`
+	Hits           int64 `json:"hits"`
+	Misses         int64 `json:"misses"`
+	Evictions      int64 `json:"evictions"`
+	HitRate        float64 `json:"hit_rate"`
+}
+
+// updateHitRate updates the hit rate calculation for disk cache stats
+func (s *DiskCacheStats) updateHitRate() {
+	total := s.Hits + s.Misses
+	if total > 0 {
+		s.HitRate = float64(s.Hits) / float64(total)
+	}
 }
 
 // DiskCache manages persistent storage of cached responses
@@ -435,11 +448,13 @@ func (dc *DiskCache) Get(key string) (*CachedResponse, bool) {
 	defer dc.mu.Unlock()
 
 	if dc.data == nil {
+		dc.recordMiss()
 		return nil, false
 	}
 
 	entry, exists := dc.data.Entries[key]
 	if !exists {
+		dc.recordMiss()
 		return nil, false
 	}
 
@@ -447,8 +462,12 @@ func (dc *DiskCache) Get(key string) (*CachedResponse, bool) {
 	if entry.IsExpired() {
 		delete(dc.data.Entries, key)
 		dc.dirty = true
+		dc.recordMiss()
 		return nil, false
 	}
+
+	// Record hit
+	dc.recordHit()
 
 	// Return a copy to avoid race conditions
 	result := entry
@@ -468,6 +487,55 @@ func (dc *DiskCache) Put(key string, value *CachedResponse) error {
 	dc.dirty = true
 
 	return nil
+}
+
+// recordHit records a disk cache hit
+func (dc *DiskCache) recordHit() {
+	if dc.data == nil {
+		return
+	}
+	dc.data.mu.Lock()
+	defer dc.data.mu.Unlock()
+	dc.data.Stats.Hits++
+	dc.data.Stats.updateHitRate()
+}
+
+// recordMiss records a disk cache miss
+func (dc *DiskCache) recordMiss() {
+	if dc.data == nil {
+		return
+	}
+	dc.data.mu.Lock()
+	defer dc.data.mu.Unlock()
+	dc.data.Stats.Misses++
+	dc.data.Stats.updateHitRate()
+}
+
+// recordEviction records a disk cache eviction
+func (dc *DiskCache) recordEviction(count int) {
+	if dc.data == nil {
+		return
+	}
+	dc.data.mu.Lock()
+	defer dc.data.mu.Unlock()
+	dc.data.Stats.Evictions += int64(count)
+}
+
+// Stats returns a copy of the disk cache statistics
+func (dc *DiskCache) Stats() DiskCacheStats {
+	dc.mu.Lock()
+	defer dc.mu.Unlock()
+
+	if dc.data == nil {
+		return DiskCacheStats{}
+	}
+
+	dc.data.mu.RLock()
+	defer dc.data.mu.RUnlock()
+
+	// Create a copy to avoid race conditions
+	stats := dc.data.Stats
+	return stats
 }
 
 // Delete removes a value from the disk cache
@@ -520,6 +588,7 @@ func (dc *DiskCache) CleanupExpired() error {
 
 	if expiredCount > 0 {
 		dc.dirty = true
+		dc.recordEviction(expiredCount)
 		return dc.saveLocked()
 	}
 
