@@ -1,0 +1,315 @@
+{
+  "version": "1.0",
+  "spec_id": "003-implement-response-caching-for-llm-api-calls-with-",
+  "title": "Implement response caching for LLM API calls with identical inputs",
+  "created_at": "2025-12-29T01:40:00Z",
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Design and Architecture",
+      "status": "in_progress",
+      "subtasks": [
+        {
+          "id": "1-1",
+          "name": "Design cache key generation strategy",
+          "description": "Determine how to generate unique cache keys from LLM request parameters (system prompt, messages, tools, temperature)",
+          "status": "completed",
+          "files_to_modify": [],
+          "dependencies": []
+        },
+        {
+          "id": "1-2",
+          "name": "Design cache data structures",
+          "description": "Design in-memory and on-disk cache structures with support for TTL and size limits",
+          "status": "pending",
+          "files_to_modify": [],
+          "dependencies": ["1-1"]
+        },
+        {
+          "id": "1-3",
+          "name": "Design cache integration layer",
+          "description": "Define where in the LLM call flow to integrate caching (likely as a decorator around LLMClient)",
+          "status": "pending",
+          "files_to_modify": [],
+          "dependencies": ["1-2"]
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Implement Core Caching Layer",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "2-1",
+          "name": "Create LLM response cache package",
+          "description": "Create internal/llmcache package with cache entry structures and basic operations",
+          "status": "pending",
+          "files_to_modify": [],
+          "new_files": [
+            "internal/llmcache/cache.go",
+            "internal/llmcache/entry.go",
+            "internal/llmcache/key.go"
+          ],
+          "dependencies": ["1-1", "1-2", "1-3"]
+        },
+        {
+          "id": "2-2",
+          "name": "Implement cache key generation",
+          "description": "Implement SHA256-based cache key generation from CompletionRequest",
+          "status": "pending",
+          "files_to_modify": [],
+          "dependencies": ["2-1"]
+        },
+        {
+          "id": "2-3",
+          "name": "Implement in-memory cache with LRU eviction",
+          "description": "Implement thread-safe in-memory cache with configurable size limit and LRU eviction",
+          "status": "pending",
+          "files_to_modify": [],
+          "dependencies": ["2-1"]
+        },
+        {
+          "id": "2-4",
+          "name": "Implement persistent disk cache",
+          "description": "Implement JSON-based disk cache with automatic loading and background persistence",
+          "status": "pending",
+          "files_to_modify": [],
+          "dependencies": ["2-1"]
+        },
+        {
+          "id": "2-5",
+          "name": "Implement cache TTL and expiration",
+          "description": "Add time-based expiration with configurable TTL (default 7 days)",
+          "status": "pending",
+          "files_to_modify": [],
+          "dependencies": ["2-3", "2-4"]
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Integrate with LLM Client Layer",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "3-1",
+          "name": "Create caching LLM client decorator",
+          "description": "Implement CachedLLMClient that wraps existing LLMClient implementations",
+          "status": "pending",
+          "files_to_modify": [],
+          "new_files": [
+            "internal/llm/cached_client.go"
+          ],
+          "dependencies": ["2-1", "2-2", "2-3", "2-4", "2-5"]
+        },
+        {
+          "id": "3-2",
+          "name": "Update LLM factory to support caching",
+          "description": "Modify llm.NewFactory to create cached clients when caching is enabled",
+          "status": "pending",
+          "files_to_modify": [
+            "internal/llm/factory.go"
+          ],
+          "dependencies": ["3-1"]
+        },
+        {
+          "id": "3-3",
+          "name": "Add cache configuration to config system",
+          "description": "Add LLMCacheConfig structure with enable/disable, max_size, ttl, cache_path options",
+          "status": "pending",
+          "files_to_modify": [
+            "internal/config/models.go"
+          ],
+          "dependencies": ["3-1"]
+        },
+        {
+          "id": "3-4",
+          "name": "Integrate caching in agent creation",
+          "description": "Update agent factories to use cached clients when appropriate",
+          "status": "pending",
+          "files_to_modify": [
+            "internal/agents/sub_agents.go",
+            "internal/agents/factory.go"
+          ],
+          "dependencies": ["3-2", "3-3"]
+        }
+      ]
+    },
+    {
+      "id": "phase-4",
+      "name": "Add Metrics and Observability",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "4-1",
+          "name": "Implement cache statistics tracking",
+          "description": "Track hits, misses, evictions, size, and hit rate",
+          "status": "pending",
+          "files_to_modify": [],
+          "dependencies": ["2-3"]
+        },
+        {
+          "id": "4-2",
+          "name": "Add cache logging",
+          "description": "Add structured logging for cache operations (hit/miss/store/evict)",
+          "status": "pending",
+          "files_to_modify": [
+            "internal/llmcache/cache.go"
+          ],
+          "dependencies": ["4-1"]
+        },
+        {
+          "id": "4-3",
+          "name": "Add cache statistics output",
+          "description": "Add CLI command or flag to display cache statistics",
+          "status": "pending",
+          "files_to_modify": [
+            "cmd/root.go",
+            "cmd/analyze.go"
+          ],
+          "dependencies": ["4-1", "4-2"]
+        }
+      ]
+    },
+    {
+      "id": "phase-5",
+      "name": "Add Cache Management Utilities",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "5-1",
+          "name": "Implement cache clearing command",
+          "description": "Add CLI command to clear the LLM response cache",
+          "status": "pending",
+          "files_to_modify": [
+            "cmd/root.go"
+          ],
+          "new_files": [
+            "cmd/cache.go"
+          ],
+          "dependencies": ["2-4"]
+        },
+        {
+          "id": "5-2",
+          "name": "Implement cache validation and recovery",
+          "description": "Add checksums and validation to detect corrupted cache entries",
+          "status": "pending",
+          "files_to_modify": [],
+          "dependencies": ["2-4"]
+        },
+        {
+          "id": "5-3",
+          "name": "Add cache size estimation",
+          "description": "Calculate and report disk usage of cache files",
+          "status": "pending",
+          "files_to_modify": [],
+          "dependencies": ["5-1"]
+        }
+      ]
+    },
+    {
+      "id": "phase-6",
+      "name": "Testing",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "6-1",
+          "name": "Unit tests for cache key generation",
+          "description": "Test that identical requests generate same key, different requests generate different keys",
+          "status": "pending",
+          "files_to_modify": [],
+          "new_files": [
+            "internal/llmcache/key_test.go"
+          ],
+          "dependencies": ["2-2"]
+        },
+        {
+          "id": "6-2",
+          "name": "Unit tests for in-memory cache",
+          "description": "Test LRU eviction, concurrent access, size limits",
+          "status": "pending",
+          "files_to_modify": [],
+          "new_files": [
+            "internal/llmcache/cache_test.go"
+          ],
+          "dependencies": ["2-3"]
+        },
+        {
+          "id": "6-3",
+          "name": "Unit tests for disk cache",
+          "description": "Test persistence, loading, corruption handling",
+          "status": "pending",
+          "files_to_modify": [],
+          "new_files": [
+            "internal/llmcache/persistence_test.go"
+          ],
+          "dependencies": ["2-4"]
+        },
+        {
+          "id": "6-4",
+          "name": "Integration tests for cached LLM client",
+          "description": "Test end-to-end caching with actual LLM calls",
+          "status": "pending",
+          "files_to_modify": [],
+          "new_files": [
+            "internal/llm/cached_client_test.go"
+          ],
+          "dependencies": ["3-1"]
+        },
+        {
+          "id": "6-5",
+          "name": "Manual testing with real workloads",
+          "description": "Test with documenter and AI rules agents to verify cache hits on re-runs",
+          "status": "pending",
+          "files_to_modify": [],
+          "dependencies": ["3-4", "6-4"]
+        }
+      ]
+    },
+    {
+      "id": "phase-7",
+      "name": "Documentation",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "7-1",
+          "name": "Document cache configuration options",
+          "description": "Add documentation for config options (cache.enabled, cache.max_size_mb, cache.ttl_days)",
+          "status": "pending",
+          "files_to_modify": [
+            "README.md"
+          ],
+          "dependencies": ["3-3"]
+        },
+        {
+          "id": "7-2",
+          "name": "Document cache management commands",
+          "description": "Document CLI commands for cache management (clear, stats)",
+          "status": "pending",
+          "files_to_modify": [
+            "README.md"
+          ],
+          "dependencies": ["5-1", "5-3"]
+        },
+        {
+          "id": "7-3",
+          "name": "Add inline code documentation",
+          "description": "Add comprehensive Go doc comments to cache types and functions",
+          "status": "pending",
+          "files_to_modify": [
+            "internal/llmcache/*.go",
+            "internal/llm/cached_client.go"
+          ],
+          "dependencies": ["2-1", "3-1"]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 7,
+    "total_subtasks": 29,
+    "estimated_effort": "medium",
+    "priority": "high"
+  }
+}

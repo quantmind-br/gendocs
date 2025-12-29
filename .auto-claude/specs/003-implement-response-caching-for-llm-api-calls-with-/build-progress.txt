@@ -1,0 +1,55 @@
+# Build Progress: LLM Response Caching
+
+## Current Status: Design and Architecture (Phase 1)
+
+### Completed Tasks
+- [x] Read and understand specification
+- [x] Explore codebase structure
+- [x] Identify LLM call flow
+- [x] Create implementation plan with 7 phases and 29 subtasks
+- [x] Subtask 1-1: Design cache key generation strategy
+
+### Current Phase: Design and Architecture
+Completed designs:
+1. ✅ Cache key generation strategy (see design_cache_key_generation.md)
+   - SHA256 hash of canonicalized JSON
+   - Includes: system_prompt, messages, tools (sorted), temperature
+   - Excludes: max_tokens (doesn't affect response content)
+   - Performance: ~2-10μs overhead vs ~500-5000ms API calls
+
+Remaining designs:
+2. Cache data structures (in-memory LRU + persistent disk cache)
+3. Integration layer (decorator pattern around LLMClient)
+
+### Architecture Overview
+LLM Call Flow (Current):
+Agent -> BaseAgent.RunOnce -> LLMClient.GenerateCompletion -> API
+
+LLM Call Flow (With Cache):
+Agent -> BaseAgent.RunOnce -> CachedLLMClient.GenerateCompletion
+                                    |
+                                    v
+                              [Check Cache] --miss--> LLMClient.GenerateCompletion
+                                    |                         |
+                                  hit                        v
+                                    |                  [Store Response]
+                                    v
+                              Return Cached
+
+### Key Decisions Made
+1. Decorator Pattern: CachedLLMClient wraps existing LLMClient implementations
+2. Two-tier Cache: In-memory LRU for hot entries + disk cache for persistence
+3. Cache Key: SHA256 hash of (system_prompt + messages + tools + temperature)
+   - Canonical JSON serialization with sorted map keys
+   - Tools sorted by name for order-independent hashing
+   - Messages preserve order (conversation history is significant)
+   - Excludes max_tokens (doesn't affect response content)
+4. Default TTL: 7 days (configurable)
+5. Cache Location: .ai/llm_cache.json in project root
+
+### Next Steps
+1. Begin Phase 1: Design and Architecture
+2. Create internal/llmcache package
+3. Implement cache key generation
+4. Build in-memory cache with LRU eviction
+
