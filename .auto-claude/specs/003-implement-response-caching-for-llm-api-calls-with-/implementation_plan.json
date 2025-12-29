@@ -216,13 +216,15 @@
           "id": "4-2",
           "name": "Add cache logging",
           "description": "Add structured logging for cache operations (hit/miss/store/evict)",
-          "status": "pending",
+          "status": "completed",
           "files_to_modify": [
             "internal/llmcache/cache.go"
           ],
           "dependencies": [
             "4-1"
-          ]
+          ],
+          "notes": "Successfully implemented comprehensive structured logging for all cache operations using zap logger via internal/logging package. Added logger field to LRUCache and DiskCache structs with SetLogger() methods for injection. Updated constructors to use no-op logger by default (backward compatible). LRUCache operations logged: cache_hit (debug with key, hits, access_count, rate), cache_miss (debug with key, misses, rate), cache_miss_expired (debug with key, expired_at), cache_store (debug with key, size_bytes, current/max_size), cache_update (debug with key, old/new_size), cache_evict (debug with key, size, evictions, current_size), cache_cleanup_expired (info with count, remaining). DiskCache operations logged: disk_cache_hit/miss/miss_expired (debug with stats), disk_cache_store/update (debug), disk_cache_cleanup_expired (info), disk_cache_load (info with status, entries), disk_cache_load_failed (error), disk_cache_corrupted (warn), disk_cache_version_mismatch (warn), disk_cache_save (debug), disk_cache_save_failed (error). Updated setupCaches() in sub_agents.go to inject named loggers: llmcache.memory and llmcache.disk. All log entries use structured fields (String, Int, Int64, Float64, Time, Error). Logging levels: Debug for routine ops, Info for events, Warn for issues, Error for failures. Backward compatible with no-op logger default. Cache operations are now fully traceable through logs for performance analysis and issue diagnosis.",
+          "updated_at": "2025-12-29T09:00:00.000000+00:00"
         },
         {
           "id": "4-3",
