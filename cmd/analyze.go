@@ -129,12 +129,16 @@ func displayCacheStats(repoPath string) {
 	cachePath := filepath.Join(repoPath, llmcache.DefaultCacheFileName)
 
 	// Check if cache file exists
-	if _, err := os.Stat(cachePath); os.IsNotExist(err) {
+	fileInfo, err := os.Stat(cachePath)
+	if os.IsNotExist(err) {
 		fmt.Println("\n📊 LLM Cache Statistics")
 		fmt.Println("   Cache file not found. Run analysis with caching enabled first.")
 		fmt.Printf("   Expected location: %s\n\n", cachePath)
 		return
 	}
+
+	// Get actual file size on disk
+	actualFileSize := fileInfo.Size()
 
 	// Read cache file
 	data, err := os.ReadFile(cachePath)
@@ -169,8 +173,13 @@ func displayCacheStats(repoPath string) {
 	fmt.Printf("  Cache Misses: %d\n", stats.Misses)
 	fmt.Printf("  Hit Rate: %.2f%%\n\n", stats.HitRate*100)
 
-	fmt.Println("Storage:")
-	fmt.Printf("  Total Size: %.2f MB\n", float64(stats.TotalSizeBytes)/(1024*1024))
+	fmt.Println("Disk Usage:")
+	fmt.Printf("  Actual File Size: %.2f MB\n", float64(actualFileSize)/(1024*1024))
+	fmt.Printf("  Logical Data Size: %.2f MB\n", float64(stats.TotalSizeBytes)/(1024*1024))
+	if stats.TotalSizeBytes > 0 {
+		efficiency := float64(stats.TotalSizeBytes) / float64(actualFileSize) * 100
+		fmt.Printf("  Storage Efficiency: %.1f%% (data size / file size)\n", efficiency)
+	}
 	fmt.Printf("  Evictions: %d\n\n", stats.Evictions)
 
 	fmt.Println("======================\n")
