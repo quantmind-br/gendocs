@@ -3,8 +3,8 @@
   "description": "The cache.ScanFiles() function calculates SHA256 hashes for every file sequentially, which becomes a bottleneck for large repositories. Many files haven't changed and don't need re-hashing.",
   "created_at": "2025-12-29T03:58:22.725Z",
   "updated_at": "2025-12-29T04:00:00.000Z",
-  "status": "in_progress",
-  "planStatus": "in_progress",
+  "status": "completed",
+  "planStatus": "completed",
   "spec_file": "spec.md",
   "phases": [
     {
@@ -209,7 +209,7 @@
           "subtask_id": "phase-4-subtask-3",
           "name": "Final code review and validation",
           "description": "Perform final code review, run all tests, and verify the implementation meets the spec requirements.",
-          "status": "pending",
+          "status": "completed",
           "files": [
             "internal/cache/cache.go",
             "internal/agents/analyzer.go"
