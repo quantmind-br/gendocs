@@ -1,0 +1,65 @@
+# Build Progress: Extract Duplicated LLM Client HTTP Request Handling
+
+## Summary
+Extracting duplicated HTTP request handling logic from OpenAI, Anthropic, and Gemini LLM clients into a shared helper function in BaseLLMClient.
+
+## Status: Phase 1 - Subtask 1 Complete
+
+### Phase 1: Design HTTP Request Helper
+
+#### ✅ Subtask 1: Analyze Duplicated Pattern (Completed)
+Created detailed pattern-analysis.md documenting:
+- **8-step duplicated pattern** across all three clients
+  1. Marshal request to JSON (lines 117, 115, 115)
+  2. Create HTTP request (lines 124, 122, 127)
+  3. Set HTTP headers (lines 129-130, 127-129, 132)
+  4. Execute with retry (lines 133-137, 132-136, 135-139)
+  5. Read response body (lines 140-143, 139-142, 142-145)
+  6. Check status code (lines 146-148, 145-147, 148-150)
+  7. Parse JSON response (lines 151-154, 150-153, 153-156)
+  8. Check provider API errors (lines 157-159, 156-158, 159-161)
+
+- **Code duplication metrics**:
+  - OpenAI: 32 lines duplicated
+  - Anthropic: 33 lines duplicated
+  - Gemini: 36 lines duplicated
+  - Total: ~101 lines of nearly identical code
+
+- **Identical error messages** across all implementations
+- **Provider-specific logic** clearly identified and documented
+- **Proposed helper function** signature designed
+
+### Next Steps
+1. ✅ Subtask 1: Document pattern (COMPLETED)
+2. ⏳ Subtask 2: Design helper function signature
+3. ⏳ Subtask 3: Identify provider-specific logic (already documented)
+
+### Implementation Plan Created
+- ✅ 6 phases defined with 19 subtasks
+- ✅ Each subtask has clear acceptance criteria
+- ✅ Estimated total time: ~2.5 hours
+
+### Next Steps
+1. Begin Phase 1: Design HTTP request helper
+2. Implement doHTTPRequest method in BaseLLMClient
+3. Refactor each LLM client to use the helper
+4. Verify all tests pass
+
+### Key Design Decisions
+- Helper method signature: `doHTTPRequest(ctx context.Context, method, url string, headers map[string]string, body interface{}) ([]byte, error)`
+- Added to BaseLLMClient to leverage existing retryClient
+- Returns raw response bytes, allowing each client to handle provider-specific parsing
+- Preserves exact error messages and wrapping behavior
+
+### Files Modified
+- internal/llm/client.go (will add doHTTPRequest method)
+- internal/llm/openai.go (will refactor GenerateCompletion)
+- internal/llm/anthropic.go (will refactor GenerateCompletion)
+- internal/llm/gemini.go (will refactor GenerateCompletion)
+
+### Expected Outcomes
+- ~90 lines of code reduction
+- Single source of truth for HTTP request handling
+- Easier maintenance and bug fixes
+- No breaking changes to public APIs
+- All existing tests continue to pass

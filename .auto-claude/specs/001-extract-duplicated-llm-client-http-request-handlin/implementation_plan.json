@@ -1,0 +1,325 @@
+{
+  "feature": "Extract duplicated LLM client HTTP request handling",
+  "description": "The LLM client implementations (openai.go, anthropic.go, gemini.go) contain nearly identical HTTP request handling logic in their GenerateCompletion methods. Each implements the same pattern: marshal JSON, create HTTP request, execute with retry, read response, check status code, parse response, check for API errors.",
+  "created_at": "2025-12-29T03:58:09.503Z",
+  "updated_at": "2025-12-29T04:00:00.000Z",
+  "status": "planned",
+  "planStatus": "ready",
+  "workflow_type": "development",
+  "services_involved": ["internal/llm"],
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Design HTTP request helper",
+      "description": "Design the signature and structure for a generic HTTP request handler that eliminates duplication across LLM clients",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "phase-1-subtask-1",
+          "name": "Analyze duplicated pattern",
+          "description": "Document the exact duplicated pattern across openai.go, anthropic.go, and gemini.go GenerateCompletion methods",
+          "status": "completed",
+          "estimatedMinutes": 10,
+          "files_involved": ["internal/llm/openai.go", "internal/llm/anthropic.go", "internal/llm/gemini.go"],
+          "notes": "Created pattern-analysis.md documenting the 8-step duplicated pattern, code metrics (101 lines), and provider-specific logic"
+        },
+        {
+          "id": "phase-1-subtask-2",
+          "name": "Design helper function signature",
+          "description": "Design doHTTPRequest helper function with parameters: context, method, url, headers, requestBody. Returns: responseBody bytes",
+          "status": "pending",
+          "estimatedMinutes": 15,
+          "files_involved": ["internal/llm/client.go"]
+        },
+        {
+          "id": "phase-1-subtask-3",
+          "name": "Identify provider-specific logic",
+          "description": "Confirm that provider-specific logic (convertRequest, convertResponse, API error field checks) will remain in each client implementation",
+          "status": "pending",
+          "estimatedMinutes": 5,
+          "files_involved": []
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Implement HTTP request helper",
+      "description": "Create the doHTTPRequest helper function in BaseLLMClient that handles the common pattern",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "phase-2-subtask-1",
+          "name": "Add doHTTPRequest method to BaseLLMClient",
+          "description": "Implement method with signature: doHTTPRequest(ctx context.Context, method, url string, headers map[string]string, body interface{}) ([]byte, error)",
+          "status": "pending",
+          "estimatedMinutes": 20,
+          "files_involved": ["internal/llm/client.go"],
+          "acceptance_criteria": [
+            "Method accepts method, url, headers map, and body interface",
+            "Marshals body to JSON",
+            "Creates HTTP request with context",
+            "Sets all provided headers",
+            "Executes with retryClient.Do",
+            "Reads response body",
+            "Returns error on non-200 status",
+            "Returns response body bytes on success"
+          ]
+        },
+        {
+          "id": "phase-2-subtask-2",
+          "name": "Handle JSON marshaling errors",
+          "description": "Ensure proper error wrapping for JSON marshaling failures",
+          "status": "pending",
+          "estimatedMinutes": 5,
+          "files_involved": ["internal/llm/client.go"],
+          "acceptance_criteria": [
+            "Returns wrapped error with context 'failed to marshal request'"
+          ]
+        },
+        {
+          "id": "phase-2-subtask-3",
+          "name": "Handle HTTP request creation errors",
+          "description": "Ensure proper error wrapping for HTTP request creation failures",
+          "status": "pending",
+          "estimatedMinutes": 5,
+          "files_involved": ["internal/llm/client.go"],
+          "acceptance_criteria": [
+            "Returns wrapped error with context 'failed to create request'"
+          ]
+        },
+        {
+          "id": "phase-2-subtask-4",
+          "name": "Handle request execution errors",
+          "description": "Ensure proper error wrapping for request execution failures",
+          "status": "pending",
+          "estimatedMinutes": 5,
+          "files_involved": ["internal/llm/client.go"],
+          "acceptance_criteria": [
+            "Returns wrapped error with context 'request failed'",
+            "Properly defers response.Body.Close()"
+          ]
+        },
+        {
+          "id": "phase-2-subtask-5",
+          "name": "Handle response reading errors",
+          "description": "Ensure proper error wrapping for response body reading failures",
+          "status": "pending",
+          "estimatedMinutes": 5,
+          "files_involved": ["internal/llm/client.go"],
+          "acceptance_criteria": [
+            "Returns wrapped error with context 'failed to read response'"
+          ]
+        },
+        {
+          "id": "phase-2-subtask-6",
+          "name": "Handle non-OK status codes",
+          "description": "Ensure proper error wrapping for non-200 status codes with response body in error message",
+          "status": "pending",
+          "estimatedMinutes": 5,
+          "files_involved": ["internal/llm/client.go"],
+          "acceptance_criteria": [
+            "Checks if resp.StatusCode != http.StatusOK",
+            "Returns wrapped error with status code and response body",
+            "Error message format: 'API error: status %d, body: %s'"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Refactor OpenAI client",
+      "description": "Update OpenAI client's GenerateCompletion method to use the new helper function",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "phase-3-subtask-1",
+          "name": "Update GenerateCompletion to use doHTTPRequest",
+          "description": "Replace lines 117-148 in openai.go with call to c.doHTTPRequest, passing URL, headers, and request body",
+          "status": "pending",
+          "estimatedMinutes": 15,
+          "files_involved": ["internal/llm/openai.go"],
+          "acceptance_criteria": [
+            "Removes duplicated JSON marshaling code",
+            "Removes duplicated HTTP request creation code",
+            "Removes duplicated header setting code",
+            "Removes duplicated request execution code",
+            "Removes duplicated response reading code",
+            "Removes duplicated status code checking code",
+            "Calls c.doHTTPRequest with proper parameters"
+          ]
+        },
+        {
+          "id": "phase-3-subtask-2",
+          "name": "Run OpenAI client tests",
+          "description": "Run go test on internal/llm/openai_test.go to ensure no regressions",
+          "status": "pending",
+          "estimatedMinutes": 5,
+          "files_involved": ["internal/llm/openai_test.go"],
+          "acceptance_criteria": [
+            "All tests pass",
+            "No test modifications required"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-4",
+      "name": "Refactor Anthropic client",
+      "description": "Update Anthropic client's GenerateCompletion method to use the new helper function",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "phase-4-subtask-1",
+          "name": "Update GenerateCompletion to use doHTTPRequest",
+          "description": "Replace lines 115-147 in anthropic.go with call to c.doHTTPRequest, passing URL, headers, and request body",
+          "status": "pending",
+          "estimatedMinutes": 15,
+          "files_involved": ["internal/llm/anthropic.go"],
+          "acceptance_criteria": [
+            "Removes duplicated JSON marshaling code",
+            "Removes duplicated HTTP request creation code",
+            "Removes duplicated header setting code",
+            "Removes duplicated request execution code",
+            "Removes duplicated response reading code",
+            "Removes duplicated status code checking code",
+            "Calls c.doHTTPRequest with proper parameters"
+          ]
+        },
+        {
+          "id": "phase-4-subtask-2",
+          "name": "Run Anthropic client tests",
+          "description": "Run go test on internal/llm/anthropic_test.go to ensure no regressions",
+          "status": "pending",
+          "estimatedMinutes": 5,
+          "files_involved": ["internal/llm/anthropic_test.go"],
+          "acceptance_criteria": [
+            "All tests pass",
+            "No test modifications required"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-5",
+      "name": "Refactor Gemini client",
+      "description": "Update Gemini client's GenerateCompletion method to use the new helper function",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "phase-5-subtask-1",
+          "name": "Update GenerateCompletion to use doHTTPRequest",
+          "description": "Replace lines 115-150 in gemini.go with call to c.doHTTPRequest, passing URL, headers, and request body",
+          "status": "pending",
+          "estimatedMinutes": 15,
+          "files_involved": ["internal/llm/gemini.go"],
+          "acceptance_criteria": [
+            "Removes duplicated JSON marshaling code",
+            "Removes duplicated HTTP request creation code",
+            "Removes duplicated header setting code",
+            "Removes duplicated request execution code",
+            "Removes duplicated response reading code",
+            "Removes duplicated status code checking code",
+            "Calls c.doHTTPRequest with proper parameters"
+          ]
+        },
+        {
+          "id": "phase-5-subtask-2",
+          "name": "Run Gemini client tests",
+          "description": "Run go test on internal/llm/gemini_test.go to ensure no regressions",
+          "status": "pending",
+          "estimatedMinutes": 5,
+          "files_involved": ["internal/llm/gemini_test.go"],
+          "acceptance_criteria": [
+            "All tests pass",
+            "No test modifications required"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-6",
+      "name": "Comprehensive testing and verification",
+      "description": "Run complete test suite and verify all functionality works correctly",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "phase-6-subtask-1",
+          "name": "Run full LLM package test suite",
+          "description": "Execute 'go test ./internal/llm/...' to ensure all tests pass across all clients",
+          "status": "pending",
+          "estimatedMinutes": 10,
+          "files_involved": ["internal/llm/..."],
+          "acceptance_criteria": [
+            "All OpenAI tests pass",
+            "All Anthropic tests pass",
+            "All Gemini tests pass",
+            "Zero test failures"
+          ]
+        },
+        {
+          "id": "phase-6-subtask-2",
+          "name": "Verify error handling preserved",
+          "description": "Manually verify that error handling (invalid API keys, rate limits, context cancellation) still works correctly",
+          "status": "pending",
+          "estimatedMinutes": 10,
+          "files_involved": [],
+          "acceptance_criteria": [
+            "Error messages are properly wrapped",
+            "Response bodies included in error messages",
+            "Context cancellation handled correctly"
+          ]
+        },
+        {
+          "id": "phase-6-subtask-3",
+          "name": "Verify retry logic preserved",
+          "description": "Confirm that retry logic for rate limiting and transient errors still functions correctly",
+          "status": "pending",
+          "estimatedMinutes": 5,
+          "files_involved": [],
+          "acceptance_criteria": [
+            "Rate limit retries work",
+            "Exponential backoff applied",
+            "Max attempts respected"
+          ]
+        },
+        {
+          "id": "phase-6-subtask-4",
+          "name": "Verify code reduction",
+          "description": "Count lines of code removed and document the reduction in duplication",
+          "status": "pending",
+          "estimatedMinutes": 5,
+          "files_involved": ["internal/llm/openai.go", "internal/llm/anthropic.go", "internal/llm/gemini.go"],
+          "acceptance_criteria": [
+            "Approximately 30 lines removed from each client",
+            "HTTP request logic centralized in one location",
+            "Provider-specific logic remains in each client"
+          ]
+        },
+        {
+          "id": "phase-6-subtask-5",
+          "name": "Build the project",
+          "description": "Run 'go build ./...' to ensure project compiles without errors",
+          "status": "pending",
+          "estimatedMinutes": 5,
+          "files_involved": [],
+          "acceptance_criteria": [
+            "Project builds successfully",
+            "No compilation errors",
+            "No import errors"
+          ]
+        }
+      ]
+    }
+  ],
+  "final_acceptance": [
+    "All LLM client tests pass without modification",
+    "HTTP request handling logic exists in only one location (BaseLLMClient.doHTTPRequest)",
+    "Provider-specific logic (convertRequest, convertResponse, API error checking) remains in each client",
+    "Error handling behavior unchanged (same error messages and wrapping)",
+    "Retry logic behavior unchanged",
+    "Code duplication reduced by approximately 90 lines across 3 files",
+    "Project builds successfully",
+    "No breaking changes to public APIs"
+  ],
+  "spec_file": "spec.md"
+}
