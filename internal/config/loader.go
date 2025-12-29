@@ -185,6 +185,7 @@ func LoadAnalyzerConfig(repoPath string, cliOverrides map[string]interface{}) (*
 	cfg.ExcludeDeps = getBool(configMap, "exclude_dependencies", false)
 	cfg.ExcludeReqFlow = getBool(configMap, "exclude_request_flow", false)
 	cfg.ExcludeAPI = getBool(configMap, "exclude_api_analysis", false)
+	cfg.MaxHashWorkers = getInt(configMap, "max_hash_workers", 0)
 	cfg.Force = getBool(configMap, "force", false)
 
 	// Validate required fields

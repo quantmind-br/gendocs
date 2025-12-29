@@ -21,6 +21,7 @@ type ProgressReporter interface {
 	SkipTask(id string)
 }
 
+// AnalyzerAgent orchestrates all sub-agents for code analysis
 type AnalyzerAgent struct {
 	config        config.AnalyzerConfig
 	llmFactory    *llm.Factory
@@ -30,9 +31,12 @@ type AnalyzerAgent struct {
 	progress      ProgressReporter
 }
 
-
+// NewAnalyzerAgent creates a new analyzer agent
 func NewAnalyzerAgent(cfg config.AnalyzerConfig, promptManager *prompts.Manager, logger *logging.Logger) *AnalyzerAgent {
+	// Create retry client
 	retryClient := llm.NewRetryClient(llm.DefaultRetryConfig())
+
+	// Create LLM factory
 	factory := llm.NewFactory(retryClient)
 
 	return &AnalyzerAgent{
@@ -48,28 +52,46 @@ func (aa *AnalyzerAgent) SetProgressReporter(p ProgressReporter) {
 	aa.progress = p
 }
 
+// Run executes all sub-agents concurrently
 func (aa *AnalyzerAgent) Run(ctx context.Context) (*AnalysisResult, error) {
 	aa.logger.Info("Starting analysis",
 		logging.String("repo_path", aa.config.RepoPath),
 		logging.Int("max_workers", aa.config.MaxWorkers),
 	)
 
+	// Load cache and detect changes (unless force mode)
 	var analysisCache *cache.AnalysisCache
 	var changeReport *cache.ChangeReport
 	var currentFiles map[string]cache.FileInfo
 	var scanErr error
+	var scanMetrics cache.ScanMetrics
 
-	currentFiles, scanErr = cache.ScanFiles(aa.config.RepoPath, nil)
-	if scanErr != nil {
-		aa.logger.Warn(fmt.Sprintf("Failed to scan files: %v", scanErr))
-	}
-
+	// Always load/create cache (needed for selective hashing)
 	analysisCache, _ = cache.LoadCache(aa.config.RepoPath)
 	if analysisCache == nil {
 		analysisCache = cache.NewCache()
 	}
 
+	// Always scan files for cache update (with cache for selective hashing and metrics tracking)
+	currentFiles, scanErr = cache.ScanFiles(aa.config.RepoPath, nil, analysisCache, &scanMetrics, aa.config.GetMaxHashWorkers())
+	if scanErr != nil {
+		aa.logger.Warn(fmt.Sprintf("Failed to scan files: %v", scanErr))
+	}
+
+	// Log scan metrics to show optimization effectiveness
+	aa.logger.Debug("File scan metrics",
+		logging.Int("total_files", scanMetrics.TotalFiles),
+		logging.Int("cached_files", scanMetrics.CachedFiles),
+		logging.Int("hashed_files", scanMetrics.HashedFiles),
+	)
+	if scanMetrics.TotalFiles > 0 {
+		cacheHitRate := float64(scanMetrics.CachedFiles) / float64(scanMetrics.TotalFiles) * 100
+		aa.logger.Debug(fmt.Sprintf("Cache hit rate: %.1f%% (%d/%d files reused cached hashes)",
+			cacheHitRate, scanMetrics.CachedFiles, scanMetrics.TotalFiles))
+	}
+
 	if !aa.config.Force && scanErr == nil {
+		// Detect changes
 		changeReport = analysisCache.DetectChanges(aa.config.RepoPath, currentFiles)
 
 		if !changeReport.HasChanges {
@@ -97,14 +119,17 @@ func (aa *AnalyzerAgent) Run(ctx context.Context) (*AnalysisResult, error) {
 		aa.logger.Info("Force mode enabled - running full analysis")
 	}
 
+	// Use the existing factory
 	factory := aa.llmFactory
 
+	// Build task list based on configuration and change report
 	var tasks []worker_pool.Task
 	var outputPaths []string
 	var agentNames []string
 
 	docsDir := filepath.Join(aa.config.RepoPath, ".ai", "docs")
 
+	// Helper to check if agent should run
 	shouldRunAgent := func(agentName string) bool {
 		if aa.config.Force || changeReport == nil {
 			return true
@@ -202,20 +227,25 @@ func (aa *AnalyzerAgent) Run(ctx context.Context) (*AnalysisResult, error) {
 
 	aa.logger.Info(fmt.Sprintf("Running %d analysis tasks concurrently", len(tasks)))
 
+	// Execute all tasks concurrently
 	results := aa.workerPool.Run(ctx, tasks)
 
+	// Process results
 	analysisResult := aa.processResults(outputPaths, results)
 
+	// Update cache with results
 	if analysisCache != nil && len(currentFiles) > 0 {
 		agentResults := make(map[string]bool)
 		for i, name := range agentNames {
 			agentResults[name] = results[i].Error == nil
 		}
+		// Also mark skipped agents as successful (they were already cached)
 		if changeReport != nil {
 			for _, skipped := range changeReport.AgentsToSkip {
 				agentResults[skipped] = true
 			}
 		}
+		// In force mode, mark all agents as successful
 		if aa.config.Force {
 			for _, name := range []string{"structure_analyzer", "dependency_analyzer", "data_flow_analyzer", "request_flow_analyzer", "api_analyzer"} {
 				if _, exists := agentResults[name]; !exists {
@@ -240,16 +270,19 @@ func (aa *AnalyzerAgent) createTask(ctx context.Context, factory *llm.Factory, n
 	task := func(ctx context.Context) (interface{}, error) {
 		aa.logger.Info(fmt.Sprintf("Creating %s", name))
 
+		// Create agent
 		agent, err := creator(aa.config.LLM, aa.config.RepoPath, factory, aa.promptManager, aa.logger)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create %s: %w", name, err)
 		}
 
+		// Run agent
 		output, err := agent.Run(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("%s failed: %w", name, err)
 		}
 
+		// Save output
 		if err := agent.SaveOutput(output, outputPath); err != nil {
 			return nil, fmt.Errorf("failed to save %s output: %w", name, err)
 		}
@@ -269,6 +302,7 @@ func (aa *AnalyzerAgent) createTaskWithProgress(ctx context.Context, factory *ll
 
 		aa.logger.Info(fmt.Sprintf("Creating %s", name))
 
+		// Create agent
 		agent, err := creator(aa.config.LLM, aa.config.RepoPath, factory, aa.promptManager, aa.logger)
 		if err != nil {
 			if aa.progress != nil {
@@ -277,6 +311,7 @@ func (aa *AnalyzerAgent) createTaskWithProgress(ctx context.Context, factory *ll
 			return nil, fmt.Errorf("failed to create %s: %w", name, err)
 		}
 
+		// Run agent
 		output, err := agent.Run(ctx)
 		if err != nil {
 			if aa.progress != nil {
@@ -285,6 +320,7 @@ func (aa *AnalyzerAgent) createTaskWithProgress(ctx context.Context, factory *ll
 			return nil, fmt.Errorf("%s failed: %w", name, err)
 		}
 
+		// Save output
 		if err := agent.SaveOutput(output, outputPath); err != nil {
 			if aa.progress != nil {
 				aa.progress.FailTask(name, err)

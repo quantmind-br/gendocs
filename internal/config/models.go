@@ -47,6 +47,7 @@ type AnalyzerConfig struct {
 	ExcludeReqFlow    bool         `mapstructure:"exclude_request_flow"`
 	ExcludeAPI        bool         `mapstructure:"exclude_api_analysis"`
 	MaxWorkers        int          `mapstructure:"max_workers"`
+	MaxHashWorkers    int          `mapstructure:"max_hash_workers"`
 	RetryConfig       RetryConfig  `mapstructure:"retry"`
 	Force             bool         `mapstructure:"force"`              // Force full re-analysis, ignore cache
 	Incremental       bool         `mapstructure:"incremental"`        // Enable incremental analysis (default: true)
@@ -132,4 +133,9 @@ func (c *LLMConfig) GetRetries() int {
 		return 2 // Default retries
 	}
 	return c.Retries
+}
+
+// GetMaxHashWorkers returns the max hash workers with a default (0 = use CPU count with max of 8)
+func (c *AnalyzerConfig) GetMaxHashWorkers() int {
+	return c.MaxHashWorkers
 }

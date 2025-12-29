@@ -1,12 +1,9 @@
 package llm
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"strings"
 
 	"github.com/user/gendocs/internal/config"
@@ -112,38 +109,18 @@ func (c *AnthropicClient) GenerateCompletion(ctx context.Context, req Completion
 	// Convert to Anthropic format
 	anReq := c.convertRequest(req)
 
-	jsonData, err := json.Marshal(anReq)
-	if err != nil {
-		return CompletionResponse{}, fmt.Errorf("failed to marshal request: %w", err)
-	}
-
-	// Create HTTP request
+	// Build URL and headers
 	url := c.baseURL + "/v1/messages"
-	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonData))
-	if err != nil {
-		return CompletionResponse{}, fmt.Errorf("failed to create request: %w", err)
+	headers := map[string]string{
+		"Content-Type":      "application/json",
+		"x-api-key":         c.apiKey,
+		"anthropic-version": "2023-06-01",
 	}
 
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("x-api-key", c.apiKey)
-	httpReq.Header.Set("anthropic-version", "2023-06-01")
-
-	// Execute with retry
-	resp, err := c.retryClient.Do(httpReq)
+	// Execute HTTP request with retry
+	body, err := c.doHTTPRequest(ctx, "POST", url, headers, anReq)
 	if err != nil {
-		return CompletionResponse{}, fmt.Errorf("request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	// Read response
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return CompletionResponse{}, fmt.Errorf("failed to read response: %w", err)
-	}
-
-	// Check for error status
-	if resp.StatusCode != http.StatusOK {
-		return CompletionResponse{}, fmt.Errorf("API error: status %d, body: %s", resp.StatusCode, string(body))
+		return CompletionResponse{}, err
 	}
 
 	// Parse response
