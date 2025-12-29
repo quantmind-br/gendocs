@@ -155,11 +155,35 @@
         }
       ],
       "status": "completed"
+    },
+    "4-2": {
+      "attempts": [
+        {
+          "session": 15,
+          "timestamp": "2025-12-29T02:32:08.228967",
+          "approach": "Implemented: Add structured logging for cache operations (hit/miss/store/evict)",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "4-3": {
+      "attempts": [
+        {
+          "session": 16,
+          "timestamp": "2025-12-29T02:36:36.662547",
+          "approach": "Implemented: Add CLI command or flag to display cache statistics",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
     }
   },
   "stuck_subtasks": [],
   "metadata": {
     "created_at": "2025-12-29T01:40:22.693561",
-    "last_updated": "2025-12-29T02:27:37.875981"
+    "last_updated": "2025-12-29T02:36:36.662549"
   }
 }

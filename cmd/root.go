@@ -39,6 +39,10 @@ func init() {
 	// Add cache-stats command
 	rootCmd.AddCommand(cacheStatsCmd)
 	cacheStatsCmd.Flags().StringVar(&cacheStatsRepoPath, "repo-path", ".", "Path to repository")
+
+	// Add cache-clear command
+	rootCmd.AddCommand(cacheClearCmd)
+	cacheClearCmd.Flags().StringVar(&cacheClearRepoPath, "repo-path", ".", "Path to repository")
 }
 
 // cacheStatsCmd represents the cache-stats command
