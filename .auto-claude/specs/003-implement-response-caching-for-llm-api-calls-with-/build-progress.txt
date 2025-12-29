@@ -529,5 +529,34 @@ Working on Phase 5 (Add Cache Management Utilities).
   - Improves cache reliability and fault tolerance
   - Graceful degradation: removes corrupted entries but keeps valid ones
 - Implementation verified and committed
-- Ready for subtask 5-3 (Add cache size estimation)
+
+✅ **Subtask 5-3: Add cache size estimation** (COMPLETED 2025-12-29)
+- Modified `cmd/analyze.go` displayCacheStats() function:
+  - Changed os.Stat() error handling to capture fileInfo for size calculation
+  - Added actualFileSize := fileInfo.Size() to get real disk usage
+- Enhanced disk usage reporting:
+  - Renamed section from "Storage:" to "Disk Usage:" for clarity
+  - Added "Actual File Size": Shows real disk space consumed by cache file (from os.Stat)
+  - Renamed "Total Size" to "Logical Data Size": Shows sum of cached entry sizes
+  - Added "Storage Efficiency": Calculates percentage ratio (data size / file size)
+  - Moved "Evictions" to Disk Usage section
+- Key features:
+  - Actual File Size: Real bytes on disk from filesystem metadata
+  - Logical Data Size: Sum of all cached entry sizes (already tracked in stats)
+  - Storage Efficiency: Shows how efficiently JSON stores the data (typically 60-80%)
+- Benefits:
+  - Transparency: Users see real disk space consumed vs cached data
+  - Efficiency monitoring: High JSON overhead visible via low efficiency
+  - Better decisions: Informed cache management with complete picture
+  - Space management: Identify when cache needs clearing to free disk space
+- Example output:
+  ```
+  Disk Usage:
+    Actual File Size: 2.45 MB
+    Logical Data Size: 1.82 MB
+    Storage Efficiency: 74.3% (data size / file size)
+    Evictions: 10
+  ```
+- Implementation verified and documented in verification_5-3.md
+- **Phase 5 (Add Cache Management Utilities) now COMPLETE!** 🎉
 
