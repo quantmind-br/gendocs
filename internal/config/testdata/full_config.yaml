@@ -1,0 +1,106 @@
+# Test fixture with all configuration fields
+# Used for round-trip serialization testing
+
+version: 1
+
+analyzer:
+  repo_path: "/test/repo/path"
+  debug: true
+  llm:
+    provider: "anthropic"
+    model: "claude-3-5-sonnet-20241022"
+    api_key: "test-api-key-12345"
+    base_url: "https://api.anthropic.com"
+    retries: 3
+    timeout: 180
+    max_tokens: 8192
+    temperature: 0.1
+    cache:
+      enabled: true
+      max_size: 500
+      ttl: 14
+      cache_path: ".ai/test_cache.json"
+  exclude_code_structure: true
+  exclude_data_flow: false
+  exclude_dependencies: true
+  exclude_request_flow: false
+  exclude_api_analysis: true
+  max_workers: 4
+  max_hash_workers: 2
+  retry:
+    max_attempts: 5
+    multiplier: 2
+    max_wait_per_attempt: 60
+    max_total_wait: 300
+  force: false
+  incremental: true
+
+documenter:
+  repo_path: "/test/documenter/path"
+  debug: false
+  llm:
+    provider: "openai"
+    model: "gpt-4o"
+    api_key: "documenter-api-key"
+    base_url: "https://api.openai.com/v1"
+    retries: 2
+    timeout: 120
+    max_tokens: 4096
+    temperature: 0.0
+    cache:
+      enabled: false
+      max_size: 1000
+      ttl: 7
+      cache_path: ".ai/doc_cache.json"
+  retry:
+    max_attempts: 3
+    multiplier: 1
+    max_wait_per_attempt: 30
+    max_total_wait: 120
+
+ai_rules:
+  repo_path: "/test/ai_rules/path"
+  debug: true
+  llm:
+    provider: "gemini"
+    model: "gemini-1.5-pro"
+    api_key: "gemini-api-key"
+    base_url: ""
+    retries: 4
+    timeout: 240
+    max_tokens: 16384
+    temperature: 0.2
+    cache:
+      enabled: true
+      max_size: 200
+      ttl: 30
+      cache_path: ".ai/rules_cache.json"
+  retry:
+    max_attempts: 4
+    multiplier: 2
+    max_wait_per_attempt: 45
+    max_total_wait: 180
+  max_tokens_markdown: 32000
+  max_tokens_cursor: 16000
+
+cronjob:
+  max_days_since_last_commit: 30
+  working_path: "/tmp/gendocs-test"
+  group_project_id: 12345
+
+gitlab:
+  api_url: "https://gitlab.example.com/api/v4"
+  user_name: "Test User"
+  user_username: "testuser"
+  user_email: "test@example.com"
+  oauth_token: "gitlab-oauth-token-secret"
+
+gemini:
+  use_vertex_ai: true
+  project_id: "test-gcp-project"
+  location: "us-central1"
+
+logging:
+  log_dir: ".ai/logs"
+  file_level: "debug"
+  console_level: "info"
