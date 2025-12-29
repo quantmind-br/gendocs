@@ -3,6 +3,7 @@ package llm
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"math"
@@ -39,6 +40,34 @@ func DefaultRetryConfig() *RetryConfig {
 		TLSHandshakeTimeout: 10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
 	}
+}
+
+// createOptimizedTransport creates an http.Transport with optimal settings for LLM API calls
+// It configures connection pooling, timeouts, and HTTP/2 support for improved performance
+func createOptimizedTransport(config *RetryConfig) *http.Transport {
+	transport := &http.Transport{
+		// Connection pooling settings
+		MaxIdleConns:        config.MaxIdleConns,
+		MaxIdleConnsPerHost: config.MaxIdleConnsPerHost,
+		IdleConnTimeout:     config.IdleConnTimeout,
+
+		// Timeout settings
+		TLSHandshakeTimeout:   config.TLSHandshakeTimeout,
+		ExpectContinueTimeout: config.ExpectContinueTimeout,
+
+		// Force attempt HTTP/2 for HTTPS connections
+		// Note: Go's http2.ConfigureTransport will enable HTTP/2 if supported
+		ForceAttemptHTTP2: true,
+	}
+
+	// Configure TLS settings for optimal performance
+	transport.TLSClientConfig = &tls.Config{
+		// Use reasonable defaults for TLS
+		MinVersion: tls.VersionTLS12,
+		// Enable HTTP/2 properly (will be configured by http2.ConfigureTransport if available)
+	}
+
+	return transport
 }
 
 // RetryClient wraps http.Client with retry logic
