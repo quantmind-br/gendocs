@@ -778,13 +778,33 @@ All testing subtasks complete!
 - Testing infrastructure ready for manual verification when API access available
 - **Phase 6 (Testing) now COMPLETE!** 🎉
 
-### Phase 7 Status: PENDING 📋
-Ready to begin Phase 7 (Documentation).
+### Phase 7 Status: IN PROGRESS 🚧
+Working on Phase 7 (Documentation).
 
-**Subtasks:**
-- Subtask 7-1: Document cache configuration options
-- Subtask 7-2: Document cache management commands
-- Subtask 7-3: Add inline code documentation
+**Completed Subtasks:**
+- Subtask 7-1: Document cache configuration options ✅
+- Subtask 7-2: Document cache management commands ✅
 
 **Remaining Subtasks:**
-- All 3 documentation subtasks
+- Subtask 7-3: Add inline code documentation
+
+### Recent Implementation Work
+✅ **Subtask 7-1: Document cache configuration options** (COMPLETED 2025-12-29)
+- Enhanced README.md Configuration section with comprehensive cache documentation
+- Added cache configuration table with all options (enabled, max_size, ttl, cache_path)
+- Included types, defaults, and detailed descriptions for each option
+- Added example YAML configuration showing cache settings
+- Documented cache management commands (cache-stats, cache-clear, --show-cache-stats)
+- Added "Benefits of Caching" section explaining cost savings, faster iteration, and offline capability
+- Also covered subtask 7-2 content as cache management commands logically belong with configuration docs
+- Documentation follows README formatting patterns and is comprehensive for users
+
+✅ **Subtask 7-2: Document cache management commands** (COMPLETED 2025-12-29)
+- Documentation completed as part of subtask 7-1
+- Added "Cache Management Commands" section to README.md
+- Documented all three cache management commands:
+  - gendocs cache-stats: View cache statistics
+  - gendocs cache-clear: Clear the cache
+  - gendocs analyze --show-cache-stats: Show stats after analysis
+- Each command includes description and usage example
+- Commands integrated with Configuration section for easy reference
