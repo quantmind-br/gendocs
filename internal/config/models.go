@@ -101,15 +101,19 @@ type LoggingConfig struct {
 	ConsoleLevel string `mapstructure:"console_level"` // debug, info, warn, error
 }
 
+// CurrentConfigVersion is the current schema version for config files
+const CurrentConfigVersion = 1
+
 // GlobalConfig holds top-level configuration from .ai/config.yaml
 type GlobalConfig struct {
-	Analyzer   AnalyzerConfig   `mapstructure:"analyzer"`
-	Documenter DocumenterConfig `mapstructure:"documenter"`
-	AIRules    AIRulesConfig    `mapstructure:"ai_rules"`
-	Cronjob    CronjobConfig    `mapstructure:"cronjob"`
-	GitLab     GitLabConfig     `mapstructure:"gitlab"`
-	Gemini     GeminiConfig     `mapstructure:"gemini"`
-	Logging    LoggingConfig    `mapstructure:"logging"`
+	Version    int              `mapstructure:"version" yaml:"version"`
+	Analyzer   AnalyzerConfig   `mapstructure:"analyzer" yaml:"analyzer"`
+	Documenter DocumenterConfig `mapstructure:"documenter" yaml:"documenter"`
+	AIRules    AIRulesConfig    `mapstructure:"ai_rules" yaml:"ai_rules"`
+	Cronjob    CronjobConfig    `mapstructure:"cronjob" yaml:"cronjob"`
+	GitLab     GitLabConfig     `mapstructure:"gitlab" yaml:"gitlab"`
+	Gemini     GeminiConfig     `mapstructure:"gemini" yaml:"gemini"`
+	Logging    LoggingConfig    `mapstructure:"logging" yaml:"logging"`
 }
 
 // GetTimeout returns the timeout as a time.Duration

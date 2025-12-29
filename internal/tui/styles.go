@@ -128,3 +128,84 @@ var SpinnerFrames = []string{
 	IconSpinner1, IconSpinner2, IconSpinner3, IconSpinner4, IconSpinner5,
 	IconSpinner6, IconSpinner7, IconSpinner8, IconSpinner9, IconSpinner0,
 }
+
+// Dashboard sidebar styles
+var (
+	StyleSidebarContainer = lipgloss.NewStyle().
+				Width(26).
+				BorderRight(true).
+				BorderStyle(lipgloss.NormalBorder()).
+				BorderForeground(ColorSubtle).
+				Padding(1, 0)
+
+	StyleNavItem = lipgloss.NewStyle().
+			Padding(0, 2)
+
+	StyleNavItemActive = StyleNavItem.
+				Background(ColorPrimary).
+				Foreground(lipgloss.Color("#FFFFFF"))
+
+	StyleNavItemHover = StyleNavItem.
+				Background(ColorSubtle)
+)
+
+// Dashboard form component styles
+var (
+	StyleFormLabel = lipgloss.NewStyle().
+			Foreground(ColorTextDim).
+			Width(20)
+
+	StyleFormInput = lipgloss.NewStyle().
+			Border(lipgloss.NormalBorder()).
+			BorderForeground(ColorSubtle).
+			Padding(0, 1).
+			Width(40)
+
+	StyleFormInputFocused = StyleFormInput.
+				BorderForeground(ColorPrimary)
+
+	StyleFormInputError = StyleFormInput.
+				BorderForeground(ColorError)
+
+	StyleFormHelp = lipgloss.NewStyle().
+			Foreground(ColorMuted).
+			Italic(true)
+)
+
+// Dashboard section container styles
+var (
+	StyleSectionHeader = lipgloss.NewStyle().
+				Foreground(ColorPrimary).
+				Bold(true).
+				MarginBottom(1)
+
+	StyleSectionContent = lipgloss.NewStyle().
+				Padding(1, 2)
+)
+
+// Dashboard status bar styles
+var (
+	StyleStatusBar = lipgloss.NewStyle().
+			Background(ColorBgDim).
+			Padding(0, 1)
+
+	StyleStatusScope = lipgloss.NewStyle().
+				Background(ColorSecondary).
+				Foreground(lipgloss.Color("#FFFFFF")).
+				Padding(0, 1)
+
+	StyleStatusModified = lipgloss.NewStyle().
+				Foreground(ColorWarning)
+
+	StyleStatusSaved = lipgloss.NewStyle().
+				Foreground(ColorSuccess)
+)
+
+// Dashboard icons
+const (
+	IconScope  = "⚙"
+	IconSave   = "💾"
+	IconHelp   = "?"
+	IconBack   = "←"
+	IconSelect = "↵"
+)

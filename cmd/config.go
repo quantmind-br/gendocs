@@ -4,18 +4,32 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
-	"github.com/user/gendocs/internal/tui"
+	"github.com/user/gendocs/internal/tui/dashboard"
+	"github.com/user/gendocs/internal/tui/dashboard/sections"
 )
 
-// configCmd represents the config command
 var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "Configure gendocs settings",
-	Long: `Launch an interactive configuration wizard to set up your LLM provider,
-API key, and model preferences. Configuration is saved to ~/.gendocs.yaml.`,
+	Long: `Launch an interactive configuration dashboard to manage all gendocs settings.
+
+The dashboard provides a multi-section interface to configure:
+  - LLM provider settings (API keys, models, parameters)
+  - Response caching options
+  - Analysis behavior and exclusions
+  - Retry policies for API calls
+  - Gemini/Vertex AI specific settings
+  - GitLab integration
+  - Cronjob scheduling
+  - Logging configuration
+
+Configuration can be saved to:
+  - Global: ~/.gendocs.yaml (applies to all projects)
+  - Project: .ai/config.yaml (project-specific overrides)
+
+Use Ctrl+T to toggle between global and project scope.`,
 	RunE: runConfig,
 }
 
@@ -24,59 +38,36 @@ func init() {
 }
 
 func runConfig(cmd *cobra.Command, args []string) error {
-	// Initialize text inputs
-	apiKeyInput := textinput.New()
-	apiKeyInput.Placeholder = "Enter your API key"
-	apiKeyInput.EchoMode = textinput.EchoPassword
-	apiKeyInput.EchoCharacter = '•'
-	apiKeyInput.Focus()
+	model := dashboard.NewDashboard()
 
-	modelInput := textinput.New()
-	modelInput.Placeholder = "Press Enter for default model"
+	model.RegisterSection("llm", sections.NewLLMSection())
+	model.RegisterSection("cache", sections.NewCacheSection())
+	model.RegisterSection("analysis", sections.NewAnalysisSection())
+	model.RegisterSection("retry", sections.NewRetrySection())
+	model.RegisterSection("gemini", sections.NewGeminiSection())
+	model.RegisterSection("gitlab", sections.NewGitLabSection())
+	model.RegisterSection("cronjob", sections.NewCronjobSection())
+	model.RegisterSection("logging", sections.NewLoggingSection())
 
-	baseURLInput := textinput.New()
-	baseURLInput.Placeholder = "https://api.example.com (optional)"
-
-	// Initialize Bubble Tea model
-	model := tui.Model{
-		Step:         0,
-		Provider:     "",
-		Model:        "",
-		BaseURL:      "",
-		Quitting:     false,
-		APIKeyInput:  apiKeyInput,
-		ModelInput:   modelInput,
-		BaseURLInput: baseURLInput,
-	}
-
-	// Start Bubble Tea program
 	p := tea.NewProgram(
 		model,
-		tea.WithAltScreen(),       // Use full screen mode
-		tea.WithMouseCellMotion(), // Enable mouse motion
+		tea.WithAltScreen(),
+		tea.WithMouseCellMotion(),
 	)
 
 	finalModel, err := p.Run()
 	if err != nil {
-		return fmt.Errorf("error running config wizard: %w", err)
+		return fmt.Errorf("error running config dashboard: %w", err)
 	}
 
-	// Type assertion to get our model back
-	m, ok := finalModel.(tui.Model)
+	m, ok := finalModel.(dashboard.DashboardModel)
 	if !ok {
 		return fmt.Errorf("unexpected model type")
 	}
 
-	// Show final status
-	if m.Err != nil {
-		fmt.Fprintf(os.Stderr, "\nError: %v\n", m.Err)
-		return m.Err
-	}
-
-	if m.SavedConfig {
-		fmt.Printf("\nConfiguration saved to: %s\n", m.GetConfigPath())
-		fmt.Println("\nYou can now run:")
-		fmt.Println("  gendocs analyze --repo-path .")
+	if m.HasError() {
+		fmt.Fprintf(os.Stderr, "\nError: %v\n", m.Error())
+		return m.Error()
 	}
 
 	return nil

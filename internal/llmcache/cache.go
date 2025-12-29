@@ -430,15 +430,16 @@ func (s *DiskCacheStats) updateHitRate() {
 // cached LLM responses to be reused between runs. It uses a JSON file
 // for storage and supports atomic writes and checksum validation.
 type DiskCache struct {
-	filePath    string          // Path to the cache file
-	ttl         time.Duration   // Default TTL for entries
-	maxDiskSize int64           // Maximum disk size (not currently enforced)
-	mu          sync.Mutex      // Protects all access
-	data        *DiskCacheData  // In-memory cache data
-	dirty       bool            // Whether data has changed since last save
-	autoSave    bool            // Whether auto-save is running
-	stopSave    chan struct{}   // Channel to stop auto-save goroutine
-	logger      *logging.Logger // Logger for disk cache operations
+	filePath    string
+	ttl         time.Duration
+	maxDiskSize int64
+	mu          sync.Mutex
+	data        *DiskCacheData
+	dirty       bool
+	autoSave    bool
+	stopSave    chan struct{}
+	saveWg      sync.WaitGroup
+	logger      *logging.Logger
 }
 
 // NewDiskCache creates a new disk cache.
@@ -835,16 +836,17 @@ func (dc *DiskCache) backupCorruptedCache() {
 func (dc *DiskCache) StartAutoSave(interval time.Duration) {
 	dc.mu.Lock()
 	if dc.autoSave {
-		// Already started
 		dc.mu.Unlock()
 		return
 	}
 	dc.autoSave = true
+	dc.stopSave = make(chan struct{})
+	stopChan := dc.stopSave
 	dc.mu.Unlock()
 
-	dc.stopSave = make(chan struct{})
-
+	dc.saveWg.Add(1)
 	go func() {
+		defer dc.saveWg.Done()
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 
@@ -853,22 +855,17 @@ func (dc *DiskCache) StartAutoSave(interval time.Duration) {
 			case <-ticker.C:
 				dc.mu.Lock()
 				if dc.dirty {
-					// Save without holding lock (copy data first)
 					dataToSave := *dc.data //nolint:govet // intentional copy for async save
 					dirtyFlag := dc.dirty
 					dc.mu.Unlock()
 
-					// Save asynchronously
 					if dirtyFlag {
-						// Log error but continue - non-blocking
-						// TODO: Add logging in subtask 4-2
 						_ = dc.saveData(&dataToSave)
 					}
 				} else {
 					dc.mu.Unlock()
 				}
-			case <-dc.stopSave:
-				// Stop signal received, do one final save if dirty
+			case <-stopChan:
 				dc.mu.Lock()
 				if dc.dirty {
 					dataToSave := *dc.data //nolint:govet // intentional copy for final save
@@ -883,9 +880,6 @@ func (dc *DiskCache) StartAutoSave(interval time.Duration) {
 	}()
 }
 
-// Stop stops the disk cache and performs final save if needed.
-//
-// Waits for the auto-save goroutine to finish and saves any pending changes.
 func (dc *DiskCache) Stop() {
 	dc.mu.Lock()
 	if !dc.autoSave {
@@ -893,13 +887,14 @@ func (dc *DiskCache) Stop() {
 		return
 	}
 	dc.autoSave = false
+	stopChan := dc.stopSave
+	dc.stopSave = nil
 	dc.mu.Unlock()
 
-	// Signal the background goroutine to stop
-	if dc.stopSave != nil {
-		close(dc.stopSave)
-		dc.stopSave = nil
+	if stopChan != nil {
+		close(stopChan)
 	}
+	dc.saveWg.Wait()
 }
 
 // saveData saves the cache data to disk without holding the lock.

@@ -418,3 +418,49 @@ func validateLLMConfig(cfg *LLMConfig, prefix string) error {
 
 	return nil
 }
+
+// LoadGlobalConfig loads and returns the full GlobalConfig from ~/.gendocs.yaml
+func (l *Loader) LoadGlobalConfig() (*GlobalConfig, error) {
+	if err := l.loadGlobalConfig(); err != nil {
+		return nil, err
+	}
+
+	cfg := &GlobalConfig{}
+	if err := l.v.Unmarshal(cfg); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal global config: %w", err)
+	}
+
+	return cfg, nil
+}
+
+// LoadProjectConfig loads project-specific config from .ai/config.yaml
+func (l *Loader) LoadProjectConfig(repoPath string) (*GlobalConfig, error) {
+	if err := l.loadProjectConfig(repoPath); err != nil {
+		return nil, err
+	}
+
+	cfg := &GlobalConfig{}
+	if err := l.v.Unmarshal(cfg); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal project config: %w", err)
+	}
+
+	return cfg, nil
+}
+
+// LoadMergedConfig loads config with proper precedence (project > global > env > defaults)
+func (l *Loader) LoadMergedConfig(repoPath string) (*GlobalConfig, error) {
+	if err := l.loadGlobalConfig(); err != nil {
+		return nil, err
+	}
+
+	if err := l.loadProjectConfig(repoPath); err != nil {
+		return nil, err
+	}
+
+	cfg := &GlobalConfig{}
+	if err := l.v.Unmarshal(cfg); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal merged config: %w", err)
+	}
+
+	return cfg, nil
+}
