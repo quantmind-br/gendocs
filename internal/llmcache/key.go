@@ -55,3 +55,36 @@ func GenerateCacheKey(req llm.CompletionRequest) (string, error) {
 	// Return hex-encoded hash
 	return hex.EncodeToString(hash[:]), nil
 }
+
+// CacheKeyRequestFrom converts a CompletionRequest to a CacheKeyRequest
+func CacheKeyRequestFrom(req llm.CompletionRequest) CacheKeyRequest {
+	keyReq := CacheKeyRequest{
+		SystemPrompt: strings.TrimSpace(req.SystemPrompt),
+		Temperature:  req.Temperature,
+	}
+
+	// Convert messages (preserving order)
+	for _, msg := range req.Messages {
+		keyReq.Messages = append(keyReq.Messages, CacheKeyMessage{
+			Role:    msg.Role,
+			Content: strings.TrimSpace(msg.Content),
+			ToolID:  msg.ToolID,
+		})
+	}
+
+	// Convert tools and sort by name
+	tools := make([]CacheKeyTool, len(req.Tools))
+	for i, tool := range req.Tools {
+		tools[i] = CacheKeyTool{
+			Name:        tool.Name,
+			Description: tool.Description,
+			Parameters:  tool.Parameters,
+		}
+	}
+	sort.Slice(tools, func(i, j int) bool {
+		return tools[i].Name < tools[j].Name
+	})
+	keyReq.Tools = tools
+
+	return keyReq
+}
