@@ -199,13 +199,54 @@ All subtasks completed:
 5. ✅ Subtask 2-5: Implement cache TTL and expiration - COMPLETED
 
 ### Phase 3 Status: IN PROGRESS 🚧
-Starting work on Phase 3 (Integrate with LLM Client Layer).
+Working on Phase 3 (Integrate with LLM Client Layer).
 
-**Ready for Phase 3:** Integrate with LLM Client Layer
-- Subtask 3-1: Create caching LLM client decorator
-- Subtask 3-2: Update LLM factory to support caching
-- Subtask 3-3: Add cache configuration to config system
+**Completed Subtasks:**
+- Subtask 3-1: Create caching LLM client decorator ✅
+- Subtask 3-2: Update LLM factory to support caching ✅
+- Subtask 3-3: Add cache configuration to config system ✅
+
+**Remaining Subtasks:**
 - Subtask 3-4: Integrate caching in agent creation
+
+### Recent Implementation Work
+✅ **Subtask 3-2: Update LLM factory to support caching** (COMPLETED 2025-12-29)
+- Modified `internal/llm/factory.go` to support creating cached clients when caching is enabled
+- Updated Factory struct to include cache fields:
+  - memoryCache: *llmcache.LRUCache
+  - diskCache: *llmcache.DiskCache
+  - cacheEnabled: bool
+  - cacheTTL: time.Duration
+- Modified NewFactory constructor to accept cache parameters (memoryCache, diskCache, cacheEnabled, cacheTTL)
+- Updated CreateClient method to:
+  - Create base client based on provider (unchanged)
+  - Wrap with CachedLLMClient if caching enabled and memoryCache available
+  - Return base client directly otherwise
+- Updated all existing NewFactory calls in agent files:
+  - internal/agents/documenter.go
+  - internal/agents/analyzer.go
+  - internal/agents/ai_rules_generator.go
+- All calls updated to pass nil, nil, false, 0 (caching disabled until config added)
+- Maintains backward compatibility - existing behavior preserved
+- Follows design specifications from design_cache_integration_layer.md
+- Ready for subtask 3-3 (Add cache configuration to config system)
+
+✅ **Subtask 3-3: Add cache configuration to config system** (COMPLETED 2025-12-29)
+- Implemented LLMCacheConfig structure in `internal/config/models.go`
+- Added configuration fields:
+  - Enabled (bool): Enable/disable caching
+  - MaxSize (int): Maximum number of entries in memory cache
+  - TTL (int): Time-to-live for cache entries in days
+  - CachePath (string): Path to disk cache file
+- Added helper methods following existing patterns:
+  - IsEnabled(): Returns whether caching is enabled
+  - GetMaxSize(): Returns max size with default 1000 entries
+  - GetTTL(): Returns TTL as time.Duration with default 7 days
+  - GetCachePath(): Returns cache path with default ".ai/llm_cache.json"
+- Integrated LLMCacheConfig into LLMConfig struct as Cache field
+- All fields include mapstructure tags for YAML configuration support
+- Implementation follows design specifications and existing code patterns
+- Ready for subtask 3-4 (Integrate caching in agent creation)
 
 ### Implementation Notes
 - Subtask 2-1 actually implemented the basic structures for 2-2, 2-3, 2-4, and 2-5 as well

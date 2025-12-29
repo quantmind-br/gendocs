@@ -148,25 +148,29 @@
           "id": "3-2",
           "name": "Update LLM factory to support caching",
           "description": "Modify llm.NewFactory to create cached clients when caching is enabled",
-          "status": "pending",
+          "status": "completed",
           "files_to_modify": [
             "internal/llm/factory.go"
           ],
           "dependencies": [
             "3-1"
-          ]
+          ],
+          "notes": "Successfully modified llm.NewFactory to support creating cached clients when caching is enabled. Updated Factory struct to include memoryCache, diskCache, cacheEnabled, and cacheTTL fields. Modified NewFactory constructor to accept cache parameters (memoryCache, diskCache, cacheEnabled, cacheTTL). Updated CreateClient method to wrap base clients with CachedLLMClient when caching is enabled and memoryCache is available; otherwise returns base client directly. Updated all existing NewFactory calls in agent files (documenter.go, analyzer.go, ai_rules_generator.go) to pass nil values for cache parameters, maintaining current behavior (caching disabled) until subtask 3-3 adds configuration support. Implementation follows design specifications exactly and maintains backward compatibility.",
+          "updated_at": "2025-12-29T07:15:00.000000+00:00"
         },
         {
           "id": "3-3",
           "name": "Add cache configuration to config system",
           "description": "Add LLMCacheConfig structure with enable/disable, max_size, ttl, cache_path options",
-          "status": "pending",
+          "status": "completed",
           "files_to_modify": [
             "internal/config/models.go"
           ],
           "dependencies": [
             "3-1"
-          ]
+          ],
+          "notes": "Successfully implemented LLMCacheConfig structure in internal/config/models.go. Added fields: Enabled (bool), MaxSize (int), TTL (int in days), CachePath (string). Added helper methods following existing patterns: IsEnabled(), GetMaxSize() (default 1000 entries), GetTTL() (default 7 days as time.Duration), GetCachePath() (default '.ai/llm_cache.json'). Integrated LLMCacheConfig into LLMConfig struct as Cache field. All fields include mapstructure tags for YAML configuration support.",
+          "updated_at": "2025-12-29T07:30:00.000000+00:00"
         },
         {
           "id": "3-4",
@@ -392,5 +396,5 @@
     "estimated_effort": "medium",
     "priority": "high"
   },
-  "last_updated": "2025-12-29T07:00:00.000000+00:00"
+  "last_updated": "2025-12-29T07:30:00.000000+00:00"
 }
