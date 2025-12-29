@@ -3,23 +3,23 @@
   "spec": "001-extract-duplicated-llm-client-http-request-handlin",
   "state": "building",
   "subtasks": {
-    "completed": 2,
+    "completed": 3,
     "total": 20,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Design HTTP request helper",
+    "current": "Implement HTTP request helper",
     "id": null,
-    "total": 3
+    "total": 6
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 4,
+    "number": 5,
     "started_at": "2025-12-29T00:58:35.286150"
   },
-  "last_update": "2025-12-29T01:05:22.671026"
+  "last_update": "2025-12-29T01:07:37.549071"
 }
