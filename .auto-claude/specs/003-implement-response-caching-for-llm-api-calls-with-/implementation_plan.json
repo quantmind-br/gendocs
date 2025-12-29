@@ -23,15 +23,23 @@
           "description": "Design in-memory and on-disk cache structures with support for TTL and size limits",
           "status": "completed",
           "files_to_modify": [],
-          "dependencies": ["1-1"]
+          "dependencies": [
+            "1-1"
+          ],
+          "notes": "Completed comprehensive design document for cache data structures. Designed two-tier architecture with in-memory LRU cache and persistent disk cache. Includes TTL support (configurable, default 7 days), size limits (entry count for memory, byte size for disk), thread-safety with sync.RWMutex, error handling for corruption recovery, and performance optimizations. Document is ready for implementation in subtask 2-1.",
+          "updated_at": "2025-12-29T04:47:05.847100+00:00"
         },
         {
           "id": "1-3",
           "name": "Design cache integration layer",
           "description": "Define where in the LLM call flow to integrate caching (likely as a decorator around LLMClient)",
-          "status": "pending",
+          "status": "completed",
           "files_to_modify": [],
-          "dependencies": ["1-2"]
+          "dependencies": [
+            "1-2"
+          ],
+          "notes": "Completed comprehensive design document for cache integration layer. Analyzed current LLM client architecture and identified decorator pattern as optimal integration strategy. Designed CachedLLMClient decorator that wraps existing LLMClient implementations, intercepts GenerateCompletion() calls to check cache before making API calls. Includes factory integration approach, configuration structure, error handling strategy (non-blocking cache failures), and complete call flow diagrams. Design is ready for implementation in subtask 3-1.",
+          "updated_at": "2025-12-29T05:30:00.000000+00:00"
         }
       ]
     },
@@ -51,7 +59,11 @@
             "internal/llmcache/entry.go",
             "internal/llmcache/key.go"
           ],
-          "dependencies": ["1-1", "1-2", "1-3"]
+          "dependencies": [
+            "1-1",
+            "1-2",
+            "1-3"
+          ]
         },
         {
           "id": "2-2",
@@ -59,7 +71,9 @@
           "description": "Implement SHA256-based cache key generation from CompletionRequest",
           "status": "pending",
           "files_to_modify": [],
-          "dependencies": ["2-1"]
+          "dependencies": [
+            "2-1"
+          ]
         },
         {
           "id": "2-3",
@@ -67,7 +81,9 @@
           "description": "Implement thread-safe in-memory cache with configurable size limit and LRU eviction",
           "status": "pending",
           "files_to_modify": [],
-          "dependencies": ["2-1"]
+          "dependencies": [
+            "2-1"
+          ]
         },
         {
           "id": "2-4",
@@ -75,7 +91,9 @@
           "description": "Implement JSON-based disk cache with automatic loading and background persistence",
           "status": "pending",
           "files_to_modify": [],
-          "dependencies": ["2-1"]
+          "dependencies": [
+            "2-1"
+          ]
         },
         {
           "id": "2-5",
@@ -83,7 +101,10 @@
           "description": "Add time-based expiration with configurable TTL (default 7 days)",
           "status": "pending",
           "files_to_modify": [],
-          "dependencies": ["2-3", "2-4"]
+          "dependencies": [
+            "2-3",
+            "2-4"
+          ]
         }
       ]
     },
@@ -101,7 +122,13 @@
           "new_files": [
             "internal/llm/cached_client.go"
           ],
-          "dependencies": ["2-1", "2-2", "2-3", "2-4", "2-5"]
+          "dependencies": [
+            "2-1",
+            "2-2",
+            "2-3",
+            "2-4",
+            "2-5"
+          ]
         },
         {
           "id": "3-2",
@@ -111,7 +138,9 @@
           "files_to_modify": [
             "internal/llm/factory.go"
           ],
-          "dependencies": ["3-1"]
+          "dependencies": [
+            "3-1"
+          ]
         },
         {
           "id": "3-3",
@@ -121,7 +150,9 @@
           "files_to_modify": [
             "internal/config/models.go"
           ],
-          "dependencies": ["3-1"]
+          "dependencies": [
+            "3-1"
+          ]
         },
         {
           "id": "3-4",
@@ -132,7 +163,10 @@
             "internal/agents/sub_agents.go",
             "internal/agents/factory.go"
           ],
-          "dependencies": ["3-2", "3-3"]
+          "dependencies": [
+            "3-2",
+            "3-3"
+          ]
         }
       ]
     },
@@ -147,7 +181,9 @@
           "description": "Track hits, misses, evictions, size, and hit rate",
           "status": "pending",
           "files_to_modify": [],
-          "dependencies": ["2-3"]
+          "dependencies": [
+            "2-3"
+          ]
         },
         {
           "id": "4-2",
@@ -157,7 +193,9 @@
           "files_to_modify": [
             "internal/llmcache/cache.go"
           ],
-          "dependencies": ["4-1"]
+          "dependencies": [
+            "4-1"
+          ]
         },
         {
           "id": "4-3",
@@ -168,7 +206,10 @@
             "cmd/root.go",
             "cmd/analyze.go"
           ],
-          "dependencies": ["4-1", "4-2"]
+          "dependencies": [
+            "4-1",
+            "4-2"
+          ]
         }
       ]
     },
@@ -188,7 +229,9 @@
           "new_files": [
             "cmd/cache.go"
           ],
-          "dependencies": ["2-4"]
+          "dependencies": [
+            "2-4"
+          ]
         },
         {
           "id": "5-2",
@@ -196,7 +239,9 @@
           "description": "Add checksums and validation to detect corrupted cache entries",
           "status": "pending",
           "files_to_modify": [],
-          "dependencies": ["2-4"]
+          "dependencies": [
+            "2-4"
+          ]
         },
         {
           "id": "5-3",
@@ -204,7 +249,9 @@
           "description": "Calculate and report disk usage of cache files",
           "status": "pending",
           "files_to_modify": [],
-          "dependencies": ["5-1"]
+          "dependencies": [
+            "5-1"
+          ]
         }
       ]
     },
@@ -222,7 +269,9 @@
           "new_files": [
             "internal/llmcache/key_test.go"
           ],
-          "dependencies": ["2-2"]
+          "dependencies": [
+            "2-2"
+          ]
         },
         {
           "id": "6-2",
@@ -233,7 +282,9 @@
           "new_files": [
             "internal/llmcache/cache_test.go"
           ],
-          "dependencies": ["2-3"]
+          "dependencies": [
+            "2-3"
+          ]
         },
         {
           "id": "6-3",
@@ -244,7 +295,9 @@
           "new_files": [
             "internal/llmcache/persistence_test.go"
           ],
-          "dependencies": ["2-4"]
+          "dependencies": [
+            "2-4"
+          ]
         },
         {
           "id": "6-4",
@@ -255,7 +308,9 @@
           "new_files": [
             "internal/llm/cached_client_test.go"
           ],
-          "dependencies": ["3-1"]
+          "dependencies": [
+            "3-1"
+          ]
         },
         {
           "id": "6-5",
@@ -263,7 +318,10 @@
           "description": "Test with documenter and AI rules agents to verify cache hits on re-runs",
           "status": "pending",
           "files_to_modify": [],
-          "dependencies": ["3-4", "6-4"]
+          "dependencies": [
+            "3-4",
+            "6-4"
+          ]
         }
       ]
     },
@@ -280,7 +338,9 @@
           "files_to_modify": [
             "README.md"
           ],
-          "dependencies": ["3-3"]
+          "dependencies": [
+            "3-3"
+          ]
         },
         {
           "id": "7-2",
@@ -290,7 +350,10 @@
           "files_to_modify": [
             "README.md"
           ],
-          "dependencies": ["5-1", "5-3"]
+          "dependencies": [
+            "5-1",
+            "5-3"
+          ]
         },
         {
           "id": "7-3",
@@ -301,7 +364,10 @@
             "internal/llmcache/*.go",
             "internal/llm/cached_client.go"
           ],
-          "dependencies": ["2-1", "3-1"]
+          "dependencies": [
+            "2-1",
+            "3-1"
+          ]
         }
       ]
     }
@@ -311,5 +377,6 @@
     "total_subtasks": 29,
     "estimated_effort": "medium",
     "priority": "high"
-  }
+  },
+  "last_updated": "2025-12-29T05:30:00.000000+00:00"
 }
