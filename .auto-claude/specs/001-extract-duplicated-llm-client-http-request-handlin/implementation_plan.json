@@ -150,7 +150,7 @@
           "id": "phase-2-subtask-6",
           "name": "Handle non-OK status codes",
           "description": "Ensure proper error wrapping for non-200 status codes with response body in error message",
-          "status": "pending",
+          "status": "completed",
           "estimatedMinutes": 5,
           "files_involved": [
             "internal/llm/client.go"
@@ -159,7 +159,9 @@
             "Checks if resp.StatusCode != http.StatusOK",
             "Returns wrapped error with status code and response body",
             "Error message format: 'API error: status %d, body: %s'"
-          ]
+          ],
+          "notes": "Verified proper error wrapping for non-OK status codes:\n- Implementation on lines 149-152 of client.go\n- Checks if resp.StatusCode != http.StatusOK\n- Returns nil, fmt.Errorf(\"API error: status %d, body: %s\", resp.StatusCode, string(responseBody))\n- Matches exact pattern from existing implementations (openai.go lines 146-148, anthropic.go lines 145-147, gemini.go lines 148-150)\n- Error message format exactly matches: 'API error: status %d, body: %s'\n- All acceptance criteria met",
+          "updated_at": "2025-12-29T04:40:00.000000+00:00"
         }
       ]
     },
