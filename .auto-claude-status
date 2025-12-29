@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "002-split-large-analyzer-go-file-into-separate-agent-f",
+  "spec": "007-stream-llm-api-responses-instead-of-buffering-enti",
   "state": "building",
   "subtasks": {
-    "completed": 13,
-    "total": 14,
+    "completed": 0,
+    "total": 0,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Documentation",
+    "current": "Research and Design",
     "id": null,
-    "total": 2
+    "total": 3
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 13,
-    "started_at": "2025-12-29T00:58:41.013200"
+    "number": 2,
+    "started_at": "2025-12-29T02:38:49.001429"
   },
-  "last_update": "2025-12-29T01:19:44.995192"
+  "last_update": "2025-12-29T02:40:34.484029"
 }
