@@ -1,6 +1,6 @@
 # Build Progress: Optimize file scanning with selective hashing and parallel processing
 
-## Status: Phase 1 In Progress
+## Status: Phase 2 In Progress
 **Created:** 2025-12-29
 **Last Updated:** 2025-12-29
 
@@ -16,7 +16,7 @@ Target improvement: 3-5x faster for incremental scans on large repositories.
 
 ---
 
-## Current Phase: Ready to Start
+## Current Phase: Phase 2 - Parallel Hashing
 
 ### Completed Tasks
 - [x] Read and analyzed spec.md
@@ -26,16 +26,17 @@ Target improvement: 3-5x faster for incremental scans on large repositories.
 - [x] **Phase 1, Subtask 1**: Modified ScanFiles function to accept optional *AnalysisCache parameter
 - [x] **Phase 1, Subtask 2**: Added ScanMetrics struct to track cache hits/misses and updated logging
 - [x] **Phase 1, Subtask 3**: Updated analyzer.go to load cache before ScanFiles and pass it as parameter
+- [x] **Phase 2, Subtask 1**: Created parallel hash worker implementation with goroutines
 
 ### Implementation Plan Structure
 
-**Phase 1: Add mtime-based selective hashing optimization** (3 subtasks)
+**Phase 1: Add mtime-based selective hashing optimization** (3 subtasks) ✅ COMPLETE
 - Refactor ScanFiles to accept optional cache parameter
 - Add metrics tracking for cache hits/misses
 - Update analyzer.go to pass cache to ScanFiles
 
-**Phase 2: Add parallel file hashing** (3 subtasks)
-- Create parallel hash worker implementation
+**Phase 2: Add parallel file hashing** (3 subtasks) 🔄 IN PROGRESS
+- ~~Create parallel hash worker implementation~~ ✅
 - Integrate parallel hashing into ScanFiles
 - Add configurable parallelism limit
 
@@ -56,13 +57,13 @@ Target improvement: 3-5x faster for incremental scans on large repositories.
 1. **Selective Hashing Strategy**: Use mtime AND size to determine if a file has changed (both must match to skip hashing)
 2. **Backward Compatibility**: Cache parameter is optional (can be nil), maintaining existing API
 3. **Parallelization Strategy**: Separate file walking (I/O bound) from hashing (CPU bound) into two phases
-4. **Worker Count**: Default to runtime.NumCPU() but make configurable, with sensible max limit
+4. **Worker Count**: Default to runtime.NumCPU() but capped at 8 workers to avoid overwhelming the filesystem
 
 ---
 
 ## Files to Modify
 
-- `internal/cache/cache.go` - Main implementation file
+- `internal/cache/cache.go` - Main implementation file (✅ added parallel hashing infrastructure)
 - `internal/agents/analyzer.go` - Update to pass cache to ScanFiles
 - `internal/config/models.go` - Add MaxHashWorkers configuration
 - `internal/cache/cache_test.go` - Create unit tests
@@ -74,16 +75,22 @@ Target improvement: 3-5x faster for incremental scans on large repositories.
 
 ## Next Steps
 
-1. ~~Phase 1, Subtask 1~~: COMPLETED - Refactor ScanFiles to accept optional cache parameter
-2. ~~Phase 1, Subtask 2~~: COMPLETED - Add metrics tracking for cache hits/misses
-3. ~~Phase 1, Subtask 3~~: COMPLETED - Update analyzer.go to pass cache to ScanFiles
-4. **Phase 2**: Start parallel hashing implementation (Phase 1 complete!)
+1. ~~Phase 1, Subtask 1~~: ✅ COMPLETED - Refactor ScanFiles to accept optional cache parameter
+2. ~~Phase 1, Subtask 2~~: ✅ COMPLETED - Add metrics tracking for cache hits/misses
+3. ~~Phase 1, Subtask 3~~: ✅ COMPLETED - Update analyzer.go to pass cache to ScanFiles
+4. ~~Phase 2, Subtask 1~~: ✅ COMPLETED - Create parallel hash worker implementation
+5. **Phase 2, Subtask 2**: Integrate parallel hashing into ScanFiles (next)
 
 ---
 
 ## Notes
 
-- Current ScanFiles implementation: Lines 174-227 in internal/cache/cache.go
-- Current usage: Line 57 in internal/agents/analyzer.go
-- FileInfo already has Modified (mtime) and Size fields, so no schema changes needed
-- HashFile function (lines 158-172) will be reused by parallel workers
+- Phase 1 complete! Selective hashing is now functional
+- Parallel hashing infrastructure created:
+  - `hashFileJob` struct for job data
+  - `hashFileResult` struct for results
+  - `parallelHashFiles()` function with worker pool pattern
+  - `getMaxHashWorkers()` uses runtime.NumCPU() with max of 8
+  - Uses sync.WaitGroup for goroutine coordination
+  - Uses channels for job distribution and result collection
+- Next: Refactor ScanFiles to use parallelHashFiles() for cache misses

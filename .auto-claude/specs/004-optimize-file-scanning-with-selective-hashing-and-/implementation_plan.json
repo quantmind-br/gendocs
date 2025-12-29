@@ -67,7 +67,7 @@
           "subtask_id": "phase-2-subtask-1",
           "name": "Create parallel hash worker implementation",
           "description": "Create a parallel hashing system that uses goroutines to compute multiple file hashes concurrently.",
-          "status": "pending",
+          "status": "completed",
           "files": [
             "internal/cache/cache.go"
           ],
