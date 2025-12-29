@@ -132,7 +132,10 @@ func (c *AnalysisCache) Save(repoPath string) error {
 		return fmt.Errorf("failed to create cache directory: %w", err)
 	}
 
-	data, err := json.MarshalIndent(c, "", "  ")
+	// Use json.Marshal instead of json.MarshalIndent for better performance
+	// The cache file is machine-readable, so pretty-printing adds unnecessary
+	// file size and encoding overhead. json.Unmarshal is indentation-agnostic.
+	data, err := json.Marshal(c)
 	if err != nil {
 		return fmt.Errorf("failed to marshal cache: %w", err)
 	}
