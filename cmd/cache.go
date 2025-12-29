@@ -39,7 +39,7 @@ func clearCache(repoPath string) error {
 	if _, err := os.Stat(cachePath); os.IsNotExist(err) {
 		fmt.Println("ℹ️  Cache file not found.")
 		fmt.Printf("   Expected location: %s\n", cachePath)
-		fmt.Println("   No action taken.\n")
+		fmt.Println("   No action taken.")
 		return nil
 	}
 

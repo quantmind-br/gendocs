@@ -2,7 +2,6 @@ package llm
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -561,4 +560,3 @@ func TestOpenAIClient_Streaming_MultipleToolCalls(t *testing.T) {
 		t.Errorf("Expected second tool call name 'read_file', got '%s'", resp.ToolCalls[1].Name)
 	}
 }
-

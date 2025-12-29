@@ -3,19 +3,19 @@ package llmcache
 import (
 	"testing"
 
-	"github.com/user/gendocs/internal/llm"
+	"github.com/user/gendocs/internal/llmtypes"
 )
 
 func TestGenerateCacheKey_IdenticalRequests_SameKey(t *testing.T) {
 	tests := []struct {
 		name string
-		req  llm.CompletionRequest
+		req  llmtypes.CompletionRequest
 	}{
 		{
 			name: "simple request",
-			req: llm.CompletionRequest{
+			req: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages: []llm.Message{
+				Messages: []llmtypes.Message{
 					{Role: "user", Content: "Hello"},
 				},
 				Temperature: 0.7,
@@ -23,12 +23,12 @@ func TestGenerateCacheKey_IdenticalRequests_SameKey(t *testing.T) {
 		},
 		{
 			name: "request with tools",
-			req: llm.CompletionRequest{
+			req: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages: []llm.Message{
+				Messages: []llmtypes.Message{
 					{Role: "user", Content: "Read a file"},
 				},
-				Tools: []llm.ToolDefinition{
+				Tools: []llmtypes.ToolDefinition{
 					{Name: "read_file", Description: "Read a file", Parameters: map[string]interface{}{"type": "object"}},
 				},
 				Temperature: 0.5,
@@ -36,9 +36,9 @@ func TestGenerateCacheKey_IdenticalRequests_SameKey(t *testing.T) {
 		},
 		{
 			name: "request with multiple messages",
-			req: llm.CompletionRequest{
+			req: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a code analyzer",
-				Messages: []llm.Message{
+				Messages: []llmtypes.Message{
 					{Role: "user", Content: "Analyze this code"},
 					{Role: "assistant", Content: "I'll analyze it"},
 					{Role: "user", Content: "Thanks"},
@@ -48,12 +48,12 @@ func TestGenerateCacheKey_IdenticalRequests_SameKey(t *testing.T) {
 		},
 		{
 			name: "request with multiple tools",
-			req: llm.CompletionRequest{
+			req: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a file system assistant",
-				Messages: []llm.Message{
+				Messages: []llmtypes.Message{
 					{Role: "user", Content: "List files"},
 				},
-				Tools: []llm.ToolDefinition{
+				Tools: []llmtypes.ToolDefinition{
 					{Name: "read_file", Description: "Read file", Parameters: map[string]interface{}{"type": "object"}},
 					{Name: "list_files", Description: "List files", Parameters: map[string]interface{}{"type": "object"}},
 					{Name: "write_file", Description: "Write file", Parameters: map[string]interface{}{"type": "object"}},
@@ -63,9 +63,9 @@ func TestGenerateCacheKey_IdenticalRequests_SameKey(t *testing.T) {
 		},
 		{
 			name: "request with tool calls in messages",
-			req: llm.CompletionRequest{
+			req: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages: []llm.Message{
+				Messages: []llmtypes.Message{
 					{Role: "user", Content: "Read file test.txt"},
 					{Role: "assistant", Content: "", ToolID: "call_123"},
 					{Role: "tool", Content: "File content here", ToolID: "call_123"},
@@ -110,51 +110,51 @@ func TestGenerateCacheKey_IdenticalRequests_SameKey(t *testing.T) {
 func TestGenerateCacheKey_DifferentRequests_DifferentKeys(t *testing.T) {
 	tests := []struct {
 		name     string
-		req1     llm.CompletionRequest
-		req2     llm.CompletionRequest
+		req1     llmtypes.CompletionRequest
+		req2     llmtypes.CompletionRequest
 		expected bool // true if keys should be different
 	}{
 		{
 			name: "different system prompt",
-			req1: llm.CompletionRequest{
+			req1: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
 				Temperature:  0.7,
 			},
-			req2: llm.CompletionRequest{
+			req2: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a coding assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
 				Temperature:  0.7,
 			},
 			expected: true,
 		},
 		{
 			name: "different message content",
-			req1: llm.CompletionRequest{
+			req1: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
 				Temperature:  0.7,
 			},
-			req2: llm.CompletionRequest{
+			req2: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Goodbye"}},
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Goodbye"}},
 				Temperature:  0.7,
 			},
 			expected: true,
 		},
 		{
 			name: "different message order",
-			req1: llm.CompletionRequest{
+			req1: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages: []llm.Message{
+				Messages: []llmtypes.Message{
 					{Role: "user", Content: "First"},
 					{Role: "user", Content: "Second"},
 				},
 				Temperature: 0.7,
 			},
-			req2: llm.CompletionRequest{
+			req2: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages: []llm.Message{
+				Messages: []llmtypes.Message{
 					{Role: "user", Content: "Second"},
 					{Role: "user", Content: "First"},
 				},
@@ -164,32 +164,32 @@ func TestGenerateCacheKey_DifferentRequests_DifferentKeys(t *testing.T) {
 		},
 		{
 			name: "different temperature",
-			req1: llm.CompletionRequest{
+			req1: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
 				Temperature:  0.0,
 			},
-			req2: llm.CompletionRequest{
+			req2: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
 				Temperature:  1.0,
 			},
 			expected: true,
 		},
 		{
 			name: "different tools",
-			req1: llm.CompletionRequest{
+			req1: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
-				Tools: []llm.ToolDefinition{
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
+				Tools: []llmtypes.ToolDefinition{
 					{Name: "read_file", Description: "Read file", Parameters: map[string]interface{}{"type": "object"}},
 				},
 				Temperature: 0.7,
 			},
-			req2: llm.CompletionRequest{
+			req2: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
-				Tools: []llm.ToolDefinition{
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
+				Tools: []llmtypes.ToolDefinition{
 					{Name: "write_file", Description: "Write file", Parameters: map[string]interface{}{"type": "object"}},
 				},
 				Temperature: 0.7,
@@ -198,18 +198,18 @@ func TestGenerateCacheKey_DifferentRequests_DifferentKeys(t *testing.T) {
 		},
 		{
 			name: "different tool parameters",
-			req1: llm.CompletionRequest{
+			req1: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
-				Tools: []llm.ToolDefinition{
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
+				Tools: []llmtypes.ToolDefinition{
 					{Name: "read_file", Description: "Read file", Parameters: map[string]interface{}{"type": "object"}},
 				},
 				Temperature: 0.7,
 			},
-			req2: llm.CompletionRequest{
+			req2: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
-				Tools: []llm.ToolDefinition{
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
+				Tools: []llmtypes.ToolDefinition{
 					{Name: "read_file", Description: "Read file", Parameters: map[string]interface{}{"type": "string"}},
 				},
 				Temperature: 0.7,
@@ -218,19 +218,19 @@ func TestGenerateCacheKey_DifferentRequests_DifferentKeys(t *testing.T) {
 		},
 		{
 			name: "same tool different order",
-			req1: llm.CompletionRequest{
+			req1: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
-				Tools: []llm.ToolDefinition{
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
+				Tools: []llmtypes.ToolDefinition{
 					{Name: "read_file", Description: "Read file", Parameters: map[string]interface{}{"type": "object"}},
 					{Name: "write_file", Description: "Write file", Parameters: map[string]interface{}{"type": "object"}},
 				},
 				Temperature: 0.7,
 			},
-			req2: llm.CompletionRequest{
+			req2: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
-				Tools: []llm.ToolDefinition{
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
+				Tools: []llmtypes.ToolDefinition{
 					{Name: "write_file", Description: "Write file", Parameters: map[string]interface{}{"type": "object"}},
 					{Name: "read_file", Description: "Read file", Parameters: map[string]interface{}{"type": "object"}},
 				},
@@ -240,58 +240,58 @@ func TestGenerateCacheKey_DifferentRequests_DifferentKeys(t *testing.T) {
 		},
 		{
 			name: "different message roles",
-			req1: llm.CompletionRequest{
+			req1: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
 				Temperature:  0.7,
 			},
-			req2: llm.CompletionRequest{
+			req2: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "assistant", Content: "Hello"}},
+				Messages:     []llmtypes.Message{{Role: "assistant", Content: "Hello"}},
 				Temperature:  0.7,
 			},
 			expected: true,
 		},
 		{
 			name: "different tool IDs",
-			req1: llm.CompletionRequest{
+			req1: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "tool", Content: "Result", ToolID: "call_123"}},
+				Messages:     []llmtypes.Message{{Role: "tool", Content: "Result", ToolID: "call_123"}},
 				Temperature:  0.7,
 			},
-			req2: llm.CompletionRequest{
+			req2: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "tool", Content: "Result", ToolID: "call_456"}},
+				Messages:     []llmtypes.Message{{Role: "tool", Content: "Result", ToolID: "call_456"}},
 				Temperature:  0.7,
 			},
 			expected: true,
 		},
 		{
 			name: "with vs without tools",
-			req1: llm.CompletionRequest{
+			req1: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
-				Tools:        []llm.ToolDefinition{{Name: "read_file", Description: "Read"}},
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
+				Tools:        []llmtypes.ToolDefinition{{Name: "read_file", Description: "Read"}},
 				Temperature:  0.7,
 			},
-			req2: llm.CompletionRequest{
+			req2: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
 				Temperature:  0.7,
 			},
 			expected: true,
 		},
 		{
 			name: "max tokens ignored (same key)",
-			req1: llm.CompletionRequest{
+			req1: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
 				MaxTokens:    100,
 				Temperature:  0.7,
 			},
-			req2: llm.CompletionRequest{
+			req2: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
 				MaxTokens:    500,
 				Temperature:  0.7,
 			},
@@ -326,49 +326,49 @@ func TestGenerateCacheKey_DifferentRequests_DifferentKeys(t *testing.T) {
 func TestGenerateCacheKey_WhitespaceTrimming(t *testing.T) {
 	tests := []struct {
 		name string
-		req1 llm.CompletionRequest
-		req2 llm.CompletionRequest
+		req1 llmtypes.CompletionRequest
+		req2 llmtypes.CompletionRequest
 	}{
 		{
 			name: "system prompt whitespace",
-			req1: llm.CompletionRequest{
+			req1: llmtypes.CompletionRequest{
 				SystemPrompt: "  You are a helpful assistant  ",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
 				Temperature:  0.7,
 			},
-			req2: llm.CompletionRequest{
+			req2: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
 				Temperature:  0.7,
 			},
 		},
 		{
 			name: "message content whitespace",
-			req1: llm.CompletionRequest{
+			req1: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "  Hello  "}},
+				Messages:     []llmtypes.Message{{Role: "user", Content: "  Hello  "}},
 				Temperature:  0.7,
 			},
-			req2: llm.CompletionRequest{
+			req2: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
 				Temperature:  0.7,
 			},
 		},
 		{
 			name: "tool description whitespace",
-			req1: llm.CompletionRequest{
+			req1: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
-				Tools: []llm.ToolDefinition{
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
+				Tools: []llmtypes.ToolDefinition{
 					{Name: "read_file", Description: "  Read a file  ", Parameters: map[string]interface{}{"type": "object"}},
 				},
 				Temperature: 0.7,
 			},
-			req2: llm.CompletionRequest{
+			req2: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
-				Tools: []llm.ToolDefinition{
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
+				Tools: []llmtypes.ToolDefinition{
 					{Name: "read_file", Description: "Read a file", Parameters: map[string]interface{}{"type": "object"}},
 				},
 				Temperature: 0.7,
@@ -400,39 +400,39 @@ func TestGenerateCacheKey_WhitespaceTrimming(t *testing.T) {
 func TestGenerateCacheKey_EmptyFields(t *testing.T) {
 	tests := []struct {
 		name string
-		req  llm.CompletionRequest
+		req  llmtypes.CompletionRequest
 	}{
 		{
 			name: "empty system prompt",
-			req: llm.CompletionRequest{
+			req: llmtypes.CompletionRequest{
 				SystemPrompt: "",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
 				Temperature:  0.7,
 			},
 		},
 		{
 			name: "empty messages",
-			req: llm.CompletionRequest{
+			req: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{},
+				Messages:     []llmtypes.Message{},
 				Temperature:  0.7,
 			},
 		},
 		{
 			name: "empty tools",
-			req: llm.CompletionRequest{
+			req: llmtypes.CompletionRequest{
 				SystemPrompt: "You are a helpful assistant",
-				Messages:     []llm.Message{{Role: "user", Content: "Hello"}},
-				Tools:        []llm.ToolDefinition{},
+				Messages:     []llmtypes.Message{{Role: "user", Content: "Hello"}},
+				Tools:        []llmtypes.ToolDefinition{},
 				Temperature:  0.7,
 			},
 		},
 		{
 			name: "all fields empty or zero",
-			req: llm.CompletionRequest{
+			req: llmtypes.CompletionRequest{
 				SystemPrompt: "",
-				Messages:     []llm.Message{},
-				Tools:        []llm.ToolDefinition{},
+				Messages:     []llmtypes.Message{},
+				Tools:        []llmtypes.ToolDefinition{},
 				Temperature:  0.0,
 			},
 		},
@@ -470,13 +470,13 @@ func TestGenerateCacheKey_EmptyFields(t *testing.T) {
 }
 
 func TestCacheKeyRequestFrom_ConsistencyWithGenerateCacheKey(t *testing.T) {
-	req := llm.CompletionRequest{
+	req := llmtypes.CompletionRequest{
 		SystemPrompt: "You are a helpful assistant",
-		Messages: []llm.Message{
+		Messages: []llmtypes.Message{
 			{Role: "user", Content: "Hello"},
 			{Role: "assistant", Content: "Hi there"},
 		},
-		Tools: []llm.ToolDefinition{
+		Tools: []llmtypes.ToolDefinition{
 			{Name: "read_file", Description: "Read file", Parameters: map[string]interface{}{"type": "object"}},
 		},
 		Temperature: 0.7,

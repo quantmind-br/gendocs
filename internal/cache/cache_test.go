@@ -301,9 +301,9 @@ func TestScanFiles_MultipleFilesMixedCache(t *testing.T) {
 
 	// Create three test files
 	files := map[string]string{
-		"cached.go":   "package cached\n",
-		"changed.go":  "package changed\n",
-		"newfile.go":  "package newfile\n",
+		"cached.go":  "package cached\n",
+		"changed.go": "package changed\n",
+		"newfile.go": "package newfile\n",
 	}
 
 	var expectedHashes map[string]string = make(map[string]string)
@@ -426,9 +426,9 @@ func TestScanFiles_WithIgnorePatterns(t *testing.T) {
 
 	// Create files
 	files := map[string]string{
-		"main.go":      "package main\n",
+		"main.go":       "package main\n",
 		"vendor/lib.go": "package vendor\n",
-		"test_test.go": "package test\n",
+		"test_test.go":  "package test\n",
 	}
 
 	for name, content := range files {
@@ -443,25 +443,25 @@ func TestScanFiles_WithIgnorePatterns(t *testing.T) {
 
 	// Scan with ignore patterns
 	ignorePatterns := []string{"vendor", "*_test.go"}
-	files, err := ScanFiles(tmpDir, ignorePatterns, nil, nil, 0)
+	scannedFiles, err := ScanFiles(tmpDir, ignorePatterns, nil, nil, 0)
 	if err != nil {
 		t.Fatalf("ScanFiles failed: %v", err)
 	}
 
 	// Verify only main.go is in results
-	if len(files) != 1 {
-		t.Errorf("Expected 1 file, got %d", len(files))
+	if len(scannedFiles) != 1 {
+		t.Errorf("Expected 1 file, got %d", len(scannedFiles))
 	}
 
-	if _, exists := files["main.go"]; !exists {
+	if _, exists := scannedFiles["main.go"]; !exists {
 		t.Error("main.go should be in results")
 	}
 
-	if _, exists := files["vendor/lib.go"]; exists {
+	if _, exists := scannedFiles["vendor/lib.go"]; exists {
 		t.Error("vendor/lib.go should be ignored")
 	}
 
-	if _, exists := files["test_test.go"]; exists {
+	if _, exists := scannedFiles["test_test.go"]; exists {
 		t.Error("test_test.go should be ignored")
 	}
 }

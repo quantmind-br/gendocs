@@ -25,14 +25,14 @@ const (
 // CacheStats tracks cache performance metrics.
 // These statistics help monitor cache effectiveness and efficiency.
 type CacheStats struct {
-	Hits          int64    `json:"hits"`            // Number of cache hits
-	Misses        int64    `json:"misses"`          // Number of cache misses
-	Evictions     int64    `json:"evictions"`       // Number of entries evicted
-	Size          int      `json:"size"`            // Current number of entries
-	MaxSize       int      `json:"max_size"`        // Maximum number of entries allowed
+	Hits           int64   `json:"hits"`             // Number of cache hits
+	Misses         int64   `json:"misses"`           // Number of cache misses
+	Evictions      int64   `json:"evictions"`        // Number of entries evicted
+	Size           int     `json:"size"`             // Current number of entries
+	MaxSize        int     `json:"max_size"`         // Maximum number of entries allowed
 	TotalSizeBytes int64   `json:"total_size_bytes"` // Total size of all entries in bytes
-	HitRate       float64  `json:"hit_rate"`        // Cache hit rate (0.0 to 1.0)
-	mu            sync.RWMutex
+	HitRate        float64 `json:"hit_rate"`         // Cache hit rate (0.0 to 1.0)
+	mu             sync.RWMutex
 }
 
 // updateHitRate updates the hit rate calculation.
@@ -73,12 +73,12 @@ func (s *CacheStats) RecordEviction() {
 // lruEntry represents a single cache entry in the LRU list.
 // It's an internal type used by LRUCache to track cached items.
 type lruEntry struct {
-	key        string            // Cache key for this entry
-	value      *CachedResponse   // The cached response
-	createdAt  time.Time         // When the entry was created
-	accessedAt time.Time         // When the entry was last accessed
-	sizeBytes  int64             // Approximate size in bytes
-	prev, next *lruEntry         // Pointers for LRU doubly-linked list
+	key        string          // Cache key for this entry
+	value      *CachedResponse // The cached response
+	createdAt  time.Time       // When the entry was created
+	accessedAt time.Time       // When the entry was last accessed
+	sizeBytes  int64           // Approximate size in bytes
+	prev, next *lruEntry       // Pointers for LRU doubly-linked list
 }
 
 // LRUCache implements a thread-safe LRU (Least Recently Used) cache for LLM responses.
@@ -86,13 +86,13 @@ type lruEntry struct {
 // The cache automatically evicts the least recently used entries when it reaches capacity.
 // It tracks hit/miss statistics and provides thread-safe access to cached data.
 type LRUCache struct {
-	maxSize    int                    // Maximum number of entries allowed
-	size       int                    // Current number of entries
-	cache      map[string]*lruEntry   // Map from key to entry
-	head, tail *lruEntry              // Head (most recent) and tail (least recent) of LRU list
-	mu         sync.RWMutex           // Protects all cache access
-	stats      CacheStats             // Cache performance statistics
-	logger     *logging.Logger        // Logger for cache operations
+	maxSize    int                  // Maximum number of entries allowed
+	size       int                  // Current number of entries
+	cache      map[string]*lruEntry // Map from key to entry
+	head, tail *lruEntry            // Head (most recent) and tail (least recent) of LRU list
+	mu         sync.RWMutex         // Protects all cache access
+	stats      CacheStats           // Cache performance statistics
+	logger     *logging.Logger      // Logger for cache operations
 }
 
 // NewLRUCache creates a new LRU cache with the given maximum size.
@@ -171,9 +171,12 @@ func (c *LRUCache) Put(key string, value *CachedResponse) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	// Calculate size if not already set
 	if value.SizeBytes == 0 {
 		value.SizeBytes = value.EstimateSize()
+	}
+
+	if value.ExpiresAt.IsZero() {
+		value.ExpiresAt = time.Now().Add(DefaultTTL)
 	}
 
 	// Check if key already exists
@@ -394,12 +397,12 @@ func (c *LRUCache) CleanupExpired() int {
 // DiskCacheData represents the on-disk cache format.
 // This structure is serialized to JSON for persistent storage.
 type DiskCacheData struct {
-	Version   int                         `json:"version"`    // Cache format version
-	CreatedAt time.Time                   `json:"created_at"` // When the cache was created
-	UpdatedAt time.Time                   `json:"updated_at"` // When the cache was last updated
-	Entries   map[string]CachedResponse   `json:"entries"`    // Cached entries
-	Stats     DiskCacheStats              `json:"stats"`      // Cache statistics
-	mu        sync.RWMutex                // Protects stats fields
+	Version   int                       `json:"version"`    // Cache format version
+	CreatedAt time.Time                 `json:"created_at"` // When the cache was created
+	UpdatedAt time.Time                 `json:"updated_at"` // When the cache was last updated
+	Entries   map[string]CachedResponse `json:"entries"`    // Cached entries
+	Stats     DiskCacheStats            `json:"stats"`      // Cache statistics
+	mu        sync.RWMutex              // Protects stats fields
 }
 
 // DiskCacheStats tracks disk cache statistics.
@@ -427,15 +430,15 @@ func (s *DiskCacheStats) updateHitRate() {
 // cached LLM responses to be reused between runs. It uses a JSON file
 // for storage and supports atomic writes and checksum validation.
 type DiskCache struct {
-	filePath    string            // Path to the cache file
-	ttl         time.Duration     // Default TTL for entries
-	maxDiskSize int64             // Maximum disk size (not currently enforced)
-	mu          sync.Mutex        // Protects all access
-	data        *DiskCacheData    // In-memory cache data
-	dirty       bool              // Whether data has changed since last save
-	autoSave    bool              // Whether auto-save is running
-	stopSave    chan struct{}     // Channel to stop auto-save goroutine
-	logger      *logging.Logger   // Logger for disk cache operations
+	filePath    string          // Path to the cache file
+	ttl         time.Duration   // Default TTL for entries
+	maxDiskSize int64           // Maximum disk size (not currently enforced)
+	mu          sync.Mutex      // Protects all access
+	data        *DiskCacheData  // In-memory cache data
+	dirty       bool            // Whether data has changed since last save
+	autoSave    bool            // Whether auto-save is running
+	stopSave    chan struct{}   // Channel to stop auto-save goroutine
+	logger      *logging.Logger // Logger for disk cache operations
 }
 
 // NewDiskCache creates a new disk cache.

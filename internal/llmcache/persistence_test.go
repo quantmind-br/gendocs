@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/user/gendocs/internal/llm"
+	"github.com/user/gendocs/internal/llmtypes"
 )
 
 // TestDiskCache_BasicOperations tests basic Get/Put/Delete/Clear operations
@@ -25,8 +25,8 @@ func TestDiskCache_BasicOperations(t *testing.T) {
 
 		key := "test-key-1"
 		value := &CachedResponse{
-			Key:   key,
-			Response: llm.CompletionResponse{
+			Key: key,
+			Response: llmtypes.CompletionResponse{
 				Content: "test response",
 			},
 			CreatedAt:   time.Now(),
@@ -45,8 +45,8 @@ func TestDiskCache_BasicOperations(t *testing.T) {
 			t.Fatal("Expected to find value in cache")
 		}
 
-		if retrieved.Content != "test response" {
-			t.Errorf("Expected content 'test response', got '%s'", retrieved.Content)
+		if retrieved.Response.Content != "test response" {
+			t.Errorf("Expected content 'test response', got '%s'", retrieved.Response.Content)
 		}
 
 		// Verify checksum was calculated
@@ -86,8 +86,8 @@ func TestDiskCache_BasicOperations(t *testing.T) {
 
 		key := "test-key-2"
 		value := &CachedResponse{
-			Key:   key,
-			Response: llm.CompletionResponse{
+			Key: key,
+			Response: llmtypes.CompletionResponse{
 				Content: "to be deleted",
 			},
 			CreatedAt:   time.Now(),
@@ -127,8 +127,8 @@ func TestDiskCache_BasicOperations(t *testing.T) {
 		for i := 1; i <= 5; i++ {
 			key := "test-key-" + string(rune('0'+i))
 			value := &CachedResponse{
-				Key:   key,
-				Response: llm.CompletionResponse{
+				Key: key,
+				Response: llmtypes.CompletionResponse{
 					Content: "test response",
 				},
 				CreatedAt:   time.Now(),
@@ -169,8 +169,8 @@ func TestDiskCache_Persistence(t *testing.T) {
 
 		// Add test entries
 		entry1 := &CachedResponse{
-			Key:   "key1",
-			Response: llm.CompletionResponse{
+			Key: "key1",
+			Response: llmtypes.CompletionResponse{
 				Content: "response 1",
 			},
 			CreatedAt:   time.Now(),
@@ -178,8 +178,8 @@ func TestDiskCache_Persistence(t *testing.T) {
 			AccessCount: 0,
 		}
 		entry2 := &CachedResponse{
-			Key:   "key2",
-			Response: llm.CompletionResponse{
+			Key: "key2",
+			Response: llmtypes.CompletionResponse{
 				Content: "response 2",
 			},
 			CreatedAt:   time.Now(),
@@ -217,16 +217,16 @@ func TestDiskCache_Persistence(t *testing.T) {
 		if !found {
 			t.Fatal("Expected to find key1")
 		}
-		if retrieved1.Content != "response 1" {
-			t.Errorf("Expected 'response 1', got '%s'", retrieved1.Content)
+		if retrieved1.Response.Content != "response 1" {
+			t.Errorf("Expected 'response 1', got '%s'", retrieved1.Response.Content)
 		}
 
 		retrieved2, found := cache2.Get("key2")
 		if !found {
 			t.Fatal("Expected to find key2")
 		}
-		if retrieved2.Content != "response 2" {
-			t.Errorf("Expected 'response 2', got '%s'", retrieved2.Content)
+		if retrieved2.Response.Content != "response 2" {
+			t.Errorf("Expected 'response 2', got '%s'", retrieved2.Response.Content)
 		}
 
 		cache2.Stop()
@@ -298,8 +298,8 @@ func TestDiskCache_CorruptionHandling(t *testing.T) {
 
 		// Add entries
 		entry1 := &CachedResponse{
-			Key:   "valid-key",
-			Response: llm.CompletionResponse{
+			Key: "valid-key",
+			Response: llmtypes.CompletionResponse{
 				Content: "valid response",
 			},
 			CreatedAt:   time.Now(),
@@ -328,8 +328,8 @@ func TestDiskCache_CorruptionHandling(t *testing.T) {
 
 		// Add a corrupted entry with invalid checksum
 		corruptedEntry := CachedResponse{
-			Key:   "corrupted-key",
-			Response: llm.CompletionResponse{
+			Key: "corrupted-key",
+			Response: llmtypes.CompletionResponse{
 				Content: "corrupted response",
 			},
 			CreatedAt:   time.Now(),
@@ -383,8 +383,8 @@ func TestDiskCache_CorruptionHandling(t *testing.T) {
 			UpdatedAt: time.Now(),
 			Entries: map[string]CachedResponse{
 				"old-key": {
-					Key:   "old-key",
-					Response: llm.CompletionResponse{
+					Key: "old-key",
+					Response: llmtypes.CompletionResponse{
 						Content: "old response",
 					},
 					CreatedAt:   time.Now(),
@@ -412,8 +412,8 @@ func TestDiskCache_CorruptionHandling(t *testing.T) {
 		if !found {
 			t.Fatal("Expected old format entry to be accessible")
 		}
-		if retrieved.Content != "old response" {
-			t.Errorf("Expected 'old response', got '%s'", retrieved.Content)
+		if retrieved.Response.Content != "old response" {
+			t.Errorf("Expected 'old response', got '%s'", retrieved.Response.Content)
 		}
 
 		cache.Stop()
@@ -432,8 +432,8 @@ func TestDiskCache_VersionMismatch(t *testing.T) {
 		UpdatedAt: time.Now(),
 		Entries: map[string]CachedResponse{
 			"old-key": {
-				Key:   "old-key",
-				Response: llm.CompletionResponse{
+				Key: "old-key",
+				Response: llmtypes.CompletionResponse{
 					Content: "old response",
 				},
 				CreatedAt:   time.Now(),
@@ -478,8 +478,8 @@ func TestDiskCache_TTLExpiration(t *testing.T) {
 		// Create already-expired entry
 		key := "expired-key"
 		value := &CachedResponse{
-			Key:   key,
-			Response: llm.CompletionResponse{
+			Key: key,
+			Response: llmtypes.CompletionResponse{
 				Content: "expired response",
 			},
 			CreatedAt:   time.Now().Add(-2 * time.Hour),
@@ -511,8 +511,8 @@ func TestDiskCache_TTLExpiration(t *testing.T) {
 
 		key := "valid-key"
 		value := &CachedResponse{
-			Key:   key,
-			Response: llm.CompletionResponse{
+			Key: key,
+			Response: llmtypes.CompletionResponse{
 				Content: "valid response",
 			},
 			CreatedAt:   time.Now(),
@@ -529,8 +529,8 @@ func TestDiskCache_TTLExpiration(t *testing.T) {
 		if !found {
 			t.Fatal("Expected valid entry to be found")
 		}
-		if retrieved.Content != "valid response" {
-			t.Errorf("Expected 'valid response', got '%s'", retrieved.Content)
+		if retrieved.Response.Content != "valid response" {
+			t.Errorf("Expected 'valid response', got '%s'", retrieved.Response.Content)
 		}
 
 		cache.Stop()
@@ -547,8 +547,8 @@ func TestDiskCache_TTLExpiration(t *testing.T) {
 
 		// Add expired entry
 		expiredEntry := &CachedResponse{
-			Key:   "expired-key",
-			Response: llm.CompletionResponse{
+			Key: "expired-key",
+			Response: llmtypes.CompletionResponse{
 				Content: "expired response",
 			},
 			CreatedAt:   time.Now().Add(-2 * time.Hour),
@@ -561,8 +561,8 @@ func TestDiskCache_TTLExpiration(t *testing.T) {
 
 		// Add valid entry
 		validEntry := &CachedResponse{
-			Key:   "valid-key",
-			Response: llm.CompletionResponse{
+			Key: "valid-key",
+			Response: llmtypes.CompletionResponse{
 				Content: "valid response",
 			},
 			CreatedAt:   time.Now(),
@@ -633,8 +633,8 @@ func TestDiskCache_Statistics(t *testing.T) {
 
 		// Add entry
 		entry := &CachedResponse{
-			Key:   "test-key",
-			Response: llm.CompletionResponse{
+			Key: "test-key",
+			Response: llmtypes.CompletionResponse{
 				Content: "test response",
 			},
 			CreatedAt:   time.Now(),
@@ -680,8 +680,8 @@ func TestDiskCache_Statistics(t *testing.T) {
 		// Add expired entries
 		for i := 1; i <= 3; i++ {
 			entry := &CachedResponse{
-				Key:   "expired-" + string(rune('0'+i)),
-				Response: llm.CompletionResponse{
+				Key: "expired-" + string(rune('0'+i)),
+				Response: llmtypes.CompletionResponse{
 					Content: "expired",
 				},
 				CreatedAt:   time.Now().Add(-2 * time.Hour),
@@ -720,8 +720,8 @@ func TestDiskCache_ConcurrentAccess(t *testing.T) {
 
 		// Add entry
 		entry := &CachedResponse{
-			Key:   "test-key",
-			Response: llm.CompletionResponse{
+			Key: "test-key",
+			Response: llmtypes.CompletionResponse{
 				Content: "test response",
 			},
 			CreatedAt:   time.Now(),
@@ -770,8 +770,8 @@ func TestDiskCache_ConcurrentAccess(t *testing.T) {
 			go func(i int) {
 				key := "key-" + string(rune('0'+i))
 				entry := &CachedResponse{
-					Key:   key,
-					Response: llm.CompletionResponse{
+					Key: key,
+					Response: llmtypes.CompletionResponse{
 						Content: "response",
 					},
 					CreatedAt:   time.Now(),
@@ -822,8 +822,8 @@ func TestDiskCache_ConcurrentAccess(t *testing.T) {
 				for j := 0; j < 10; j++ {
 					key := "key-" + string(rune('0'+i))
 					entry := &CachedResponse{
-						Key:   key,
-						Response: llm.CompletionResponse{
+						Key: key,
+						Response: llmtypes.CompletionResponse{
 							Content: "response",
 						},
 						CreatedAt:   time.Now(),
@@ -867,8 +867,8 @@ func TestDiskCache_AutoSave(t *testing.T) {
 
 		// Add entry
 		entry := &CachedResponse{
-			Key:   "test-key",
-			Response: llm.CompletionResponse{
+			Key: "test-key",
+			Response: llmtypes.CompletionResponse{
 				Content: "test response",
 			},
 			CreatedAt:   time.Now(),
@@ -915,8 +915,8 @@ func TestDiskCache_AutoSave(t *testing.T) {
 
 		// Add entry
 		entry := &CachedResponse{
-			Key:   "test-key",
-			Response: llm.CompletionResponse{
+			Key: "test-key",
+			Response: llmtypes.CompletionResponse{
 				Content: "test response",
 			},
 			CreatedAt:   time.Now(),
@@ -952,8 +952,8 @@ func TestDiskCache_AutoSave(t *testing.T) {
 
 		// Verify cache is still functional
 		entry := &CachedResponse{
-			Key:   "test-key",
-			Response: llm.CompletionResponse{
+			Key: "test-key",
+			Response: llmtypes.CompletionResponse{
 				Content: "test response",
 			},
 			CreatedAt:   time.Now(),
@@ -984,8 +984,8 @@ func TestDiskCache_AtomicWrite(t *testing.T) {
 
 		// Add entry
 		entry := &CachedResponse{
-			Key:   "test-key",
-			Response: llm.CompletionResponse{
+			Key: "test-key",
+			Response: llmtypes.CompletionResponse{
 				Content: "test response",
 			},
 			CreatedAt:   time.Now(),

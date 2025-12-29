@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/user/gendocs/internal/llm"
+	"github.com/user/gendocs/internal/llmtypes"
 )
 
 // TestLRUCache_BasicOperations tests basic Get/Put/Delete operations
@@ -15,8 +15,8 @@ func TestLRUCache_BasicOperations(t *testing.T) {
 	t.Run("Put and Get", func(t *testing.T) {
 		key := "test-key-1"
 		value := &CachedResponse{
-			Key:   key,
-			Response: llm.CompletionResponse{
+			Key: key,
+			Response: llmtypes.CompletionResponse{
 				Content: "test response",
 			},
 		}
@@ -30,8 +30,8 @@ func TestLRUCache_BasicOperations(t *testing.T) {
 			t.Fatal("Expected to find value in cache")
 		}
 
-		if retrieved.Content != "test response" {
-			t.Errorf("Expected content 'test response', got '%s'", retrieved.Content)
+		if retrieved.Response.Content != "test response" {
+			t.Errorf("Expected content 'test response', got '%s'", retrieved.Response.Content)
 		}
 	})
 
@@ -45,8 +45,8 @@ func TestLRUCache_BasicOperations(t *testing.T) {
 	t.Run("Delete key", func(t *testing.T) {
 		key := "test-key-2"
 		value := &CachedResponse{
-			Key:   key,
-			Response: llm.CompletionResponse{
+			Key: key,
+			Response: llmtypes.CompletionResponse{
 				Content: "to be deleted",
 			},
 		}
@@ -63,14 +63,14 @@ func TestLRUCache_BasicOperations(t *testing.T) {
 	t.Run("Update existing key", func(t *testing.T) {
 		key := "test-key-3"
 		value1 := &CachedResponse{
-			Key:   key,
-			Response: llm.CompletionResponse{
+			Key: key,
+			Response: llmtypes.CompletionResponse{
 				Content: "first value",
 			},
 		}
 		value2 := &CachedResponse{
-			Key:   key,
-			Response: llm.CompletionResponse{
+			Key: key,
+			Response: llmtypes.CompletionResponse{
 				Content: "second value",
 			},
 		}
@@ -79,8 +79,8 @@ func TestLRUCache_BasicOperations(t *testing.T) {
 		cache.Put(key, value2)
 
 		retrieved, _ := cache.Get(key)
-		if retrieved.Content != "second value" {
-			t.Errorf("Expected 'second value', got '%s'", retrieved.Content)
+		if retrieved.Response.Content != "second value" {
+			t.Errorf("Expected 'second value', got '%s'", retrieved.Response.Content)
 		}
 
 		// Size should still be 1 (not 2)
@@ -96,16 +96,16 @@ func TestLRUCache_LRUEviction(t *testing.T) {
 		cache := NewLRUCache(3)
 
 		// Fill cache to max
-		cache.Put("key1", &CachedResponse{Response: llm.CompletionResponse{Content: "value1"}})
-		cache.Put("key2", &CachedResponse{Response: llm.CompletionResponse{Content: "value2"}})
-		cache.Put("key3", &CachedResponse{Response: llm.CompletionResponse{Content: "value3"}})
+		cache.Put("key1", &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value1"}})
+		cache.Put("key2", &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value2"}})
+		cache.Put("key3", &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value3"}})
 
 		if cache.Size() != 3 {
 			t.Errorf("Expected cache size 3, got %d", cache.Size())
 		}
 
 		// Add one more - should evict key1 (least recently used)
-		cache.Put("key4", &CachedResponse{Response: llm.CompletionResponse{Content: "value4"}})
+		cache.Put("key4", &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value4"}})
 
 		if cache.Size() != 3 {
 			t.Errorf("Expected cache size 3 after eviction, got %d", cache.Size())
@@ -130,15 +130,15 @@ func TestLRUCache_LRUEviction(t *testing.T) {
 		cache := NewLRUCache(3)
 
 		// Fill cache
-		cache.Put("key1", &CachedResponse{Response: llm.CompletionResponse{Content: "value1"}})
-		cache.Put("key2", &CachedResponse{Response: llm.CompletionResponse{Content: "value2"}})
-		cache.Put("key3", &CachedResponse{Response: llm.CompletionResponse{Content: "value3"}})
+		cache.Put("key1", &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value1"}})
+		cache.Put("key2", &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value2"}})
+		cache.Put("key3", &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value3"}})
 
 		// Access key1 to make it more recently used
 		cache.Get("key1")
 
 		// Add key4 - should evict key2 (now least recently used)
-		cache.Put("key4", &CachedResponse{Response: llm.CompletionResponse{Content: "value4"}})
+		cache.Put("key4", &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value4"}})
 
 		// key1 should still exist (was accessed)
 		_, found := cache.Get("key1")
@@ -165,23 +165,23 @@ func TestLRUCache_LRUEviction(t *testing.T) {
 		cache := NewLRUCache(3)
 
 		// Fill cache
-		cache.Put("key1", &CachedResponse{Response: llm.CompletionResponse{Content: "value1"}})
-		cache.Put("key2", &CachedResponse{Response: llm.CompletionResponse{Content: "value2"}})
-		cache.Put("key3", &CachedResponse{Response: llm.CompletionResponse{Content: "value3"}})
+		cache.Put("key1", &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value1"}})
+		cache.Put("key2", &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value2"}})
+		cache.Put("key3", &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value3"}})
 
 		// Update key1 to make it recently used
-		cache.Put("key1", &CachedResponse{Response: llm.CompletionResponse{Content: "value1-updated"}})
+		cache.Put("key1", &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value1-updated"}})
 
 		// Add key4 - should evict key2 (least recently used)
-		cache.Put("key4", &CachedResponse{Response: llm.CompletionResponse{Content: "value4"}})
+		cache.Put("key4", &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value4"}})
 
 		// key1 should still exist (was updated)
 		retrieved, found := cache.Get("key1")
 		if !found {
 			t.Error("Expected key1 to still exist after being updated")
 		}
-		if retrieved.Content != "value1-updated" {
-			t.Errorf("Expected updated value for key1, got '%s'", retrieved.Content)
+		if retrieved.Response.Content != "value1-updated" {
+			t.Errorf("Expected updated value for key1, got '%s'", retrieved.Response.Content)
 		}
 
 		// key2 should be evicted
@@ -195,14 +195,14 @@ func TestLRUCache_LRUEviction(t *testing.T) {
 		cache := NewLRUCache(3)
 
 		// Fill cache
-		cache.Put("key1", &CachedResponse{Response: llm.CompletionResponse{Content: "value1"}})
-		cache.Put("key2", &CachedResponse{Response: llm.CompletionResponse{Content: "value2"}})
-		cache.Put("key3", &CachedResponse{Response: llm.CompletionResponse{Content: "value3"}})
+		cache.Put("key1", &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value1"}})
+		cache.Put("key2", &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value2"}})
+		cache.Put("key3", &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value3"}})
 
 		// Add 3 more entries - should evict key1, key2, key3 in that order
 		for i := 4; i <= 6; i++ {
 			key := string(rune('0' + i))
-			cache.Put("key"+key, &CachedResponse{Response: llm.CompletionResponse{Content: "value" + key}})
+			cache.Put("key"+key, &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value" + key}})
 		}
 
 		if cache.Size() != 3 {
@@ -238,7 +238,7 @@ func TestLRUCache_ConcurrentAccess(t *testing.T) {
 		for i := 0; i < 50; i++ {
 			key := string(rune('0' + i))
 			cache.Put("key"+key, &CachedResponse{
-				Response: llm.CompletionResponse{Content: "value" + key},
+				Response: llmtypes.CompletionResponse{Content: "value" + key},
 			})
 		}
 
@@ -281,7 +281,7 @@ func TestLRUCache_ConcurrentAccess(t *testing.T) {
 				for i := 0; i < writesPerGoroutine; i++ {
 					key := string(rune('a' + i))
 					cache.Put("key"+string(rune('0'+goroutineID))+key, &CachedResponse{
-						Response: llm.CompletionResponse{Content: "value"},
+						Response: llmtypes.CompletionResponse{Content: "value"},
 					})
 				}
 			}(g)
@@ -321,7 +321,7 @@ func TestLRUCache_ConcurrentAccess(t *testing.T) {
 				for i := 0; i < operationsPerGoroutine; i++ {
 					key := string(rune('a' + i))
 					cache.Put("key"+string(rune('0'+goroutineID))+key, &CachedResponse{
-						Response: llm.CompletionResponse{Content: "value"},
+						Response: llmtypes.CompletionResponse{Content: "value"},
 					})
 				}
 			}(g)
@@ -340,7 +340,7 @@ func TestLRUCache_ConcurrentAccess(t *testing.T) {
 		cache := NewLRUCache(100)
 
 		key := "shared-key"
-		cache.Put(key, &CachedResponse{Response: llm.CompletionResponse{Content: "initial"}})
+		cache.Put(key, &CachedResponse{Response: llmtypes.CompletionResponse{Content: "initial"}})
 
 		var wg sync.WaitGroup
 		numGoroutines := 10
@@ -352,7 +352,7 @@ func TestLRUCache_ConcurrentAccess(t *testing.T) {
 				defer wg.Done()
 				for i := 0; i < updatesPerGoroutine; i++ {
 					cache.Put(key, &CachedResponse{
-						Response: llm.CompletionResponse{Content: "value"},
+						Response: llmtypes.CompletionResponse{Content: "value"},
 					})
 				}
 			}(g)
@@ -378,7 +378,7 @@ func TestLRUCache_ConcurrentAccess(t *testing.T) {
 		// Pre-fill cache
 		for i := 0; i < 100; i++ {
 			key := "key" + string(rune('0'+i))
-			cache.Put(key, &CachedResponse{Response: llm.CompletionResponse{Content: "value"}})
+			cache.Put(key, &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value"}})
 		}
 
 		var wg sync.WaitGroup
@@ -431,7 +431,7 @@ func TestLRUCache_Stats(t *testing.T) {
 
 	t.Run("hit and miss tracking", func(t *testing.T) {
 		cache := NewLRUCache(10)
-		cache.Put("key1", &CachedResponse{Response: llm.CompletionResponse{Content: "value1"}})
+		cache.Put("key1", &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value1"}})
 
 		// Hit
 		cache.Get("key1")
@@ -458,9 +458,9 @@ func TestLRUCache_Stats(t *testing.T) {
 	t.Run("eviction tracking", func(t *testing.T) {
 		cache := NewLRUCache(2)
 
-		cache.Put("key1", &CachedResponse{Response: llm.CompletionResponse{Content: "value1"}})
-		cache.Put("key2", &CachedResponse{Response: llm.CompletionResponse{Content: "value2"}})
-		cache.Put("key3", &CachedResponse{Response: llm.CompletionResponse{Content: "value3"}})
+		cache.Put("key1", &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value1"}})
+		cache.Put("key2", &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value2"}})
+		cache.Put("key3", &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value3"}})
 
 		stats := cache.Stats()
 
@@ -491,7 +491,7 @@ func TestLRUCache_SizeLimit(t *testing.T) {
 			// Add more items than maxSize
 			for i := 0; i < tt.numItems; i++ {
 				key := "key" + string(rune('0'+(i%10))) + string(rune('a'+(i/10)))
-				cache.Put(key, &CachedResponse{Response: llm.CompletionResponse{Content: "value"}})
+				cache.Put(key, &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value"}})
 			}
 
 			// Size should not exceed maxSize
@@ -514,7 +514,7 @@ func TestLRUCache_Clear(t *testing.T) {
 	// Add some entries
 	for i := 0; i < 5; i++ {
 		key := "key" + string(rune('0'+i))
-		cache.Put(key, &CachedResponse{Response: llm.CompletionResponse{Content: "value"}})
+		cache.Put(key, &CachedResponse{Response: llmtypes.CompletionResponse{Content: "value"}})
 	}
 
 	if cache.Size() != 5 {
@@ -544,7 +544,7 @@ func TestLRUCache_TTL(t *testing.T) {
 		value := &CachedResponse{
 			Key:       key,
 			ExpiresAt: time.Now().Add(-1 * time.Hour), // Expired 1 hour ago
-			Response:  llm.CompletionResponse{Content: "expired value"},
+			Response:  llmtypes.CompletionResponse{Content: "expired value"},
 		}
 
 		cache.Put(key, value)
@@ -569,7 +569,7 @@ func TestLRUCache_TTL(t *testing.T) {
 		value := &CachedResponse{
 			Key:       key,
 			ExpiresAt: time.Now().Add(1 * time.Hour), // Expires in 1 hour
-			Response:  llm.CompletionResponse{Content: "valid value"},
+			Response:  llmtypes.CompletionResponse{Content: "valid value"},
 		}
 
 		cache.Put(key, value)
@@ -580,8 +580,8 @@ func TestLRUCache_TTL(t *testing.T) {
 			t.Error("Expected valid entry to be found")
 		}
 
-		if retrieved.Content != "valid value" {
-			t.Errorf("Expected 'valid value', got '%s'", retrieved.Content)
+		if retrieved.Response.Content != "valid value" {
+			t.Errorf("Expected 'valid value', got '%s'", retrieved.Response.Content)
 		}
 
 		// Stats should record this as a hit
@@ -600,7 +600,7 @@ func TestLRUCache_TTL(t *testing.T) {
 			cache.Put(key, &CachedResponse{
 				Key:       key,
 				ExpiresAt: time.Now().Add(-1 * time.Hour),
-				Response:  llm.CompletionResponse{Content: "expired"},
+				Response:  llmtypes.CompletionResponse{Content: "expired"},
 			})
 		}
 
@@ -610,7 +610,7 @@ func TestLRUCache_TTL(t *testing.T) {
 			cache.Put(key, &CachedResponse{
 				Key:       key,
 				ExpiresAt: time.Now().Add(1 * time.Hour),
-				Response:  llm.CompletionResponse{Content: "valid"},
+				Response:  llmtypes.CompletionResponse{Content: "valid"},
 			})
 		}
 
@@ -655,8 +655,8 @@ func TestLRUCache_AccessCount(t *testing.T) {
 
 	key := "test-key"
 	value := &CachedResponse{
-		Key:   key,
-		Response: llm.CompletionResponse{
+		Key: key,
+		Response: llmtypes.CompletionResponse{
 			Content: "test value",
 		},
 		AccessCount: 0,

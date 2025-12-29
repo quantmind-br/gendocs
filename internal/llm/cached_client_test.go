@@ -66,7 +66,7 @@ func TestCachedLLMClient_CacheMiss_CallsUnderlying(t *testing.T) {
 
 	// Create caches
 	memoryCache := llmcache.NewLRUCache(10)
-	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", 100*1024*1024, llmcache.DefaultTTL)
+	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", llmcache.DefaultTTL, 100*1024*1024)
 
 	// Create cached client
 	cachedClient := NewCachedLLMClient(mockClient, memoryCache, diskCache, true, time.Hour)
@@ -120,7 +120,7 @@ func TestCachedLLMClient_CacheHit_Memory(t *testing.T) {
 
 	// Create caches
 	memoryCache := llmcache.NewLRUCache(10)
-	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", 100*1024*1024, llmcache.DefaultTTL)
+	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", llmcache.DefaultTTL, 100*1024*1024)
 
 	// Create cached client
 	cachedClient := NewCachedLLMClient(mockClient, memoryCache, diskCache, true, time.Hour)
@@ -186,7 +186,7 @@ func TestCachedLLMClient_CacheHit_DiskPromotedToMemory(t *testing.T) {
 	tempDir := t.TempDir()
 	cachePath := filepath.Join(tempDir, "test-cache.json")
 	memoryCache := llmcache.NewLRUCache(1)
-	diskCache := llmcache.NewDiskCache(cachePath, 100*1024*1024, llmcache.DefaultTTL)
+	diskCache := llmcache.NewDiskCache(cachePath, llmcache.DefaultTTL, 100*1024*1024)
 
 	// Create first cached client to populate disk cache
 	cachedClient1 := NewCachedLLMClient(mockClient, memoryCache, diskCache, true, time.Hour)
@@ -201,7 +201,7 @@ func TestCachedLLMClient_CacheHit_DiskPromotedToMemory(t *testing.T) {
 	}
 
 	// First call - populates both caches
-	resp1, err1 := cachedClient1.GenerateCompletion(ctx, req)
+	_, err1 := cachedClient1.GenerateCompletion(ctx, req)
 	if err1 != nil {
 		t.Fatalf("First call: Expected no error, got %v", err1)
 	}
@@ -211,7 +211,7 @@ func TestCachedLLMClient_CacheHit_DiskPromotedToMemory(t *testing.T) {
 
 	// Create new caches (simulating restart)
 	memoryCache2 := llmcache.NewLRUCache(10)
-	diskCache2 := llmcache.NewDiskCache(cachePath, 100*1024*1024, llmcache.DefaultTTL)
+	diskCache2 := llmcache.NewDiskCache(cachePath, llmcache.DefaultTTL, 100*1024*1024)
 	if err := diskCache2.Load(); err != nil {
 		t.Fatalf("Failed to load disk cache: %v", err)
 	}
@@ -273,7 +273,7 @@ func TestCachedLLMClient_CachingDisabled_BypassesCache(t *testing.T) {
 
 	// Create cached client with caching disabled
 	memoryCache := llmcache.NewLRUCache(10)
-	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", 100*1024*1024, llmcache.DefaultTTL)
+	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", llmcache.DefaultTTL, 100*1024*1024)
 	cachedClient := NewCachedLLMClient(mockClient, memoryCache, diskCache, false, time.Hour)
 
 	ctx := context.Background()
@@ -315,7 +315,7 @@ func TestCachedLLMClient_DifferentRequests_DifferentKeys(t *testing.T) {
 	}
 
 	memoryCache := llmcache.NewLRUCache(10)
-	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", 100*1024*1024, llmcache.DefaultTTL)
+	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", llmcache.DefaultTTL, 100*1024*1024)
 	cachedClient := NewCachedLLMClient(mockClient, memoryCache, diskCache, true, time.Hour)
 
 	ctx := context.Background()
@@ -325,17 +325,17 @@ func TestCachedLLMClient_DifferentRequests_DifferentKeys(t *testing.T) {
 		{
 			SystemPrompt: "system 1",
 			Messages:     []Message{{Role: "user", Content: "message 1"}},
-			Temperature: 0.7,
+			Temperature:  0.7,
 		},
 		{
 			SystemPrompt: "system 2", // Different system prompt
 			Messages:     []Message{{Role: "user", Content: "message 1"}},
-			Temperature: 0.7,
+			Temperature:  0.7,
 		},
 		{
 			SystemPrompt: "system 1",
 			Messages:     []Message{{Role: "user", Content: "message 2"}}, // Different message
-			Temperature: 0.7,
+			Temperature:  0.7,
 		},
 	}
 
@@ -366,14 +366,14 @@ func TestCachedLLMClient_APIFailure_NotCached(t *testing.T) {
 	}
 
 	memoryCache := llmcache.NewLRUCache(10)
-	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", 100*1024*1024, llmcache.DefaultTTL)
+	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", llmcache.DefaultTTL, 100*1024*1024)
 	cachedClient := NewCachedLLMClient(mockClient, memoryCache, diskCache, true, time.Hour)
 
 	ctx := context.Background()
 	req := CompletionRequest{
 		SystemPrompt: "test",
 		Messages:     []Message{{Role: "user", Content: "hello"}},
-		Temperature: 0.7,
+		Temperature:  0.7,
 	}
 
 	// Execute request - should fail
@@ -403,7 +403,7 @@ func TestCachedLLMClient_TTLExpiration(t *testing.T) {
 	}
 
 	memoryCache := llmcache.NewLRUCache(10)
-	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", 100*1024*1024, llmcache.DefaultTTL)
+	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", llmcache.DefaultTTL, 100*1024*1024)
 
 	// Use very short TTL (1ms)
 	cachedClient := NewCachedLLMClient(mockClient, memoryCache, diskCache, true, 1*time.Millisecond)
@@ -412,7 +412,7 @@ func TestCachedLLMClient_TTLExpiration(t *testing.T) {
 	req := CompletionRequest{
 		SystemPrompt: "test",
 		Messages:     []Message{{Role: "user", Content: "hello"}},
-		Temperature: 0.7,
+		Temperature:  0.7,
 	}
 
 	// First call - cache miss
@@ -443,7 +443,7 @@ func TestCachedLLMClient_SupportsTools_Delegates(t *testing.T) {
 	}
 
 	memoryCache := llmcache.NewLRUCache(10)
-	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", 100*1024*1024, llmcache.DefaultTTL)
+	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", llmcache.DefaultTTL, 100*1024*1024)
 	cachedClient := NewCachedLLMClient(mockClient, memoryCache, diskCache, true, time.Hour)
 
 	if !cachedClient.SupportsTools() {
@@ -458,7 +458,7 @@ func TestCachedLLMClient_GetProvider_ReturnsPrefixedName(t *testing.T) {
 	}
 
 	memoryCache := llmcache.NewLRUCache(10)
-	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", 100*1024*1024, llmcache.DefaultTTL)
+	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", llmcache.DefaultTTL, 100*1024*1024)
 	cachedClient := NewCachedLLMClient(mockClient, memoryCache, diskCache, true, time.Hour)
 
 	expectedProvider := "cached-openai"
@@ -475,14 +475,14 @@ func TestCachedLLMClient_GetStats_AggregatesStats(t *testing.T) {
 	}
 
 	memoryCache := llmcache.NewLRUCache(10)
-	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", 100*1024*1024, llmcache.DefaultTTL)
+	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", llmcache.DefaultTTL, 100*1024*1024)
 	cachedClient := NewCachedLLMClient(mockClient, memoryCache, diskCache, true, time.Hour)
 
 	ctx := context.Background()
 	req := CompletionRequest{
 		SystemPrompt: "test",
 		Messages:     []Message{{Role: "user", Content: "hello"}},
-		Temperature: 0.7,
+		Temperature:  0.7,
 	}
 
 	// Generate some activity
@@ -512,7 +512,7 @@ func TestCachedLLMClient_CleanupExpired_CleansBothCaches(t *testing.T) {
 	}
 
 	memoryCache := llmcache.NewLRUCache(10)
-	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", 100*1024*1024, llmcache.DefaultTTL)
+	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", llmcache.DefaultTTL, 100*1024*1024)
 
 	// Use short TTL
 	cachedClient := NewCachedLLMClient(mockClient, memoryCache, diskCache, true, 10*time.Millisecond)
@@ -521,7 +521,7 @@ func TestCachedLLMClient_CleanupExpired_CleansBothCaches(t *testing.T) {
 	req := CompletionRequest{
 		SystemPrompt: "test",
 		Messages:     []Message{{Role: "user", Content: "hello"}},
-		Temperature: 0.7,
+		Temperature:  0.7,
 	}
 
 	// Populate cache
@@ -531,7 +531,7 @@ func TestCachedLLMClient_CleanupExpired_CleansBothCaches(t *testing.T) {
 	time.Sleep(20 * time.Millisecond)
 
 	// Cleanup expired
-	memoryExpired, diskExpired := cachedClient.CleanupExpired()
+	memoryExpired, _ := cachedClient.CleanupExpired()
 
 	if memoryExpired < 1 {
 		t.Errorf("Expected at least 1 expired entry in memory cache, got %d", memoryExpired)
@@ -546,14 +546,14 @@ func TestCachedLLMClient_Clear_EmptiesBothCaches(t *testing.T) {
 	}
 
 	memoryCache := llmcache.NewLRUCache(10)
-	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", 100*1024*1024, llmcache.DefaultTTL)
+	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", llmcache.DefaultTTL, 100*1024*1024)
 	cachedClient := NewCachedLLMClient(mockClient, memoryCache, diskCache, true, time.Hour)
 
 	ctx := context.Background()
 	req := CompletionRequest{
 		SystemPrompt: "test",
 		Messages:     []Message{{Role: "user", Content: "hello"}},
-		Temperature: 0.7,
+		Temperature:  0.7,
 	}
 
 	// Populate cache
@@ -585,7 +585,7 @@ func TestCachedLLMClient_GetUnderlyingClient_ReturnsClient(t *testing.T) {
 	}
 
 	memoryCache := llmcache.NewLRUCache(10)
-	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", 100*1024*1024, llmcache.DefaultTTL)
+	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", llmcache.DefaultTTL, 100*1024*1024)
 	cachedClient := NewCachedLLMClient(mockClient, memoryCache, diskCache, true, time.Hour)
 
 	underlying := cachedClient.GetUnderlyingClient()
@@ -632,7 +632,7 @@ func TestCachedLLMClient_IntegrationWithOpenAI(t *testing.T) {
 
 	// Wrap with caching
 	memoryCache := llmcache.NewLRUCache(10)
-	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", 100*1024*1024, llmcache.DefaultTTL)
+	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", llmcache.DefaultTTL, 100*1024*1024)
 	cachedClient := NewCachedLLMClient(openaiClient, memoryCache, diskCache, true, time.Hour)
 
 	ctx := context.Background()
@@ -700,14 +700,14 @@ func TestCachedLLMClient_DiskCacheFailure_GracefulDegradation(t *testing.T) {
 	cachePath := filepath.Join(readonlyDir, "test-cache.json")
 
 	memoryCache := llmcache.NewLRUCache(10)
-	diskCache := llmcache.NewDiskCache(cachePath, 100*1024*1024, llmcache.DefaultTTL)
+	diskCache := llmcache.NewDiskCache(cachePath, llmcache.DefaultTTL, 100*1024*1024)
 	cachedClient := NewCachedLLMClient(mockClient, memoryCache, diskCache, true, time.Hour)
 
 	ctx := context.Background()
 	req := CompletionRequest{
 		SystemPrompt: "test",
 		Messages:     []Message{{Role: "user", Content: "hello"}},
-		Temperature: 0.7,
+		Temperature:  0.7,
 	}
 
 	// Should succeed despite disk cache write failure
@@ -742,14 +742,14 @@ func TestCachedLLMClient_NilMemoryCache_WorksCorrectly(t *testing.T) {
 		provider: "test",
 	}
 
-	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", 100*1024*1024, llmcache.DefaultTTL)
+	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", llmcache.DefaultTTL, 100*1024*1024)
 	cachedClient := NewCachedLLMClient(mockClient, nil, diskCache, true, time.Hour)
 
 	ctx := context.Background()
 	req := CompletionRequest{
 		SystemPrompt: "test",
 		Messages:     []Message{{Role: "user", Content: "hello"}},
-		Temperature: 0.7,
+		Temperature:  0.7,
 	}
 
 	// Should work with disk cache only
@@ -777,7 +777,7 @@ func TestCachedLLMClient_NilDiskCache_WorksCorrectly(t *testing.T) {
 	req := CompletionRequest{
 		SystemPrompt: "test",
 		Messages:     []Message{{Role: "user", Content: "hello"}},
-		Temperature: 0.7,
+		Temperature:  0.7,
 	}
 
 	// Should work with memory cache only
@@ -791,7 +791,7 @@ func TestCachedLLMClient_NilDiskCache_WorksCorrectly(t *testing.T) {
 	}
 
 	// Second call should hit memory cache
-	resp2, err2 := cachedClient.GenerateCompletion(ctx, req)
+	_, err2 := cachedClient.GenerateCompletion(ctx, req)
 	if err2 != nil {
 		t.Fatalf("Second call: Expected no error, got %v", err2)
 	}
@@ -809,7 +809,7 @@ func TestCachedLLMClient_ContextCancellation_PropagatesError(t *testing.T) {
 	}
 
 	memoryCache := llmcache.NewLRUCache(10)
-	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", 100*1024*1024, llmcache.DefaultTTL)
+	diskCache := llmcache.NewDiskCache(t.TempDir()+"/test-cache.json", llmcache.DefaultTTL, 100*1024*1024)
 	cachedClient := NewCachedLLMClient(mockClient, memoryCache, diskCache, true, time.Hour)
 
 	// Create canceled context
@@ -819,7 +819,7 @@ func TestCachedLLMClient_ContextCancellation_PropagatesError(t *testing.T) {
 	req := CompletionRequest{
 		SystemPrompt: "test",
 		Messages:     []Message{{Role: "user", Content: "hello"}},
-		Temperature: 0.7,
+		Temperature:  0.7,
 	}
 
 	// Should return error (context is checked before cache lookup in real scenario)

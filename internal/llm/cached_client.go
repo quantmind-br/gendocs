@@ -17,11 +17,11 @@ import (
 // Cache hits avoid making API calls entirely, saving both cost and latency.
 // When an entry is found in the disk cache, it's promoted to the memory cache.
 type CachedLLMClient struct {
-	client      LLMClient                // Underlying LLM client
-	memoryCache *llmcache.LRUCache       // In-memory LRU cache
-	diskCache   *llmcache.DiskCache      // Persistent disk cache
-	enabled     bool                     // Enable/disable caching
-	ttl         time.Duration            // Time-to-live for cache entries
+	client      LLMClient           // Underlying LLM client
+	memoryCache *llmcache.LRUCache  // In-memory LRU cache
+	diskCache   *llmcache.DiskCache // Persistent disk cache
+	enabled     bool                // Enable/disable caching
+	ttl         time.Duration       // Time-to-live for cache entries
 }
 
 // NewCachedLLMClient creates a new cached LLM client.
@@ -73,33 +73,31 @@ func (c *CachedLLMClient) GenerateCompletion(
 		return c.client.GenerateCompletion(ctx, req)
 	}
 
-	// 2. Check memory cache first
-	if cached, found := c.memoryCache.Get(cacheKey); found {
-		// Cache hit in memory - return cached response immediately
-		return cached.Response, nil
-	}
-
-	// 3. Check disk cache if memory cache miss
-	if c.diskCache != nil {
-		if cached, found := c.diskCache.Get(cacheKey); found {
-			// Cache hit on disk - promote to memory cache and return
-			c.memoryCache.Put(cacheKey, cached)
+	if c.memoryCache != nil {
+		if cached, found := c.memoryCache.Get(cacheKey); found {
 			return cached.Response, nil
 		}
 	}
 
-	// 4. Cache miss - call underlying client
+	if c.diskCache != nil {
+		if cached, found := c.diskCache.Get(cacheKey); found {
+			if c.memoryCache != nil {
+				c.memoryCache.Put(cacheKey, cached)
+			}
+			return cached.Response, nil
+		}
+	}
+
 	resp, err := c.client.GenerateCompletion(ctx, req)
 	if err != nil {
-		// API call failed, don't cache error responses
 		return CompletionResponse{}, err
 	}
 
-	// 5. Cache the successful response
 	cachedResp := llmcache.NewCachedResponse(cacheKey, llmcache.CacheKeyRequestFrom(req), resp, c.ttl)
 
-	// Store in memory cache
-	c.memoryCache.Put(cacheKey, cachedResp)
+	if c.memoryCache != nil {
+		c.memoryCache.Put(cacheKey, cachedResp)
+	}
 
 	// Store in disk cache (best-effort, non-blocking)
 	if c.diskCache != nil {

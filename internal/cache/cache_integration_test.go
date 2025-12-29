@@ -14,10 +14,10 @@ func TestIntegration_FullScanCycle(t *testing.T) {
 
 	// Create initial test files
 	files := map[string]string{
-		"main.go":      "package main\n\nfunc main() {}\n",
-		"utils.go":     "package main\n\nfunc Utils() {}\n",
-		"README.md":    "# Test Project\n",
-		"go.mod":       "module test\n\ngo 1.21\n",
+		"main.go":   "package main\n\nfunc main() {}\n",
+		"utils.go":  "package main\n\nfunc Utils() {}\n",
+		"README.md": "# Test Project\n",
+		"go.mod":    "module test\n\ngo 1.21\n",
 	}
 
 	for name, content := range files {
@@ -201,9 +201,9 @@ func TestIntegration_IncrementalScanWithChanges(t *testing.T) {
 	// Modify some files and add new ones
 	modifiedFiles := map[string]string{
 		"main.go":   "package main\n\nfunc main() {\n\tprintln(\"changed\")\n}\n", // Modified
-		"utils.go":  "package main\n\nfunc Utils() {}\n",                                   // Unchanged
-		"README.md": "# Test Project\n\nUpdated documentation\n",                          // Modified
-		"new.go":    "package main\n\nfunc New() {}\n",                                    // New file
+		"utils.go":  "package main\n\nfunc Utils() {}\n",                          // Unchanged
+		"README.md": "# Test Project\n\nUpdated documentation\n",                  // Modified
+		"new.go":    "package main\n\nfunc New() {}\n",                            // New file
 	}
 
 	for name, content := range modifiedFiles {
@@ -513,7 +513,7 @@ func TestIntegration_CacheWithIgnorePatterns(t *testing.T) {
 	}
 
 	metrics2 := &ScanMetrics{}
-	currentFiles2, err := ScanFiles(tmpDir, ignorePatterns, cache2, metrics2, 0)
+	_, err = ScanFiles(tmpDir, ignorePatterns, cache2, metrics2, 0)
 	if err != nil {
 		t.Fatalf("Second ScanFiles failed: %v", err)
 	}
@@ -609,10 +609,8 @@ func TestIntegration_VersionMismatchHandling(t *testing.T) {
 		t.Fatalf("Failed to create cache directory: %v", err)
 	}
 
-	oldCache := &AnalysisCache{
-		Version: 999, // Different version
-		Files:   make(map[string]FileInfo),
-	}
+	// oldCache struct is intentionally unused - we use raw JSON instead to simulate
+	// a cache file with a different version that we don't know how to deserialize
 
 	data := []byte(`{"version":999,"last_analysis":"0001-01-01T00:00:00Z","git_commit":"","files":{},"agents":{}}`)
 	if err := os.WriteFile(cachePath, data, 0644); err != nil {

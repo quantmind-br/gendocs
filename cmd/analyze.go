@@ -199,5 +199,5 @@ func displayCacheStats(repoPath string) {
 	}
 	fmt.Printf("  Evictions: %d\n\n", stats.Evictions)
 
-	fmt.Println("======================\n")
+	fmt.Println("======================")
 }
