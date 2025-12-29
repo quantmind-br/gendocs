@@ -449,3 +449,40 @@ Working on Phase 4 (Add Metrics and Observability).
   - Proper error handling
 - **Phase 4 (Add Metrics and Observability) now COMPLETE!** 🎉
 
+### Phase 5 Status: IN PROGRESS 🚧
+Working on Phase 5 (Add Cache Management Utilities).
+
+**Completed Subtasks:**
+- Subtask 5-1: Implement cache clearing command ✅
+
+**Remaining Subtasks:**
+- Subtask 5-2: Implement cache validation and recovery
+- Subtask 5-3: Add cache size estimation
+
+### Recent Implementation Work
+✅ **Subtask 5-1: Implement cache clearing command** (COMPLETED 2025-12-29)
+- Created `cmd/cache.go` with cache clearing functionality:
+  - cacheClearCmd: New cobra command for clearing the cache
+  - runCacheClear(): Command handler that delegates to clearCache()
+  - clearCache(): Business logic function that removes the cache file
+- Modified `cmd/root.go`:
+  - Added cacheClearRepoPath variable for --repo-path flag
+  - Registered cache-clear command in init() function
+  - Added --repo-path flag to cache-clear command
+- Implementation details:
+  - Checks if cache file exists before attempting removal
+  - Handles missing cache file gracefully with helpful message
+  - Removes .ai/llm_cache.json file when it exists
+  - Provides user-friendly output with emojis (ℹ️, ✅)
+  - Proper error handling with wrapped errors
+- Follows existing patterns:
+  - Similar structure to cache-stats command
+  - Same --repo-path flag pattern as other commands
+  - Consistent error handling and user feedback
+  - Matches emoji usage from displayCacheStats()
+- Usage:
+  - gendocs cache-clear --repo-path .
+  - gendocs cache-clear (defaults to current directory)
+- Manual verification completed successfully
+- Ready for subtask 5-2 (Implement cache validation and recovery)
+
