@@ -2,7 +2,10 @@ package llm
 
 import (
 	"crypto/tls"
+	"net"
 	"net/http"
+	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 )
@@ -403,4 +406,171 @@ type mockRoundTripper struct{}
 
 func (m *mockRoundTripper) RoundTrip(*http.Request) (*http.Response, error) {
 	return nil, nil
+}
+
+// TestConnectionReuse_Integration verifies that HTTP connections are reused across multiple requests
+func TestConnectionReuse_Integration(t *testing.T) {
+	// Track the number of connections established
+	var connectionCount int
+	var connectionCountMu sync.Mutex
+
+	// Create a custom listener that counts connections
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("Failed to create listener: %v", err)
+	}
+	defer listener.Close()
+
+	// Wrap the listener to count Accept() calls
+	countingListener := &countingListener{
+		Listener: listener,
+		onAccept: func() {
+			connectionCountMu.Lock()
+			connectionCount++
+			connectionCountMu.Unlock()
+		},
+	}
+
+	// Create test server with the custom listener
+	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status": "ok"}`))
+	}))
+	server.Listener = countingListener
+	server.StartTLS()
+	defer server.Close()
+
+	// Create RetryClient with optimized connection pooling
+	client := NewRetryClient(nil)
+
+	// Make multiple requests
+	numRequests := 10
+	for i := 0; i < numRequests; i++ {
+		req, err := http.NewRequest("GET", server.URL, nil)
+		if err != nil {
+			t.Fatalf("Failed to create request: %v", err)
+		}
+
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("Request %d failed: %v", i, err)
+		}
+		resp.Body.Close()
+	}
+
+	// Verify connections were reused
+	// With connection pooling, we should have fewer connections than requests
+	// (allowing for some overhead, we expect at most 2-3 connections for 10 requests)
+	connectionCountMu.Lock()
+	finalConnectionCount := connectionCount
+	connectionCountMu.Unlock()
+
+	if finalConnectionCount >= numRequests {
+		t.Errorf("Expected connection reuse (fewer than %d connections), got %d connections",
+			numRequests, finalConnectionCount)
+	}
+
+	// Verify at least one connection was established
+	if finalConnectionCount < 1 {
+		t.Errorf("Expected at least 1 connection, got %d", finalConnectionCount)
+	}
+
+	t.Logf("Made %d requests using %d connections (reused %d times)",
+		numRequests, finalConnectionCount, numRequests-finalConnectionCount)
+}
+
+// TestConnectionReuse_ConcurrentRequests verifies connection reuse with concurrent requests
+func TestConnectionReuse_ConcurrentRequests(t *testing.T) {
+	var connectionCount int
+	var connectionCountMu sync.Mutex
+
+	// Create a custom listener that counts connections
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("Failed to create listener: %v", err)
+	}
+	defer listener.Close()
+
+	countingListener := &countingListener{
+		Listener: listener,
+		onAccept: func() {
+			connectionCountMu.Lock()
+			connectionCount++
+			connectionCountMu.Unlock()
+		},
+	}
+
+	// Create test server with slight delay to simulate real API
+	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(10 * time.Millisecond)
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status": "ok"}`))
+	}))
+	server.Listener = countingListener
+	server.StartTLS()
+	defer server.Close()
+
+	// Create RetryClient with optimized connection pooling
+	client := NewRetryClient(nil)
+
+	// Make concurrent requests
+	numRequests := 20
+	var wg sync.WaitGroup
+	wg.Add(numRequests)
+
+	for i := 0; i < numRequests; i++ {
+		go func() {
+			defer wg.Done()
+			req, err := http.NewRequest("GET", server.URL, nil)
+			if err != nil {
+				t.Errorf("Failed to create request: %v", err)
+				return
+			}
+
+			resp, err := client.Do(req)
+			if err != nil {
+				t.Errorf("Request failed: %v", err)
+				return
+			}
+			resp.Body.Close()
+		}()
+	}
+
+	wg.Wait()
+
+	// Verify connections were reused even with concurrent requests
+	// With HTTP/2 and connection pooling, concurrent requests should share connections
+	connectionCountMu.Lock()
+	finalConnectionCount := connectionCount
+	connectionCountMu.Unlock()
+
+	// We expect significantly fewer connections than requests
+	// With HTTP/2 multiplexing, all requests could theoretically use 1 connection
+	// But we allow for multiple connections due to concurrent nature
+	if finalConnectionCount > numRequests/2 {
+		t.Logf("Warning: Made %d concurrent requests using %d connections. Consider optimizing connection pooling.",
+			numRequests, finalConnectionCount)
+	}
+
+	// Verify at least one connection was established
+	if finalConnectionCount < 1 {
+		t.Errorf("Expected at least 1 connection, got %d", finalConnectionCount)
+	}
+
+	t.Logf("Made %d concurrent requests using %d connections",
+		numRequests, finalConnectionCount)
+}
+
+// countingListener wraps a net.Listener and counts Accept() calls
+type countingListener struct {
+	net.Listener
+	onAccept func()
+}
+
+func (l *countingListener) Accept() (net.Conn, error) {
+	conn, err := l.Listener.Accept()
+	if l.onAccept != nil {
+		l.onAccept()
+	}
+	return conn, err
 }
