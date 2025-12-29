@@ -2377,3 +2377,194 @@ Some content here.
 		}
 	}
 }
+
+// Error handling: malformed markdown should still succeed gracefully
+func TestJSONErrorHandling_MalformedMarkdown(t *testing.T) {
+	exporter, err := NewJSONExporter()
+	if err != nil {
+		t.Fatalf("Failed to create exporter: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+
+	tests := []struct {
+		name     string
+		markdown string
+		desc     string
+	}{
+		{
+			name: "Unclosed code block",
+			markdown: `# Unclosed Code
+
+` + "```go\nfunc incomplete() {\n    // no closing",
+			desc: "Code block without closing fence",
+		},
+		{
+			name: "Unclosed link",
+			markdown: `# Unclosed Link
+
+This has an [unclosed link(https://example.com`,
+			desc: "Link with missing closing bracket",
+		},
+		{
+			name: "Unclosed emphasis",
+			markdown: `# Unclosed Emphasis
+
+This has **bold text that never closes
+
+And more text here.`,
+			desc: "Bold formatting without closing markers",
+		},
+		{
+			name: "Malformed table",
+			markdown: `# Malformed Table
+
+| Col1 | Col2
+|------|------
+| Val1 | Val2 | Extra
+| Val3 |
+`,
+			desc: "Table with inconsistent column counts",
+		},
+		{
+			name: "Broken list formatting",
+			markdown: `# Broken List
+
+- Item 1
+- Item 2
+  - Nested but wrong indentation
+- Item 3
+
+1. First
+2. Second
+3. Third
+   Bad indentation here
+4. Fourth
+`,
+			desc: "Lists with inconsistent indentation",
+		},
+		{
+			name: "Multiple unclosed blocks",
+			markdown: `# Multiple Issues
+
+**Bold *italic
+
+` + "```python\ndef bad():\n    pass" + `
+
+[Link](https://example.com
+
+> Blockquote that
+> doesn't close properly
+
+More text`,
+			desc: "Multiple unclosed formatting elements",
+		},
+		{
+			name: "Empty code fence with language",
+			markdown: `# Empty Code Block
+
+This has ` + "```go\n```" + ` an empty code block.
+
+And then more text.`,
+			desc: "Code fence with language but no content",
+		},
+		{
+			name: "Mangled heading levels",
+			markdown: `# H1
+
+###### H6
+
+####### Invalid H7
+
+##### H5
+
+######## Even more invalid`,
+			desc: "Heading levels beyond H6",
+		},
+		{
+			name: "Broken reference link",
+			markdown: `# Reference Link
+
+This has [ref link][ref] but ref is not defined.
+
+[Another][link]
+
+[link]: https://example.com`,
+			desc: "Reference link with undefined reference",
+		},
+		{
+			name: "Invalid HTML entities",
+			markdown: `# Invalid HTML
+
+&invalidentity;
+
+&notanentityatall;
+
+&;
+
+Text after broken entities.`,
+			desc: "Invalid HTML entity references",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mdFile := filepath.Join(tmpDir, tt.name+".md")
+			jsonFile := filepath.Join(tmpDir, tt.name+".json")
+
+			err = os.WriteFile(mdFile, []byte(tt.markdown), 0644)
+			if err != nil {
+				t.Fatalf("Failed to write markdown: %v", err)
+			}
+
+			// Should not error even with malformed markdown
+			err = exporter.ExportToJSON(mdFile, jsonFile)
+			if err != nil {
+				t.Errorf("Expected success with %s, got error: %v", tt.desc, err)
+				return
+			}
+
+			// Verify JSON file was created
+			jsonData, err := os.ReadFile(jsonFile)
+			if err != nil {
+				t.Fatalf("Failed to read JSON output: %v", err)
+			}
+
+			// Verify JSON is valid
+			var doc JSONDocument
+			if err := json.Unmarshal(jsonData, &doc); err != nil {
+				t.Errorf("Generated invalid JSON for %s: %v", tt.desc, err)
+				return
+			}
+
+			// Verify basic structure exists
+			if doc.Metadata.Title == "" {
+				t.Error("Expected metadata title to be set (should have default)")
+			}
+
+			if doc.Metadata.Generator.Name != "Gendocs" {
+				t.Error("Expected generator name to be 'Gendocs'")
+			}
+
+			// Elements array should exist (may be empty but should be present)
+			if doc.Content.Elements == nil {
+				t.Error("Expected elements array to be initialized")
+			}
+
+			// Headings array should exist
+			if doc.Content.Headings == nil {
+				t.Error("Expected headings array to be initialized")
+			}
+
+			// Verify JSON is well-formed and can be remarshaled
+			remarkaled, err := json.Marshal(doc)
+			if err != nil {
+				t.Errorf("Failed to remarshal JSON document: %v", err)
+			}
+
+			if len(remarkaled) == 0 {
+				t.Error("Remarshaled JSON is empty")
+			}
+		})
+	}
+}
