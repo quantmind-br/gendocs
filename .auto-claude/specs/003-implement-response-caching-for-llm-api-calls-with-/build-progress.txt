@@ -407,3 +407,45 @@ Working on Phase 4 (Add Metrics and Observability).
   - Enhancements (auto-save, cleanup scheduling)
   - Integration with the rest of the system
 
+
+✅ **Subtask 4-3: Add cache statistics output** (COMPLETED 2025-12-29)
+- Implemented two ways to display LLM cache statistics:
+  1. `--show-cache-stats` flag on analyze command
+  2. Standalone `cache-stats` command
+- Modified `cmd/analyze.go`:
+  - Added imports: encoding/json, path/filepath, llmcache
+  - Added showCacheStats flag variable
+  - Added --show-cache-stats flag in init()
+  - Added call to displayCacheStats() after analysis completes
+  - Implemented displayCacheStats() function:
+    - Loads disk cache from .ai/llm_cache.json
+    - Parses JSON into DiskCacheData structure
+    - Displays formatted statistics including:
+      - Cache file path and version
+      - Creation and last update timestamps
+      - Total entries, expired entries, active entries
+      - Cache hits, misses, and hit rate percentage
+      - Total storage size in MB
+      - Eviction count
+    - Handles missing cache file gracefully with helpful message
+    - Handles read/parse errors gracefully
+- Modified `cmd/root.go`:
+  - Added cacheStatsRepoPath variable
+  - Added cache-stats command as top-level command
+  - Implemented runCacheStats() function that calls displayCacheStats()
+  - Added --repo-path flag to cache-stats command
+- User-friendly output formatting:
+  - Emoji indicators (📊 for stats, ❌ for errors)
+  - Clear section headers and separators
+  - Human-readable size units (MB)
+  - Percentage for hit rate
+- Usage examples:
+  - gendocs analyze --show-cache-stats --repo-path .
+  - gendocs cache-stats --repo-path .
+- Implementation follows existing CLI patterns:
+  - Similar to other commands (analyze, config, generate)
+  - Uses cobra for command definition
+  - Consistent flag naming (--repo-path)
+  - Proper error handling
+- **Phase 4 (Add Metrics and Observability) now COMPLETE!** 🎉
+
