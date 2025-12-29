@@ -36,9 +36,13 @@ func (m MaskedInputModel) Init() tea.Cmd {
 }
 
 func (m MaskedInputModel) Update(msg tea.Msg) (MaskedInputModel, tea.Cmd) {
+	if !m.input.Focused() {
+		return m, nil
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if msg.String() == "ctrl+u" && m.input.Focused() {
+		if msg.String() == "ctrl+u" {
 			m.revealed = !m.revealed
 			if m.revealed {
 				m.input.EchoMode = textinput.EchoNormal
