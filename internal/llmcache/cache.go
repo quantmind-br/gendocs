@@ -14,6 +14,8 @@ const (
 	CacheVersion = 1
 	// DefaultCacheFileName is the default cache file name
 	DefaultCacheFileName = ".ai/llm_cache.json"
+	// DefaultTTL is the default time-to-live for cache entries
+	DefaultTTL = 7 * 24 * time.Hour // 7 days
 )
 
 // CacheStats tracks cache performance metrics
@@ -286,6 +288,30 @@ func (c *LRUCache) evictLRU() {
 	}
 
 	c.stats.Evictions++
+}
+
+// CleanupExpired removes all expired entries from the cache
+func (c *LRUCache) CleanupExpired() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	now := time.Now()
+	expired := []*lruEntry{}
+
+	// Find expired entries
+	for _, entry := range c.cache {
+		if now.After(entry.value.ExpiresAt) {
+			expired = append(expired, entry)
+		}
+	}
+
+	// Remove expired entries
+	for _, entry := range expired {
+		c.removeEntry(entry)
+		c.stats.Evictions++
+	}
+
+	return len(expired)
 }
 
 // DiskCacheData represents the on-disk cache format

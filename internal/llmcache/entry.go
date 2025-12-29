@@ -7,6 +7,20 @@ import (
 	"github.com/user/gendocs/internal/llm"
 )
 
+// NewCachedResponse creates a new CachedResponse with the given TTL
+func NewCachedResponse(key string, request CacheKeyRequest, response llm.CompletionResponse, ttl time.Duration) *CachedResponse {
+	now := time.Now()
+	return &CachedResponse{
+		Key:         key,
+		Request:     request,
+		Response:    response,
+		CreatedAt:   now,
+		ExpiresAt:   now.Add(ttl),
+		SizeBytes:   0, // Will be estimated on first use
+		AccessCount: 0,
+	}
+}
+
 // CachedResponse represents a cached LLM response with metadata
 type CachedResponse struct {
 	Key         string                 `json:"key"`           // Cache key (SHA256 hash)
