@@ -1,6 +1,7 @@
 package llm
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -94,6 +95,121 @@ type geminiError struct {
 	Status  string `json:"status"`
 }
 
+// geminiStreamChunk represents a single streaming response chunk (NDJSON line)
+type geminiStreamChunk struct {
+	Candidates     []geminiStreamCandidate `json:"candidates"`
+	UsageMetadata  *geminiUsage            `json:"usageMetadata,omitempty"`
+	Error          *geminiError            `json:"error,omitempty"`
+}
+
+// geminiStreamCandidate represents a candidate in a streaming chunk
+type geminiStreamCandidate struct {
+	Content      geminiStreamContent `json:"content"`
+	FinishReason *string             `json:"finishReason,omitempty"`
+	Index        int                 `json:"index"`
+}
+
+// geminiStreamContent represents content in a streaming chunk
+type geminiStreamContent struct {
+	Parts []geminiStreamPart `json:"parts"`
+	Role  string             `json:"role,omitempty"`
+}
+
+// geminiStreamPart represents a part in streaming content
+type geminiStreamPart struct {
+	Text         string                      `json:"text,omitempty"`
+	FunctionCall *geminiStreamFunctionCall   `json:"functionCall,omitempty"`
+}
+
+// geminiStreamFunctionCall represents a function call in streaming
+type geminiStreamFunctionCall struct {
+	Name string                 `json:"name"`
+	Args map[string]interface{} `json:"args"`
+}
+
+// geminiAccumulator builds CompletionResponse from streaming chunks
+type geminiAccumulator struct {
+	textBuilder strings.Builder
+	toolCalls   []ToolCall
+	usage       geminiUsage
+	finishReason string
+	complete    bool
+}
+
+// newGeminiAccumulator creates a new accumulator
+func newGeminiAccumulator() *geminiAccumulator {
+	return &geminiAccumulator{}
+}
+
+// HandleChunk processes a single streaming chunk
+func (a *geminiAccumulator) HandleChunk(chunk geminiStreamChunk) error {
+	// Check for API error
+	if chunk.Error != nil {
+		return fmt.Errorf("API error: %s", chunk.Error.Message)
+	}
+
+	// Skip if no candidates
+	if len(chunk.Candidates) == 0 {
+		return nil
+	}
+
+	candidate := chunk.Candidates[0]
+
+	// Check for safety block
+	if candidate.FinishReason != nil && *candidate.FinishReason == "SAFETY" {
+		return fmt.Errorf("response blocked for safety reasons")
+	}
+
+	// Accumulate usage metadata if present
+	if chunk.UsageMetadata != nil {
+		a.usage = *chunk.UsageMetadata
+	}
+
+	// Process parts
+	for _, part := range candidate.Content.Parts {
+		if part.Text != "" {
+			a.textBuilder.WriteString(part.Text)
+		}
+		if part.FunctionCall != nil {
+			// Function calls arrive complete in Gemini (no partial JSON)
+			a.toolCalls = append(a.toolCalls, ToolCall{
+				Name:      part.FunctionCall.Name,
+				Arguments: part.FunctionCall.Args,
+				RawFunctionCall: map[string]interface{}{
+					"name": part.FunctionCall.Name,
+					"args": part.FunctionCall.Args,
+				},
+			})
+		}
+	}
+
+	// Check if complete (finishReason is set)
+	if candidate.FinishReason != nil {
+		a.finishReason = *candidate.FinishReason
+		a.complete = true
+	}
+
+	return nil
+}
+
+// Build constructs the final CompletionResponse
+func (a *geminiAccumulator) Build() CompletionResponse {
+	return CompletionResponse{
+		Content: a.textBuilder.String(),
+		ToolCalls: a.toolCalls,
+		Usage: TokenUsage{
+			InputTokens:  a.usage.PromptTokenCount,
+			OutputTokens: a.usage.CandidatesTokenCount,
+			TotalTokens:  a.usage.TotalTokenCount,
+		},
+	}
+}
+
+// IsComplete returns true if finishReason was received
+func (a *geminiAccumulator) IsComplete() bool {
+	return a.complete
+}
+
 // NewGeminiClient creates a new Gemini client
 func NewGeminiClient(cfg config.LLMConfig, retryClient *RetryClient) *GeminiClient {
 	baseURL := cfg.BaseURL
@@ -120,11 +236,12 @@ func (c *GeminiClient) GenerateCompletion(ctx context.Context, req CompletionReq
 
 	// Create HTTP request
 	// Model format: models/gemini-1.5-pro or models/gemini-pro
+	// Use streaming endpoint: streamGenerateContent
 	modelName := c.model
 	if !strings.HasPrefix(modelName, "models/") {
 		modelName = "models/" + modelName
 	}
-	url := fmt.Sprintf("%s/v1beta/%s:generateContent?key=%s", c.baseURL, modelName, c.apiKey)
+	url := fmt.Sprintf("%s/v1beta/%s:streamGenerateContent?key=%s", c.baseURL, modelName, c.apiKey)
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonData))
 	if err != nil {
 		return CompletionResponse{}, fmt.Errorf("failed to create request: %w", err)
@@ -139,39 +256,52 @@ func (c *GeminiClient) GenerateCompletion(ctx context.Context, req CompletionReq
 	}
 	defer resp.Body.Close()
 
-	// Read response
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return CompletionResponse{}, fmt.Errorf("failed to read response: %w", err)
-	}
-
 	// Check for error status
 	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
 		return CompletionResponse{}, fmt.Errorf("API error: status %d, body: %s", resp.StatusCode, string(body))
 	}
 
-	// Parse response
-	var gemResp geminiResponse
-	if err := json.Unmarshal(body, &gemResp); err != nil {
-		return CompletionResponse{}, fmt.Errorf("failed to parse response: %w", err)
+	// Parse streaming response
+	return c.parseStreamingResponse(resp.Body)
+}
+
+// parseStreamingResponse parses Gemini's NDJSON stream and builds the response
+func (c *GeminiClient) parseStreamingResponse(body io.ReadCloser) (CompletionResponse, error) {
+	scanner := bufio.NewScanner(body)
+	accumulator := newGeminiAccumulator()
+
+	for scanner.Scan() {
+		line := scanner.Bytes()
+
+		// Skip empty lines
+		if len(line) == 0 {
+			continue
+		}
+
+		// Parse JSON line (NDJSON format)
+		var chunk geminiStreamChunk
+		if err := json.Unmarshal(line, &chunk); err != nil {
+			return CompletionResponse{}, fmt.Errorf("failed to parse stream chunk: %w", err)
+		}
+
+		// Handle chunk
+		if err := accumulator.HandleChunk(chunk); err != nil {
+			return CompletionResponse{}, fmt.Errorf("chunk handling error: %w", err)
+		}
+
+		// Check if stream is complete
+		if accumulator.IsComplete() {
+			break
+		}
 	}
 
-	// Check for API error
-	if gemResp.Error != nil {
-		return CompletionResponse{}, fmt.Errorf("API error: %s", gemResp.Error.Message)
+	// Check for scanner errors
+	if err := scanner.Err(); err != nil {
+		return CompletionResponse{}, fmt.Errorf("stream reading error: %w", err)
 	}
 
-	// Check for no candidates
-	if len(gemResp.Candidates) == 0 {
-		return CompletionResponse{}, fmt.Errorf("no candidates returned by model")
-	}
-
-	// Check for safety blocks
-	if len(gemResp.Candidates) > 0 && gemResp.Candidates[0].FinishReason == "SAFETY" {
-		return CompletionResponse{}, fmt.Errorf("response blocked for safety reasons")
-	}
-
-	return c.convertResponse(gemResp), nil
+	return accumulator.Build(), nil
 }
 
 // SupportsTools returns true
