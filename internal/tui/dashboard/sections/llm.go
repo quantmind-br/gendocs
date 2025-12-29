@@ -1,11 +1,15 @@
 package sections
 
 import (
+	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/user/gendocs/internal/config"
+	"github.com/user/gendocs/internal/llm"
 	"github.com/user/gendocs/internal/tui"
 	"github.com/user/gendocs/internal/tui/dashboard/components"
 	"github.com/user/gendocs/internal/tui/dashboard/types"
@@ -13,16 +17,23 @@ import (
 )
 
 type LLMSectionModel struct {
-	provider    components.DropdownModel
-	model       components.TextFieldModel
-	apiKey      components.MaskedInputModel
-	baseURL     components.TextFieldModel
-	temperature components.TextFieldModel
-	maxTokens   components.TextFieldModel
-	timeout     components.TextFieldModel
-	retries     components.TextFieldModel
+	provider       components.DropdownModel
+	model          components.TextFieldModel
+	apiKey         components.MaskedInputModel
+	baseURL        components.TextFieldModel
+	temperature    components.TextFieldModel
+	maxTokens      components.TextFieldModel
+	timeout        components.TextFieldModel
+	retries        components.TextFieldModel
+	testConnButton components.ButtonModel
 
 	focusIndex int
+	testing    bool
+}
+
+type TestConnectionResultMsg struct {
+	Success bool
+	Message string
 }
 
 func NewLLMSection() *LLMSectionModel {
@@ -32,7 +43,7 @@ func NewLLMSection() *LLMSectionModel {
 		{Value: "gemini", Label: "Google (Gemini)"},
 	}
 
-	return &LLMSectionModel{
+	m := &LLMSectionModel{
 		provider: components.NewDropdown("Provider", providerOpts, "Select your LLM provider"),
 		model: components.NewTextField("Model",
 			components.WithPlaceholder("e.g., gpt-4o, claude-3-5-sonnet"),
@@ -60,6 +71,14 @@ func NewLLMSection() *LLMSectionModel {
 			components.WithValidator(validation.ValidateIntRange(0, 10)),
 			components.WithHelp("Number of retry attempts on failure")),
 	}
+
+	m.testConnButton = components.NewButton(
+		"Test Connection",
+		m.testConnection,
+		components.WithButtonHelp("Press Enter to test LLM connection"),
+	)
+
+	return m
 }
 
 func (m *LLMSectionModel) Title() string { return "LLM Provider Settings" }
@@ -76,11 +95,16 @@ func (m *LLMSectionModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
+	case TestConnectionResultMsg:
+		m.testing = false
+		m.testConnButton.SetLoading(false)
+		return m, nil
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "tab":
 			m.blurCurrent()
-			m.focusIndex = (m.focusIndex + 1) % 8
+			m.focusIndex = (m.focusIndex + 1) % 9
 			cmds = append(cmds, m.focusCurrent())
 			return m, tea.Batch(cmds...)
 
@@ -88,7 +112,7 @@ func (m *LLMSectionModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.blurCurrent()
 			m.focusIndex--
 			if m.focusIndex < 0 {
-				m.focusIndex = 7
+				m.focusIndex = 8
 			}
 			cmds = append(cmds, m.focusCurrent())
 			return m, tea.Batch(cmds...)
@@ -112,6 +136,13 @@ func (m *LLMSectionModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.timeout, _ = m.timeout.Update(msg)
 	case 7:
 		m.retries, _ = m.retries.Update(msg)
+	case 8:
+		var cmd tea.Cmd
+		m.testConnButton, cmd = m.testConnButton.Update(msg)
+		if cmd != nil {
+			m.testing = true
+			cmds = append(cmds, cmd)
+		}
 	}
 
 	return m, tea.Batch(cmds...)
@@ -135,6 +166,8 @@ func (m *LLMSectionModel) blurCurrent() {
 		m.timeout.Blur()
 	case 7:
 		m.retries.Blur()
+	case 8:
+		m.testConnButton.Blur()
 	}
 }
 
@@ -156,6 +189,8 @@ func (m *LLMSectionModel) focusCurrent() tea.Cmd {
 		return m.timeout.Focus()
 	case 7:
 		return m.retries.Focus()
+	case 8:
+		return m.testConnButton.Focus()
 	}
 	return nil
 }
@@ -187,6 +222,8 @@ func (m *LLMSectionModel) View() string {
 		row1,
 		"",
 		row2,
+		"",
+		m.testConnButton.View(),
 	)
 
 	return lipgloss.JoinVertical(lipgloss.Left, header, desc, "", fields)
@@ -286,6 +323,74 @@ func (m *LLMSectionModel) FocusFirst() tea.Cmd {
 }
 
 func (m *LLMSectionModel) FocusLast() tea.Cmd {
-	m.focusIndex = 7
-	return m.retries.Focus()
+	m.focusIndex = 8
+	return m.testConnButton.Focus()
+}
+
+func (m *LLMSectionModel) testConnection() tea.Msg {
+	provider := m.provider.Value()
+	modelName := m.model.Value()
+	apiKey := m.apiKey.Value()
+	baseURL := m.baseURL.Value()
+
+	if apiKey == "" {
+		return TestConnectionResultMsg{
+			Success: false,
+			Message: "API Key is required to test connection",
+		}
+	}
+
+	if modelName == "" {
+		return TestConnectionResultMsg{
+			Success: false,
+			Message: "Model name is required to test connection",
+		}
+	}
+
+	if provider == "" {
+		provider = "openai"
+	}
+
+	cfg := config.LLMConfig{
+		Provider: provider,
+		Model:    modelName,
+		APIKey:   apiKey,
+		BaseURL:  baseURL,
+		Timeout:  30,
+	}
+
+	retryClient := llm.NewRetryClient(nil)
+	factory := llm.NewFactory(retryClient, nil, nil, false, 0)
+
+	client, err := factory.CreateClient(cfg)
+	if err != nil {
+		return TestConnectionResultMsg{
+			Success: false,
+			Message: fmt.Sprintf("Failed to create client: %v", err),
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	req := llm.CompletionRequest{
+		Messages: []llm.Message{
+			{Role: "user", Content: "Say 'ok' to confirm connection works."},
+		},
+		MaxTokens:   10,
+		Temperature: 0,
+	}
+
+	_, err = client.GenerateCompletion(ctx, req)
+	if err != nil {
+		return TestConnectionResultMsg{
+			Success: false,
+			Message: fmt.Sprintf("Connection failed: %v", err),
+		}
+	}
+
+	return TestConnectionResultMsg{
+		Success: true,
+		Message: fmt.Sprintf("Successfully connected to %s (%s)", provider, modelName),
+	}
 }

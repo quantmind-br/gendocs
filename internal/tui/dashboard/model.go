@@ -7,6 +7,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/user/gendocs/internal/config"
 	"github.com/user/gendocs/internal/tui"
+	"github.com/user/gendocs/internal/tui/dashboard/components"
+	"github.com/user/gendocs/internal/tui/dashboard/sections"
 )
 
 type FocusPane int
@@ -20,6 +22,7 @@ type DashboardModel struct {
 	sidebar   SidebarModel
 	statusbar StatusBarModel
 	sections  map[string]SectionModel
+	modal     components.ModalModel
 
 	cfg    *config.GlobalConfig
 	loader *config.Loader
@@ -36,11 +39,16 @@ type DashboardModel struct {
 func NewDashboard() DashboardModel {
 	sidebar := NewSidebar(DefaultNavItems)
 	statusbar := NewStatusBar()
+	modal := components.NewConfirmModal(
+		"Unsaved Changes",
+		"You have unsaved changes. What would you like to do?",
+	)
 
 	return DashboardModel{
 		sidebar:   sidebar,
 		statusbar: statusbar,
 		sections:  make(map[string]SectionModel),
+		modal:     modal,
 		loader:    config.NewLoader(),
 		saver:     config.NewSaver(),
 		focusPane: FocusSidebar,
@@ -73,8 +81,18 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 		m.sidebar, _ = m.sidebar.Update(msg)
 		m.statusbar, _ = m.statusbar.Update(msg)
+		m.modal.SetSize(msg.Width, msg.Height)
 
 	case tea.KeyMsg:
+		if m.modal.Visible() {
+			var modalCmd tea.Cmd
+			m.modal, modalCmd = m.modal.Update(msg)
+			if modalCmd != nil {
+				cmds = append(cmds, modalCmd)
+			}
+			return m, tea.Batch(cmds...)
+		}
+
 		if m.helpVisible {
 			if msg.String() == "?" || msg.String() == "esc" || msg.String() == "q" {
 				m.helpVisible = false
@@ -89,10 +107,8 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "q":
 			if m.hasUnsavedChanges() {
-				cmds = append(cmds, func() tea.Msg {
-					return ShowMessageMsg{Text: "Unsaved changes! Press Ctrl+C to quit without saving, or Ctrl+S to save first.", Type: MessageError}
-				})
-				return m, tea.Batch(cmds...)
+				m.modal.Show()
+				return m, nil
 			}
 			m.quitting = true
 			return m, tea.Quit
@@ -132,6 +148,23 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.helpVisible = true
 		}
 
+	case components.ModalResultMsg:
+		switch msg.Action {
+		case components.ModalActionSave:
+			cmds = append(cmds, m.saveConfig())
+			cmds = append(cmds, func() tea.Msg {
+				return quitAfterSaveMsg{}
+			})
+		case components.ModalActionDiscard:
+			m.quitting = true
+			return m, tea.Quit
+		case components.ModalActionCancel:
+		}
+
+	case quitAfterSaveMsg:
+		m.quitting = true
+		return m, tea.Quit
+
 	case ConfigLoadedMsg:
 		if msg.Err != nil {
 			m.err = msg.Err
@@ -151,6 +184,17 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, func() tea.Msg {
 			return ShowMessageMsg{Text: "Save failed: " + msg.Err.Error(), Type: MessageError}
 		})
+
+	case sections.TestConnectionResultMsg:
+		if msg.Success {
+			cmds = append(cmds, func() tea.Msg {
+				return ShowMessageMsg{Text: msg.Message, Type: MessageSuccess}
+			})
+		} else {
+			cmds = append(cmds, func() tea.Msg {
+				return ShowMessageMsg{Text: msg.Message, Type: MessageError}
+			})
+		}
 	}
 
 	var sidebarCmd tea.Cmd
@@ -182,6 +226,10 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m DashboardModel) View() string {
 	if m.quitting {
 		return "Goodbye!\n"
+	}
+
+	if m.modal.Visible() {
+		return m.modal.View()
 	}
 
 	if m.helpVisible {
@@ -526,6 +574,8 @@ type ConfigSavedMsg struct{}
 type ConfigSaveErrorMsg struct {
 	Err error
 }
+
+type quitAfterSaveMsg struct{}
 
 func ShowError(text string) tea.Cmd {
 	return func() tea.Msg {

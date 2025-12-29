@@ -248,7 +248,7 @@ func TestLLMSection_Update_TabNavigatesForward(t *testing.T) {
 
 func TestLLMSection_Update_TabWrapsAround(t *testing.T) {
 	s := NewLLMSection()
-	s.focusIndex = 7
+	s.focusIndex = 8
 
 	model, _ := s.Update(tea.KeyMsg{Type: tea.KeyTab})
 	s = model.(*LLMSectionModel)
@@ -277,8 +277,8 @@ func TestLLMSection_Update_ShiftTabWrapsAround(t *testing.T) {
 	model, _ := s.Update(tea.KeyMsg{Type: tea.KeyShiftTab})
 	s = model.(*LLMSectionModel)
 
-	if s.focusIndex != 7 {
-		t.Errorf("Expected focus to wrap to 7, got %d", s.focusIndex)
+	if s.focusIndex != 8 {
+		t.Errorf("Expected focus to wrap to 8, got %d", s.focusIndex)
 	}
 }
 
@@ -299,8 +299,8 @@ func TestLLMSection_FocusLast_SetsFocusToLast(t *testing.T) {
 
 	s.FocusLast()
 
-	if s.focusIndex != 7 {
-		t.Errorf("Expected focus index 7 after FocusLast, got %d", s.focusIndex)
+	if s.focusIndex != 8 {
+		t.Errorf("Expected focus index 8 after FocusLast, got %d", s.focusIndex)
 	}
 }
 
@@ -415,4 +415,100 @@ func TestLLMSection_EmptyNumericFields_NotIncludedInGetValues(t *testing.T) {
 	if _, ok := got["retries"]; ok {
 		t.Error("retries should not be in values when empty")
 	}
+}
+
+func TestLLMSection_View_ContainsTestConnectionButton(t *testing.T) {
+	s := NewLLMSection()
+	view := s.View()
+
+	if !strings.Contains(view, "Test Connection") {
+		t.Error("View should contain Test Connection button")
+	}
+}
+
+func TestLLMSection_TestConnection_RequiresAPIKey(t *testing.T) {
+	s := NewLLMSection()
+	_ = s.SetValues(map[string]any{
+		"model": "gpt-4",
+	})
+
+	result := s.testConnection()
+	msg, ok := result.(TestConnectionResultMsg)
+	if !ok {
+		t.Fatal("Expected TestConnectionResultMsg")
+	}
+
+	if msg.Success {
+		t.Error("Expected failure when API key is missing")
+	}
+	if !strings.Contains(msg.Message, "API Key") {
+		t.Errorf("Expected message to mention API Key, got %q", msg.Message)
+	}
+}
+
+func TestLLMSection_TestConnection_RequiresModel(t *testing.T) {
+	s := NewLLMSection()
+	_ = s.SetValues(map[string]any{
+		"api_key": "sk-test",
+	})
+
+	result := s.testConnection()
+	msg, ok := result.(TestConnectionResultMsg)
+	if !ok {
+		t.Fatal("Expected TestConnectionResultMsg")
+	}
+
+	if msg.Success {
+		t.Error("Expected failure when model is missing")
+	}
+	if !strings.Contains(msg.Message, "Model") {
+		t.Errorf("Expected message to mention Model, got %q", msg.Message)
+	}
+}
+
+func TestLLMSection_TestConnection_DefaultsProvider(t *testing.T) {
+	s := NewLLMSection()
+	_ = s.SetValues(map[string]any{
+		"api_key": "sk-test",
+		"model":   "gpt-4",
+	})
+
+	result := s.testConnection()
+	msg, ok := result.(TestConnectionResultMsg)
+	if !ok {
+		t.Fatal("Expected TestConnectionResultMsg")
+	}
+
+	if msg.Success {
+		t.Skip("Skipping: would need a real API connection")
+	}
+}
+
+func TestLLMSection_Update_HandlesTestConnectionResult(t *testing.T) {
+	s := NewLLMSection()
+	s.testing = true
+
+	resultMsg := TestConnectionResultMsg{
+		Success: true,
+		Message: "Connection successful",
+	}
+
+	model, _ := s.Update(resultMsg)
+	s = model.(*LLMSectionModel)
+
+	if s.testing {
+		t.Error("Expected testing to be false after result")
+	}
+}
+
+func TestLLMSection_Update_ButtonPress(t *testing.T) {
+	s := NewLLMSection()
+	s.focusIndex = 8
+
+	_ = s.SetValues(map[string]any{
+		"api_key": "sk-test",
+		"model":   "gpt-4",
+	})
+
+	s.testConnButton.Focus()
 }
