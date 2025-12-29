@@ -79,9 +79,10 @@
         {
           "id": "4-2",
           "name": "Remove AIRulesGeneratorAgent from analyzer.go",
-          "status": "pending",
+          "status": "completed",
           "description": "Remove AIRulesGeneratorAgent code from analyzer.go after ai_rules_generator.go is created.",
-          "notes": "Will be done in Phase 6 cleanup."
+          "notes": "Removed AIRulesGeneratorAgent code from analyzer.go (lines 271-344). Also removed unused 'os' import. analyzer.go reduced from 345 to 268 lines. AIRulesGeneratorAgent is now in its own file (ai_rules_generator.go).",
+          "updated_at": "2025-12-29T04:08:12.988660+00:00"
         }
       ]
     },
@@ -175,5 +176,5 @@
     "Package exports remain the same - no breaking changes for external consumers"
   ],
   "spec_file": "spec.md",
-  "last_updated": "2025-12-29T04:10:00.000000+00:00"
+  "last_updated": "2025-12-29T04:08:12.988666+00:00"
 }
