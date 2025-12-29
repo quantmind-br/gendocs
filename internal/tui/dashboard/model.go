@@ -120,15 +120,19 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if section := m.activeSection(); section != nil {
 					cmds = append(cmds, section.FocusFirst())
 				}
-			} else {
-				m.focusPane = FocusSidebar
-				m.sidebar.SetFocused(true)
+				return m, tea.Batch(cmds...)
 			}
+			// When in content, let section handle tab for field cycling
 
 		case "shift+tab":
+			// Let section handle shift+tab for field cycling backward
+			// User can press Esc to go back to sidebar
+
+		case "esc":
 			if m.focusPane == FocusContent {
 				m.focusPane = FocusSidebar
 				m.sidebar.SetFocused(true)
+				return m, nil
 			}
 
 		case "ctrl+s":
@@ -273,10 +277,11 @@ func (m DashboardModel) renderHelp() string {
 │                                                              │
 │  Navigation                                                  │
 │  ──────────                                                  │
-│  Tab / Shift+Tab    Switch between sidebar and content       │
-│  ↑/↓ or j/k         Navigate items                           │
+│  Tab                Enter content / Next field               │
+│  Shift+Tab          Previous field                           │
+│  Esc                Return to sidebar                        │
+│  ↑/↓ or j/k         Navigate sidebar items                   │
 │  Enter              Select / Confirm                         │
-│  Esc                Go back / Cancel                         │
 │                                                              │
 │  Actions                                                     │
 │  ───────                                                     │
@@ -285,11 +290,6 @@ func (m DashboardModel) renderHelp() string {
 │  Ctrl+U             Toggle password visibility               │
 │  ?                  Toggle this help                         │
 │  q                  Quit (prompts if unsaved changes)        │
-│                                                              │
-│  Field Navigation                                            │
-│  ────────────────                                            │
-│  Tab                Next field                               │
-│  Shift+Tab          Previous field                           │
 │                                                              │
 ╰──────────────────────────────────────────────────────────────╯
 
