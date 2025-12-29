@@ -67,10 +67,21 @@ type hashFileResult struct {
 // DefaultMaxHashWorkers is the default maximum number of parallel hash workers
 const DefaultMaxHashWorkers = 8
 
-// getMaxHashWorkers returns the optimal number of hash workers based on CPU count
-func getMaxHashWorkers() int {
+// getMaxHashWorkers returns the optimal number of hash workers based on CPU count and configured limit
+// If maxHashWorkers is 0, use CPU count with max of DefaultMaxHashWorkers
+// If maxHashWorkers is > 0, use the configured value (capped at DefaultMaxHashWorkers for safety)
+func getMaxHashWorkers(maxHashWorkers int) int {
 	numCPU := runtime.NumCPU()
-	// Limit to 8 workers to avoid overwhelming the filesystem
+
+	// If explicit configuration is provided, use it (with safety cap)
+	if maxHashWorkers > 0 {
+		if maxHashWorkers > DefaultMaxHashWorkers {
+			return DefaultMaxHashWorkers
+		}
+		return maxHashWorkers
+	}
+
+	// Default: use CPU count, capped at DefaultMaxHashWorkers
 	if numCPU > DefaultMaxHashWorkers {
 		return DefaultMaxHashWorkers
 	}
@@ -78,12 +89,12 @@ func getMaxHashWorkers() int {
 }
 
 // parallelHashFiles computes hashes for multiple files concurrently using a worker pool
-func parallelHashFiles(jobs []hashFileJob) map[string]string {
+func parallelHashFiles(jobs []hashFileJob, maxHashWorkers int) map[string]string {
 	if len(jobs) == 0 {
 		return make(map[string]string)
 	}
 
-	numWorkers := getMaxHashWorkers()
+	numWorkers := getMaxHashWorkers(maxHashWorkers)
 	results := make(map[string]string)
 	resultsChan := make(chan hashFileResult, len(jobs))
 	var wg sync.WaitGroup
@@ -261,7 +272,8 @@ func HashFile(path string) (string, error) {
 // ScanFiles scans repository files and returns their info
 // If cache is provided, it will skip hashing files whose mtime and size haven't changed
 // If metrics is provided, it will populate statistics about cache hits and hash computations
-func ScanFiles(repoPath string, ignorePatterns []string, cache *AnalysisCache, metrics *ScanMetrics) (map[string]FileInfo, error) {
+// maxHashWorkers controls the maximum number of parallel hash workers (0 = use CPU count with max of 8)
+func ScanFiles(repoPath string, ignorePatterns []string, cache *AnalysisCache, metrics *ScanMetrics, maxHashWorkers int) (map[string]FileInfo, error) {
 	// Phase 1: Walk directory tree and collect file metadata (no hashing yet)
 	type fileMetadata struct {
 		relPath  string
@@ -364,7 +376,7 @@ func ScanFiles(repoPath string, ignorePatterns []string, cache *AnalysisCache, m
 
 	// Phase 3: Batch hash all files that need it in parallel
 	if len(filesToHash) > 0 {
-		hashResults := parallelHashFiles(filesToHash)
+		hashResults := parallelHashFiles(filesToHash, maxHashWorkers)
 
 		// Update file entries with computed hashes
 		for relPath, hash := range hashResults {

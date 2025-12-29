@@ -61,7 +61,7 @@ func (aa *AnalyzerAgent) Run(ctx context.Context) (*AnalysisResult, error) {
 	}
 
 	// Always scan files for cache update (with cache for selective hashing and metrics tracking)
-	currentFiles, scanErr = cache.ScanFiles(aa.config.RepoPath, nil, analysisCache, &scanMetrics)
+	currentFiles, scanErr = cache.ScanFiles(aa.config.RepoPath, nil, analysisCache, &scanMetrics, aa.config.GetMaxHashWorkers())
 	if scanErr != nil {
 		aa.logger.Warn(fmt.Sprintf("Failed to scan files: %v", scanErr))
 	}
