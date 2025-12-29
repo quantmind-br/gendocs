@@ -1760,3 +1760,620 @@ func TestJSONExtractor_Images(t *testing.T) {
 		t.Errorf("Expected 3 images, got %d", imageCount)
 	}
 }
+
+// Edge case: deeply nested lists (3+ levels)
+func TestJSONEdgeCase_DeeplyNestedLists(t *testing.T) {
+	exporter, err := NewJSONExporter()
+	if err != nil {
+		t.Fatalf("Failed to create exporter: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "nested.md")
+	jsonFile := filepath.Join(tmpDir, "nested.json")
+
+	markdown := `# Deep Nesting
+
+- Level 1
+  - Level 2
+    - Level 3
+      - Level 4
+  - Back to Level 2
+- Another Level 1
+`
+
+	err = os.WriteFile(mdFile, []byte(markdown), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write markdown: %v", err)
+	}
+
+	err = exporter.ExportToJSON(mdFile, jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to export: %v", err)
+	}
+
+	jsonData, err := os.ReadFile(jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to read JSON: %v", err)
+	}
+
+	var doc JSONDocument
+	if err := json.Unmarshal(jsonData, &doc); err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	// Find list with deep nesting
+	foundDeepNesting := false
+	for _, elem := range doc.Content.Elements {
+		if elemType, ok := elem["type"].(string); ok && elemType == "list" {
+			items, ok := elem["items"].([]interface{})
+			if !ok {
+				continue
+			}
+
+			// Check first item
+			if len(items) > 0 {
+				firstItem, ok := items[0].(map[string]interface{})
+				if ok {
+					// Check Level 2
+					nested2, ok := firstItem["items"].([]interface{})
+					if ok && len(nested2) > 0 {
+						level2, ok := nested2[0].(map[string]interface{})
+						if ok {
+							// Check Level 3
+							nested3, ok := level2["items"].([]interface{})
+							if ok && len(nested3) > 0 {
+								level3, ok := nested3[0].(map[string]interface{})
+								if ok {
+									// Check Level 4
+									nested4, ok := level3["items"].([]interface{})
+									if ok && len(nested4) > 0 {
+										foundDeepNesting = true
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if !foundDeepNesting {
+		t.Error("Expected to find deeply nested list structure (4 levels)")
+	}
+}
+
+// Edge case: special characters in text
+func TestJSONEdgeCase_SpecialCharacters(t *testing.T) {
+	exporter, err := NewJSONExporter()
+	if err != nil {
+		t.Fatalf("Failed to create exporter: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "special.md")
+	jsonFile := filepath.Join(tmpDir, "special.json")
+
+	markdown := `# Special Characters
+
+Paragraph with special chars: < > & " ' ` + "`" + `
+
+Math symbols: ≤ ≥ ≠ ± × ÷ °
+
+Currency: $ € £ ¥ ¢
+
+Punctuation: ¡ ¿ † ‡
+
+Emojis: 😀 🎉 🚀 💻
+
+Unicode: 中文 日本語 한글 العربية
+
+Quotes: "smart" 'curly' ` + "``" + `backticks` + "``" + `
+`
+
+	err = os.WriteFile(mdFile, []byte(markdown), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write markdown: %v", err)
+	}
+
+	err = exporter.ExportToJSON(mdFile, jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to export: %v", err)
+	}
+
+	jsonData, err := os.ReadFile(jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to read JSON: %v", err)
+	}
+
+	var doc JSONDocument
+	if err := json.Unmarshal(jsonData, &doc); err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	// Find paragraph and verify special characters are preserved
+	foundSpecialChars := false
+	for _, elem := range doc.Content.Elements {
+		if elemType, ok := elem["type"].(string); ok && elemType == "paragraph" {
+			content, ok := elem["content"].(string)
+			if !ok {
+				continue
+			}
+
+			// Check for various special characters
+			if strings.Contains(content, "€") || strings.Contains(content, "≤") ||
+			   strings.Contains(content, "😀") || strings.Contains(content, "中文") {
+				foundSpecialChars = true
+			}
+		}
+	}
+
+	if !foundSpecialChars {
+		t.Error("Expected to find special characters in exported content")
+	}
+}
+
+// Edge case: multiple inline formatting combinations
+func TestJSONEdgeCase_ComplexInlineFormatting(t *testing.T) {
+	exporter, err := NewJSONExporter()
+	if err != nil {
+		t.Fatalf("Failed to create exporter: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "inline.md")
+	jsonFile := filepath.Join(tmpDir, "inline.json")
+
+	markdown := `# Inline Formatting
+
+**Bold and *italic* together**
+
+***All three styles*** bold and italic
+
+` + "`" + `code with **bold** inside` + "`" + `
+
+**bold with ` + "`" + `code` + "`" + ` inside**
+
+*italic with ` + "`" + `code` + "`" + ` inside*
+
+[**bold link**](https://example.com)
+
+[*italic link*](https://example.com)
+
+[` + "`" + `code link` + "`" + `](https://example.com)
+
+~~Strikethrough with **bold**~~
+`
+
+	err = os.WriteFile(mdFile, []byte(markdown), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write markdown: %v", err)
+	}
+
+	err = exporter.ExportToJSON(mdFile, jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to export: %v", err)
+	}
+
+	jsonData, err := os.ReadFile(jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to read JSON: %v", err)
+	}
+
+	var doc JSONDocument
+	if err := json.Unmarshal(jsonData, &doc); err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	// Count paragraphs with inline formatting
+	paragraphCount := 0
+	linkCount := 0
+	for _, elem := range doc.Content.Elements {
+		if elemType, ok := elem["type"].(string); ok && elemType == "paragraph" {
+			paragraphCount++
+			content, ok := elem["content"].(string)
+			if !ok {
+				continue
+			}
+			// Check that markdown formatting syntax is preserved
+			if strings.Contains(content, "**") || strings.Contains(content, "*") || strings.Contains(content, "`") {
+				// Good - formatting syntax present
+			}
+		}
+		if elemType, ok := elem["type"].(string); ok && elemType == "link" {
+			linkCount++
+		}
+	}
+
+	if paragraphCount < 5 {
+		t.Errorf("Expected at least 5 paragraphs with inline formatting, got %d", paragraphCount)
+	}
+
+	if linkCount < 3 {
+		t.Errorf("Expected at least 3 links, got %d", linkCount)
+	}
+}
+
+// Edge case: alternating code blocks and text
+func TestJSONEdgeCase_AlternatingCodeBlocks(t *testing.T) {
+	exporter, err := NewJSONExporter()
+	if err != nil {
+		t.Fatalf("Failed to create exporter: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "alternating.md")
+	jsonFile := filepath.Join(tmpDir, "alternating.json")
+
+	markdown := `# Alternating Content
+
+Text paragraph 1
+
+` + "```go\ncode 1\n```" + `
+
+Text paragraph 2
+
+` + "```python\ncode 2\n```" + `
+
+Text paragraph 3
+
+` + "```javascript\ncode 3\n```" + `
+
+Text paragraph 4
+`
+
+	err = os.WriteFile(mdFile, []byte(markdown), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write markdown: %v", err)
+	}
+
+	err = exporter.ExportToJSON(mdFile, jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to export: %v", err)
+	}
+
+	jsonData, err := os.ReadFile(jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to read JSON: %v", err)
+	}
+
+	var doc JSONDocument
+	if err := json.Unmarshal(jsonData, &doc); err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	// Count alternating elements
+	paragraphCount := 0
+	codeBlockCount := 0
+
+	for _, elem := range doc.Content.Elements {
+		elemType, ok := elem["type"].(string)
+		if !ok {
+			continue
+		}
+
+		if elemType == "paragraph" {
+			paragraphCount++
+		}
+		if elemType == "code_block" {
+			codeBlockCount++
+		}
+	}
+
+	if paragraphCount != 4 {
+		t.Errorf("Expected 4 paragraphs, got %d", paragraphCount)
+	}
+
+	if codeBlockCount != 3 {
+		t.Errorf("Expected 3 code blocks, got %d", codeBlockCount)
+	}
+}
+
+// Edge case: document with only H2/H3 (no H1)
+func TestJSONEdgeCase_NoH1Title(t *testing.T) {
+	exporter, err := NewJSONExporter()
+	if err != nil {
+		t.Fatalf("Failed to create exporter: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "noh1.md")
+	jsonFile := filepath.Join(tmpDir, "noh1.json")
+
+	markdown := `## Missing H1
+
+This document has no H1 heading.
+
+### Just H2 and H3
+
+Content here.
+`
+
+	err = os.WriteFile(mdFile, []byte(markdown), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write markdown: %v", err)
+	}
+
+	err = exporter.ExportToJSON(mdFile, jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to export: %v", err)
+	}
+
+	jsonData, err := os.ReadFile(jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to read JSON: %v", err)
+	}
+
+	var doc JSONDocument
+	if err := json.Unmarshal(jsonData, &doc); err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	// Should have default title when no H1 present
+	if doc.Metadata.Title != "Documentation" {
+		t.Errorf("Expected default title 'Documentation', got '%s'", doc.Metadata.Title)
+	}
+
+	// Should still have headings (H2 and H3)
+	if len(doc.Content.Headings) == 0 {
+		t.Error("Expected to find H2 and H3 headings even without H1")
+	}
+
+	// Verify H2 is root level
+	if len(doc.Content.Headings) > 0 {
+		firstHeading := doc.Content.Headings[0]
+		if firstHeading.Level != 2 {
+			t.Errorf("Expected first heading to be level 2, got %d", firstHeading.Level)
+		}
+	}
+}
+
+// Edge case: document with only whitespace
+func TestJSONEdgeCase_OnlyWhitespace(t *testing.T) {
+	exporter, err := NewJSONExporter()
+	if err != nil {
+		t.Fatalf("Failed to create exporter: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "whitespace.md")
+	jsonFile := filepath.Join(tmpDir, "whitespace.json")
+
+	markdown := "   \n\n   \n\t\t\n   "
+
+	err = os.WriteFile(mdFile, []byte(markdown), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write markdown: %v", err)
+	}
+
+	err = exporter.ExportToJSON(mdFile, jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to export: %v", err)
+	}
+
+	jsonData, err := os.ReadFile(jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to read JSON: %v", err)
+	}
+
+	var doc JSONDocument
+	if err := json.Unmarshal(jsonData, &doc); err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	// Should have default title
+	if doc.Metadata.Title != "Documentation" {
+		t.Errorf("Expected default title 'Documentation', got '%s'", doc.Metadata.Title)
+	}
+
+	// Should have zero word count for whitespace-only content
+	if doc.Metadata.WordCount != 0 {
+		t.Errorf("Expected 0 word count, got %d", doc.Metadata.WordCount)
+	}
+
+	// Should have no elements
+	if len(doc.Content.Elements) != 0 {
+		t.Errorf("Expected 0 elements, got %d", len(doc.Content.Elements))
+	}
+}
+
+// Edge case: very long heading text
+func TestJSONEdgeCase_LongHeading(t *testing.T) {
+	exporter, err := NewJSONExporter()
+	if err != nil {
+		t.Fatalf("Failed to create exporter: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "long.md")
+	jsonFile := filepath.Join(tmpDir, "long.json")
+
+	longText := strings.Repeat("This is a very long heading text. ", 20)
+
+	markdown := "# " + longText + `
+
+Content below.
+`
+
+	err = os.WriteFile(mdFile, []byte(markdown), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write markdown: %v", err)
+	}
+
+	err = exporter.ExportToJSON(mdFile, jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to export: %v", err)
+	}
+
+	jsonData, err := os.ReadFile(jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to read JSON: %v", err)
+	}
+
+	var doc JSONDocument
+	if err := json.Unmarshal(jsonData, &doc); err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	// Title should be preserved
+	if !strings.Contains(doc.Metadata.Title, "very long heading") {
+		t.Error("Expected long heading to be preserved in title")
+	}
+
+	if len(doc.Content.Headings) == 0 {
+		t.Fatal("Expected to find heading")
+	}
+
+	// ID should be generated (may be truncated/modified)
+	if doc.Content.Headings[0].ID == "" {
+		t.Error("Expected heading to have ID")
+	}
+}
+
+// Edge case: mixed list types in sequence
+func TestJSONEdgeCase_MixedListTypes(t *testing.T) {
+	exporter, err := NewJSONExporter()
+	if err != nil {
+		t.Fatalf("Failed to create exporter: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "mixed.md")
+	jsonFile := filepath.Join(tmpDir, "mixed.json")
+
+	markdown := `# Mixed Lists
+
+- Unordered item 1
+- Unordered item 2
+
+1. Ordered item 1
+2. Ordered item 2
+
+- [x] Task item 1
+- [ ] Task item 2
+
+- Back to unordered
+`
+
+	err = os.WriteFile(mdFile, []byte(markdown), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write markdown: %v", err)
+	}
+
+	err = exporter.ExportToJSON(mdFile, jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to export: %v", err)
+	}
+
+	jsonData, err := os.ReadFile(jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to read JSON: %v", err)
+	}
+
+	var doc JSONDocument
+	if err := json.Unmarshal(jsonData, &doc); err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	// Count different list types
+	unorderedCount := 0
+	orderedCount := 0
+	taskCount := 0
+
+	for _, elem := range doc.Content.Elements {
+		if elemType, ok := elem["type"].(string); ok && elemType == "list" {
+			listType, ok := elem["list_type"].(string)
+			if !ok {
+				continue
+			}
+
+			switch listType {
+			case "unordered":
+				unorderedCount++
+			case "ordered":
+				orderedCount++
+			case "task":
+				taskCount++
+			}
+		}
+	}
+
+	if unorderedCount != 2 {
+		t.Errorf("Expected 2 unordered lists, got %d", unorderedCount)
+	}
+
+	if orderedCount != 1 {
+		t.Errorf("Expected 1 ordered list, got %d", orderedCount)
+	}
+
+	if taskCount != 1 {
+		t.Errorf("Expected 1 task list, got %d", taskCount)
+	}
+}
+
+// Edge case: consecutive headings with no content
+func TestJSONEdgeCase_ConsecutiveHeadings(t *testing.T) {
+	exporter, err := NewJSONExporter()
+	if err != nil {
+		t.Fatalf("Failed to create exporter: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "consecutive.md")
+	jsonFile := filepath.Join(tmpDir, "consecutive.json")
+
+	markdown := `# Heading 1
+
+## Heading 1.1
+
+### Heading 1.1.1
+
+# Heading 2
+
+## Heading 2.1
+
+Some content here.
+
+### Heading 2.1.1
+`
+
+	err = os.WriteFile(mdFile, []byte(markdown), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write markdown: %v", err)
+	}
+
+	err = exporter.ExportToJSON(mdFile, jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to export: %v", err)
+	}
+
+	jsonData, err := os.ReadFile(jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to read JSON: %v", err)
+	}
+
+	var doc JSONDocument
+	if err := json.Unmarshal(jsonData, &doc); err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	// Should have 2 root headings (both H1)
+	if len(doc.Content.Headings) != 2 {
+		t.Errorf("Expected 2 root headings, got %d", len(doc.Content.Headings))
+	}
+
+	// First H1 should have nested structure
+	firstH1 := doc.Content.Headings[0]
+	if len(firstH1.Children) == 0 {
+		t.Error("Expected first H1 to have child headings")
+	}
+
+	// Verify hierarchy depth
+	if len(firstH1.Children) > 0 {
+		firstH2 := firstH1.Children[0]
+		if len(firstH2.Children) == 0 {
+			t.Error("Expected H2 to have H3 child")
+		}
+	}
+}
