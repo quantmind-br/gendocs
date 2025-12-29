@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/fiowagd/gendocs/internal/logging"
 )
 
 const (
@@ -79,6 +81,7 @@ type LRUCache struct {
 	head, tail *lruEntry
 	mu         sync.RWMutex
 	stats      CacheStats
+	logger     *logging.Logger
 }
 
 // NewLRUCache creates a new LRU cache with the given maximum size
@@ -87,7 +90,15 @@ func NewLRUCache(maxSize int) *LRUCache {
 		maxSize: maxSize,
 		cache:   make(map[string]*lruEntry),
 		stats:   CacheStats{MaxSize: maxSize},
+		logger:  logging.NewNopLogger(),
 	}
+}
+
+// SetLogger sets the logger for the cache
+func (c *LRUCache) SetLogger(logger *logging.Logger) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.logger = logger
 }
 
 // Get retrieves a value from the cache
@@ -99,6 +110,10 @@ func (c *LRUCache) Get(key string) (*CachedResponse, bool) {
 	if !exists {
 		c.stats.Misses++
 		c.stats.updateHitRate()
+		c.logger.Debug("cache_miss",
+			logging.String("key", key),
+			logging.Int64("total_misses", c.stats.Misses),
+			logging.Float64("hit_rate", c.stats.HitRate))
 		return nil, false
 	}
 
@@ -108,6 +123,9 @@ func (c *LRUCache) Get(key string) (*CachedResponse, bool) {
 		c.removeEntry(entry)
 		c.stats.Misses++
 		c.stats.updateHitRate()
+		c.logger.Debug("cache_miss_expired",
+			logging.String("key", key),
+			logging.Time("expired_at", entry.value.ExpiresAt))
 		return nil, false
 	}
 
@@ -120,6 +138,11 @@ func (c *LRUCache) Get(key string) (*CachedResponse, bool) {
 
 	c.stats.Hits++
 	c.stats.updateHitRate()
+	c.logger.Debug("cache_hit",
+		logging.String("key", key),
+		logging.Int64("total_hits", c.stats.Hits),
+		logging.Int("access_count", entry.value.AccessCount),
+		logging.Float64("hit_rate", c.stats.HitRate))
 	return entry.value, true
 }
 
@@ -136,10 +159,16 @@ func (c *LRUCache) Put(key string, value *CachedResponse) {
 	// Check if key already exists
 	if entry, exists := c.cache[key]; exists {
 		// Update existing entry
+		oldSize := entry.sizeBytes
 		entry.value = value
 		entry.accessedAt = time.Now()
 		entry.sizeBytes = value.SizeBytes
 		c.moveToFront(entry)
+		c.stats.TotalSizeBytes += (entry.sizeBytes - oldSize)
+		c.logger.Debug("cache_update",
+			logging.String("key", key),
+			logging.Int64("old_size_bytes", oldSize),
+			logging.Int64("new_size_bytes", entry.sizeBytes))
 		return
 	}
 
@@ -158,6 +187,12 @@ func (c *LRUCache) Put(key string, value *CachedResponse) {
 	c.size++
 	c.stats.Size = c.size
 	c.stats.TotalSizeBytes += entry.sizeBytes
+
+	c.logger.Debug("cache_store",
+		logging.String("key", key),
+		logging.Int64("size_bytes", entry.sizeBytes),
+		logging.Int("current_size", c.size),
+		logging.Int("max_size", c.maxSize))
 
 	// Evict if over capacity
 	for c.size > c.maxSize {
@@ -269,6 +304,9 @@ func (c *LRUCache) evictLRU() {
 		return
 	}
 
+	evictedKey := c.tail.key
+	evictedSize := c.tail.sizeBytes
+
 	// Remove from map
 	delete(c.cache, c.tail.key)
 
@@ -288,6 +326,11 @@ func (c *LRUCache) evictLRU() {
 	}
 
 	c.stats.Evictions++
+	c.logger.Debug("cache_evict",
+		logging.String("key", evictedKey),
+		logging.Int64("size_bytes", evictedSize),
+		logging.Int64("total_evictions", c.stats.Evictions),
+		logging.Int("current_size", c.size))
 }
 
 // CleanupExpired removes all expired entries from the cache
@@ -309,6 +352,12 @@ func (c *LRUCache) CleanupExpired() int {
 	for _, entry := range expired {
 		c.removeEntry(entry)
 		c.stats.Evictions++
+	}
+
+	if len(expired) > 0 {
+		c.logger.Info("cache_cleanup_expired",
+			logging.Int("expired_count", len(expired)),
+			logging.Int("remaining_size", c.size))
 	}
 
 	return len(expired)
@@ -353,6 +402,7 @@ type DiskCache struct {
 	dirty       bool
 	autoSave    bool
 	stopSave    chan struct{}
+	logger      *logging.Logger
 }
 
 // NewDiskCache creates a new disk cache
@@ -361,7 +411,15 @@ func NewDiskCache(filePath string, ttl time.Duration, maxDiskSize int64) *DiskCa
 		filePath:    filePath,
 		ttl:         ttl,
 		maxDiskSize: maxDiskSize,
+		logger:      logging.NewNopLogger(),
 	}
+}
+
+// SetLogger sets the logger for the disk cache
+func (dc *DiskCache) SetLogger(logger *logging.Logger) {
+	dc.mu.Lock()
+	defer dc.mu.Unlock()
+	dc.logger = logger
 }
 
 // Load loads the cache from disk
@@ -375,8 +433,10 @@ func (dc *DiskCache) Load() error {
 		if os.IsNotExist(err) {
 			// New cache, create empty structure
 			dc.data = dc.newCacheData()
+			dc.logger.Info("disk_cache_load", logging.String("status", "new_cache"))
 			return nil
 		}
+		dc.logger.Error("disk_cache_load_failed", logging.Error(err))
 		return fmt.Errorf("failed to read cache file: %w", err)
 	}
 
@@ -386,6 +446,7 @@ func (dc *DiskCache) Load() error {
 		// Corrupted cache, backup and start fresh
 		dc.backupCorruptedCache()
 		dc.data = dc.newCacheData()
+		dc.logger.Warn("disk_cache_corrupted", logging.String("action", "backup_and_reset"))
 		return nil
 	}
 
@@ -393,10 +454,18 @@ func (dc *DiskCache) Load() error {
 	if cacheData.Version != CacheVersion {
 		// Version mismatch, start fresh
 		dc.data = dc.newCacheData()
+		dc.logger.Warn("disk_cache_version_mismatch",
+			logging.Int("loaded_version", cacheData.Version),
+			logging.Int("expected_version", CacheVersion),
+			logging.String("action", "reset"))
 		return nil
 	}
 
 	dc.data = &cacheData
+	dc.logger.Info("disk_cache_load",
+		logging.String("status", "success"),
+		logging.Int("entries", len(dc.data.Entries)),
+		logging.String("file_path", dc.filePath))
 	return nil
 }
 
@@ -413,6 +482,7 @@ func (dc *DiskCache) saveLocked() error {
 	// Ensure directory exists
 	dir := filepath.Dir(dc.filePath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
+		dc.logger.Error("disk_cache_save_failed", logging.Error(err))
 		return fmt.Errorf("failed to create cache directory: %w", err)
 	}
 
@@ -423,22 +493,29 @@ func (dc *DiskCache) saveLocked() error {
 	// Marshal to JSON
 	data, err := json.MarshalIndent(dc.data, "", "  ")
 	if err != nil {
+		dc.logger.Error("disk_cache_save_failed", logging.Error(err))
 		return fmt.Errorf("failed to marshal cache: %w", err)
 	}
 
 	// Write to temporary file first (atomic write)
 	tmpFile := dc.filePath + ".tmp"
 	if err := os.WriteFile(tmpFile, data, 0644); err != nil {
+		dc.logger.Error("disk_cache_save_failed", logging.Error(err))
 		return fmt.Errorf("failed to write cache: %w", err)
 	}
 
 	// Rename to actual file (atomic on Unix)
 	if err := os.Rename(tmpFile, dc.filePath); err != nil {
 		os.Remove(tmpFile) // Clean up temp file
+		dc.logger.Error("disk_cache_save_failed", logging.Error(err))
 		return fmt.Errorf("failed to save cache: %w", err)
 	}
 
 	dc.dirty = false
+	dc.logger.Debug("disk_cache_save",
+		logging.Int("entries", len(dc.data.Entries)),
+		logging.Int("total_size_bytes", dc.data.Stats.TotalSizeBytes),
+		logging.String("file_path", dc.filePath))
 	return nil
 }
 
@@ -449,12 +526,17 @@ func (dc *DiskCache) Get(key string) (*CachedResponse, bool) {
 
 	if dc.data == nil {
 		dc.recordMiss()
+		dc.logger.Debug("disk_cache_miss", logging.String("reason", "cache_not_loaded"))
 		return nil, false
 	}
 
 	entry, exists := dc.data.Entries[key]
 	if !exists {
 		dc.recordMiss()
+		dc.logger.Debug("disk_cache_miss",
+			logging.String("key", key),
+			logging.Int64("total_misses", dc.data.Stats.Misses),
+			logging.Float64("hit_rate", dc.data.Stats.HitRate))
 		return nil, false
 	}
 
@@ -463,11 +545,19 @@ func (dc *DiskCache) Get(key string) (*CachedResponse, bool) {
 		delete(dc.data.Entries, key)
 		dc.dirty = true
 		dc.recordMiss()
+		dc.logger.Debug("disk_cache_miss_expired",
+			logging.String("key", key),
+			logging.Time("expired_at", entry.ExpiresAt))
 		return nil, false
 	}
 
 	// Record hit
 	dc.recordHit()
+
+	dc.logger.Debug("disk_cache_hit",
+		logging.String("key", key),
+		logging.Int64("total_hits", dc.data.Stats.Hits),
+		logging.Float64("hit_rate", dc.data.Stats.HitRate))
 
 	// Return a copy to avoid race conditions
 	result := entry
@@ -483,8 +573,20 @@ func (dc *DiskCache) Put(key string, value *CachedResponse) error {
 		dc.data = dc.newCacheData()
 	}
 
+	isNew := !dc.data.Entries[key].IsExpired()
 	dc.data.Entries[key] = *value
 	dc.dirty = true
+
+	if isNew {
+		dc.logger.Debug("disk_cache_store",
+			logging.String("key", key),
+			logging.Int64("size_bytes", value.SizeBytes),
+			logging.Int("total_entries", len(dc.data.Entries)))
+	} else {
+		dc.logger.Debug("disk_cache_update",
+			logging.String("key", key),
+			logging.Int64("size_bytes", value.SizeBytes))
+	}
 
 	return nil
 }
@@ -589,6 +691,10 @@ func (dc *DiskCache) CleanupExpired() error {
 	if expiredCount > 0 {
 		dc.dirty = true
 		dc.recordEviction(expiredCount)
+		dc.logger.Info("disk_cache_cleanup_expired",
+			logging.Int("expired_count", expiredCount),
+			logging.Int("remaining_entries", len(dc.data.Entries)),
+			logging.String("file_path", dc.filePath))
 		return dc.saveLocked()
 	}
 

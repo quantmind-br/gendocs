@@ -287,9 +287,9 @@ Working on Phase 4 (Add Metrics and Observability).
 
 **Completed Subtasks:**
 - Subtask 4-1: Implement cache statistics tracking ✅
+- Subtask 4-2: Add cache logging ✅
 
 **Remaining Subtasks:**
-- Subtask 4-2: Add cache logging
 - Subtask 4-3: Add cache statistics output
 
 ### Recent Implementation Work
@@ -340,6 +340,65 @@ Working on Phase 4 (Add Metrics and Observability).
   - New fields only in DiskCacheStats
 - Implementation verified and documented in verification_4-1.md
 - Ready for subtask 4-2 (Add cache logging)
+
+✅ **Subtask 4-2: Add cache logging** (COMPLETED 2025-12-29)
+- Added structured logging for all cache operations using zap logger via internal/logging package
+- Modified `internal/llmcache/cache.go`:
+  - Added `logger` field to `LRUCache` struct
+  - Added `logger` field to `DiskCache` struct
+  - Added `SetLogger()` method to both cache types for logger injection
+  - Updated constructors to initialize with no-op logger by default (backward compatible)
+- LRUCache operations logged:
+  - ✅ cache_hit - Debug level with key, total_hits, access_count, hit_rate
+  - ✅ cache_miss - Debug level with key, total_misses, hit_rate
+  - ✅ cache_miss_expired - Debug level with key, expired_at timestamp
+  - ✅ cache_store - Debug level with key, size_bytes, current_size, max_size
+  - ✅ cache_update - Debug level with key, old_size_bytes, new_size_bytes
+  - ✅ cache_evict - Debug level with key, size_bytes, total_evictions, current_size
+  - ✅ cache_cleanup_expired - Info level with expired_count, remaining_size
+- DiskCache operations logged:
+  - ✅ disk_cache_hit - Debug level with key, total_hits, hit_rate
+  - ✅ disk_cache_miss - Debug level with key, total_misses, hit_rate
+  - ✅ disk_cache_miss_expired - Debug level with key, expired_at timestamp
+  - ✅ disk_cache_store - Debug level with key, size_bytes, total_entries
+  - ✅ disk_cache_update - Debug level with key, size_bytes
+  - ✅ disk_cache_cleanup_expired - Info level with expired_count, remaining_entries, file_path
+  - ✅ disk_cache_load - Info level with status (new_cache/success), entries count, file_path
+  - ✅ disk_cache_load_failed - Error level with error details
+  - ✅ disk_cache_corrupted - Warn level with action taken (backup_and_reset)
+  - ✅ disk_cache_version_mismatch - Warn level with loaded_version, expected_version, action
+  - ✅ disk_cache_save - Debug level with entries, total_size_bytes, file_path
+  - ✅ disk_cache_save_failed - Error level with error details
+- Modified `internal/agents/sub_agents.go`:
+  - Updated `setupCaches()` function to inject loggers after creating caches
+  - Memory cache logger: logger.Named("llmcache.memory")
+  - Disk cache logger: logger.Named("llmcache.disk")
+  - Named loggers provide better log organization and filtering
+- All log entries use structured fields from logging package:
+  - logging.String() - For string values
+  - logging.Int() - For integer values
+  - logging.Int64() - For 64-bit integers (stats counters)
+  - logging.Float64() - For floating point values (hit rates)
+  - logging.Time() - For timestamp values
+  - logging.Error() - For error values
+- Logging follows existing patterns from codebase:
+  - Debug level for routine operations (hits, misses, stores, evicts)
+  - Info level for significant events (load success, cleanup operations)
+  - Warn level for recoverable issues (corruption, version mismatch)
+  - Error level for failures (load/save errors)
+- Backward compatible:
+  - No breaking changes to public APIs
+  - SetLogger() method is optional
+  - No-op logger used by default
+  - Existing code continues to work without modification
+- Observability improvements:
+  - Cache operations are now fully traceable through logs
+  - Performance metrics can be analyzed from log data
+  - Issues can be diagnosed with detailed context
+  - Hit/miss ratios visible in logs
+  - Eviction patterns can be monitored
+  - Disk cache persistence operations visible
+- Ready for subtask 4-3 (Add cache statistics output)
 
 ### Implementation Notes
 - Subtask 2-1 actually implemented the basic structures for 2-2, 2-3, 2-4, and 2-5 as well

@@ -77,6 +77,7 @@ func setupCaches(llmCfg config.LLMConfig, logger *logging.Logger) (*llmcache.LRU
 
 	// Create memory cache
 	memoryCache := llmcache.NewLRUCache(llmCfg.Cache.GetMaxSize())
+	memoryCache.SetLogger(logger.Named("llmcache.memory"))
 
 	// Create disk cache
 	diskCache := llmcache.NewDiskCache(
@@ -84,6 +85,7 @@ func setupCaches(llmCfg config.LLMConfig, logger *logging.Logger) (*llmcache.LRU
 		llmCfg.Cache.GetTTL(),
 		100*1024*1024, // 100MB max disk size
 	)
+	diskCache.SetLogger(logger.Named("llmcache.disk"))
 
 	// Load existing disk cache
 	if err := diskCache.Load(); err != nil {
