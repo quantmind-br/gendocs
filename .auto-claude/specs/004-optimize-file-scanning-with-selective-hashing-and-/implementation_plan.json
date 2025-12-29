@@ -157,7 +157,7 @@
           "subtask_id": "phase-3-subtask-3",
           "name": "Add integration tests",
           "description": "Create integration tests that verify the full workflow with cache load, scan, and save operations.",
-          "status": "pending",
+          "status": "completed",
           "files": [
             "internal/cache/cache_integration_test.go"
           ],
