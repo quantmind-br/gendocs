@@ -24,6 +24,11 @@ type RetryConfig struct {
 	IdleConnTimeout     time.Duration // Maximum idle time for a connection (default: 90s)
 	TLSHandshakeTimeout time.Duration // Maximum time to wait for TLS handshake (default: 10s)
 	ExpectContinueTimeout time.Duration // Maximum time to wait for 100-continue response (default: 1s)
+
+	// Transport allows providing a custom HTTP transport
+	// If nil, a transport with optimized connection pooling settings will be created
+	// If set, it will be used directly and the connection pooling fields above will be ignored
+	Transport http.RoundTripper
 }
 
 // DefaultRetryConfig returns default retry configuration with optimized connection pooling
@@ -40,6 +45,18 @@ func DefaultRetryConfig() *RetryConfig {
 		TLSHandshakeTimeout: 10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
 	}
+}
+
+// getTransport returns the appropriate HTTP transport for the given config
+// If a custom transport is provided in the config, it will be used
+// Otherwise, an optimized transport will be created using the config's connection pooling settings
+func getTransport(config *RetryConfig) http.RoundTripper {
+	if config.Transport != nil {
+		// Use custom transport provided by user
+		return config.Transport
+	}
+	// Create optimized transport with config settings
+	return createOptimizedTransport(config)
 }
 
 // createOptimizedTransport creates an http.Transport with optimal settings for LLM API calls
@@ -85,7 +102,7 @@ func NewRetryClient(config *RetryConfig) *RetryClient {
 	return &RetryClient{
 		client: &http.Client{
 			Timeout:   180 * time.Second, // Default timeout
-			Transport: createOptimizedTransport(config),
+			Transport: getTransport(config),
 		},
 		config: config,
 	}
@@ -100,7 +117,7 @@ func NewRetryClientWithTimeout(timeout time.Duration, config *RetryConfig) *Retr
 	return &RetryClient{
 		client: &http.Client{
 			Timeout:   timeout,
-			Transport: createOptimizedTransport(config),
+			Transport: getTransport(config),
 		},
 		config: config,
 	}
