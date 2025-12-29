@@ -391,26 +391,30 @@
           "id": "7-1",
           "name": "Document cache configuration options",
           "description": "Add documentation for config options (cache.enabled, cache.max_size_mb, cache.ttl_days)",
-          "status": "pending",
+          "status": "completed",
           "files_to_modify": [
             "README.md"
           ],
           "dependencies": [
             "3-3"
-          ]
+          ],
+          "notes": "Successfully added comprehensive documentation for cache configuration options to README.md. Documentation includes: table of all cache options (enabled, max_size, ttl, cache_path) with types, defaults, and descriptions; example YAML configuration showing cache settings; documentation for cache management commands (cache-stats, cache-clear, --show-cache-stats); benefits of caching section. Also covered subtask 7-2 content (cache management commands) as it logically belongs with configuration documentation.",
+          "updated_at": "2025-12-29T18:00:00.000000Z"
         },
         {
           "id": "7-2",
           "name": "Document cache management commands",
           "description": "Document CLI commands for cache management (clear, stats)",
-          "status": "pending",
+          "status": "completed",
           "files_to_modify": [
             "README.md"
           ],
           "dependencies": [
             "5-1",
             "5-3"
-          ]
+          ],
+          "notes": "Documentation for cache management commands completed as part of subtask 7-1. Added 'Cache Management Commands' section to README.md documenting: gendocs cache-stats (view cache statistics), gendocs cache-clear (clear the cache), and gendocs analyze --show-cache-stats (show stats after analysis). All commands include descriptions and usage examples.",
+          "updated_at": "2025-12-29T18:00:00.000000Z"
         },
         {
           "id": "7-3",
