@@ -3,7 +3,7 @@
 ## Summary
 Extracting duplicated HTTP request handling logic from OpenAI, Anthropic, and Gemini LLM clients into a shared helper function in BaseLLMClient.
 
-## Status: Phase 1 - Subtask 3 Complete (Phase 1 Complete!)
+## Status: Phase 2 - Subtask 1 Complete
 
 ### Phase 1: Design HTTP Request Helper
 
@@ -171,7 +171,93 @@ All three design subtasks completed:
 1. ✅ Subtask 1: Document pattern (COMPLETED)
 2. ✅ Subtask 2: Design helper function signature (COMPLETED)
 3. ✅ Subtask 3: Identify provider-specific logic (COMPLETED)
-4. ⏳ **Phase 2: Implement HTTP request helper** (NEXT)
+4. ✅ Phase 2: Implement HTTP request helper (IN PROGRESS)
+
+---
+
+### Phase 2: Implement HTTP Request Helper
+
+#### ✅ Subtask 1: Add doHTTPRequest method to BaseLLMClient (Completed)
+
+**Implementation Summary:**
+Successfully implemented the `doHTTPRequest` method in `internal/llm/client.go` with:
+
+**Function Signature:**
+```go
+func (c *BaseLLMClient) doHTTPRequest(
+    ctx context.Context,
+    method string,
+    url string,
+    headers map[string]string,
+    body interface{},
+) ([]byte, error)
+```
+
+**Implementation Details:**
+1. **JSON Marshaling** (lines 112-119)
+   - Checks if body is nil before marshaling
+   - Returns wrapped error: `"failed to marshal request: %w"`
+
+2. **HTTP Request Creation** (lines 122-129)
+   - Uses `http.NewRequestWithContext` for context support
+   - Creates body reader only if jsonData exists
+   - Returns wrapped error: `"failed to create request: %w"`
+
+3. **Header Setting** (lines 131-134)
+   - Iterates through headers map
+   - Sets each header using `httpReq.Header.Set(key, value)`
+
+4. **Request Execution** (lines 137-141)
+   - Uses `c.retryClient.Do(httpReq)` for automatic retries
+   - Returns wrapped error: `"request failed: %w"`
+   - Properly defers `resp.Body.Close()` for resource cleanup
+
+5. **Response Reading** (lines 144-147)
+   - Uses `io.ReadAll(resp.Body)` to read complete response
+   - Returns wrapped error: `"failed to read response: %w"`
+
+6. **Status Validation** (lines 150-152)
+   - Checks `resp.StatusCode != http.StatusOK`
+   - Returns error with status code and response body: `"API error: status %d, body: %s"`
+
+7. **Success Return** (line 154)
+   - Returns raw response body bytes for provider-specific parsing
+
+**Added Imports:**
+- `bytes` - for bytes.NewReader
+- `encoding/json` - for json.Marshal
+- `fmt` - for fmt.Errorf
+- `io` - for io.ReadAll
+- `net/http` - for http.NewRequestWithContext and http.StatusOK
+
+**Documentation:**
+- Comprehensive function documentation with parameter descriptions
+- Clear error handling documentation
+- Usage examples in design doc
+
+**Acceptance Criteria Met:**
+- ✅ Method accepts method, url, headers map, and body interface
+- ✅ Marshals body to JSON
+- ✅ Creates HTTP request with context
+- ✅ Sets all provided headers
+- ✅ Executes with retryClient.Do
+- ✅ Reads response body
+- ✅ Returns error on non-200 status
+- ✅ Returns response body bytes on success
+- ✅ Proper resource cleanup with defer
+- ✅ All error messages match existing pattern
+
+**Files Modified:**
+- `internal/llm/client.go` - Added doHTTPRequest method (52 lines)
+
+**Next Subtask:**
+- Phase 2, Subtask 2: Handle JSON marshaling errors (already implemented in subtask 1)
+- Phase 2, Subtask 3: Handle HTTP request creation errors (already implemented in subtask 1)
+- Phase 2, Subtask 4: Handle request execution errors (already implemented in subtask 1)
+- Phase 2, Subtask 5: Handle response reading errors (already implemented in subtask 1)
+- Phase 2, Subtask 6: Handle non-OK status codes (already implemented in subtask 1)
+
+**Note:** All Phase 2 subtasks (2-6) were completed as part of subtask 1 since the complete implementation includes all error handling.
 
 ### Implementation Plan Created
 - ✅ 6 phases defined with 19 subtasks
