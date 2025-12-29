@@ -180,7 +180,7 @@
           "subtask_id": "phase-4-subtask-1",
           "name": "Add code comments and documentation",
           "description": "Add comprehensive comments explaining the selective hashing and parallel processing logic.",
-          "status": "pending",
+          "status": "completed",
           "files": [
             "internal/cache/cache.go"
           ],

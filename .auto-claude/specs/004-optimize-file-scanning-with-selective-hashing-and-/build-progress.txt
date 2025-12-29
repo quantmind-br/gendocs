@@ -136,4 +136,12 @@ Target improvement: 3-5x faster for incremental scans on large repositories.
   - TestIntegration_VersionMismatchHandling: Tests version mismatch handling
   All tests follow project patterns and verify the full cache workflow including persistence
 - Phase 3 complete! All testing subtasks (unit tests, benchmarks, integration tests) are now complete
-- Next: Phase 4, Subtask 1 - Add code comments and documentation
+- Phase 4, Subtask 1 completed: Added comprehensive code comments and documentation:
+  - Package-level documentation explaining selective hashing and parallel processing optimizations
+  - Detailed struct documentation for AnalysisCache, FileInfo, ScanMetrics, hashFileJob, hashFileResult
+  - Comprehensive function documentation for getMaxHashWorkers(), parallelHashFiles(), and ScanFiles()
+  - Inline comments explaining the three-phase architecture (File Discovery, Cache Classification, Parallel Hashing)
+  - Documentation of cache hit conditions and why both mtime AND size must match
+  - Explanation of worker pool design and bounded parallelism strategy
+  - Performance characteristics and example usage in ScanFiles documentation
+- Next: Phase 4, Subtask 2 - Update README and documentation
