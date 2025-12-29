@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -85,30 +84,19 @@ func runCronjobAnalyze(cmd *cobra.Command, args []string) error {
 		BaseConfig: config.BaseConfig{
 			Debug: debugFlag,
 		},
-		LLM: config.LLMConfig{
-			Provider:    os.Getenv("ANALYZER_LLM_PROVIDER"),
-			Model:       os.Getenv("ANALYZER_LLM_MODEL"),
-			APIKey:      os.Getenv("ANALYZER_LLM_API_KEY"),
-			BaseURL:     os.Getenv("ANALYZER_LLM_BASE_URL"),
+		LLM: LLMConfigFromEnv("ANALYZER", LLMDefaults{
 			Retries:     2,
 			Timeout:     180,
 			MaxTokens:   8192,
 			Temperature: 0.0,
-		},
+		}),
 		MaxWorkers: 0, // Auto-detect
 	}
 
-	// Initialize logger
-	logCfg := &logging.Config{
-		LogDir:       cronjobWorkingPath + "/.ai/logs",
-		FileLevel:    logging.LevelFromString("info"),
-		ConsoleLevel: logging.LevelFromString("debug"),
-		EnableCaller: debugFlag,
-	}
-
-	logger, err := logging.NewLogger(logCfg)
+	// Initialize logger (verbose=true to enable console output for cronjob)
+	logger, err := InitLogger(cronjobWorkingPath, debugFlag, true)
 	if err != nil {
-		return fmt.Errorf("failed to initialize logger: %w", err)
+		return err
 	}
 	defer logger.Sync()
 
@@ -121,11 +109,7 @@ func runCronjobAnalyze(cmd *cobra.Command, args []string) error {
 	handler := handlers.NewCronjobHandler(cronjobCfg, gitLabCfg, analyzerCfg, logger)
 
 	if err := handler.Handle(cmd.Context()); err != nil {
-		if docErr, ok := err.(*errors.AIDocGenError); ok {
-			fmt.Fprintf(os.Stderr, "%s\n", docErr.GetUserMessage())
-			return docErr
-		}
-		return err
+		return HandleCommandError(err, nil, false)
 	}
 
 	logger.Info("Cronjob analysis complete")

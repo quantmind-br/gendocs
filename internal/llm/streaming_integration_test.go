@@ -550,11 +550,14 @@ func TestAnthropicStreaming_ConcurrentRequests(t *testing.T) {
 	}
 }
 
-// Helper function to send SSE events
+// Helper function to send SSE events in proper SSE format
+// SSE format requires:
+// event: <event_type>
+// data: <json_data>
+// <empty line>
 func sendSSEEvent(w http.ResponseWriter, event, data string) {
-	fmt.Fprint(w, event)
-	fmt.Fprint(w, ": ")
-	fmt.Fprintln(w, data)
+	fmt.Fprintf(w, "event: %s\n", event)
+	fmt.Fprintf(w, "data: %s\n", data)
 	fmt.Fprintln(w)
 }
 

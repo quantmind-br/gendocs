@@ -46,53 +46,28 @@ func init() {
 }
 
 func runReadme(cmd *cobra.Command, args []string) error {
+	// Create LLM config from environment with documenter defaults
 	cfg := config.DocumenterConfig{
 		BaseConfig: config.BaseConfig{
 			RepoPath: readmeRepoPath,
 			Debug:    debugFlag,
 		},
-		LLM: config.LLMConfig{
-			Provider:    os.Getenv("DOCUMENTER_LLM_PROVIDER"),
-			Model:       os.Getenv("DOCUMENTER_LLM_MODEL"),
-			APIKey:      os.Getenv("DOCUMENTER_LLM_API_KEY"),
-			BaseURL:     os.Getenv("DOCUMENTER_LLM_BASE_URL"),
+		LLM: LLMConfigFromEnv("DOCUMENTER", LLMDefaults{
 			Retries:     2,
 			Timeout:     180,
 			MaxTokens:   8192,
 			Temperature: 0.0,
-		},
+		}),
 	}
 
-	if cfg.LLM.Provider == "" {
-		cfg.LLM.Provider = os.Getenv("ANALYZER_LLM_PROVIDER")
-	}
-	if cfg.LLM.Model == "" {
-		cfg.LLM.Model = os.Getenv("ANALYZER_LLM_MODEL")
-	}
-	if cfg.LLM.APIKey == "" {
-		cfg.LLM.APIKey = os.Getenv("ANALYZER_LLM_API_KEY")
-	}
-
-	logDir := ".ai/logs"
-	if readmeRepoPath != "." {
-		logDir = readmeRepoPath + "/.ai/logs"
-	}
-
-	showProgress := !verboseFlag
-	logCfg := &logging.Config{
-		LogDir:         logDir,
-		FileLevel:      logging.LevelFromString("info"),
-		ConsoleLevel:   logging.LevelFromString("debug"),
-		EnableCaller:   debugFlag,
-		ConsoleEnabled: !showProgress,
-	}
-
-	logger, err := logging.NewLogger(logCfg)
+	// Initialize logger using helper
+	logger, err := InitLogger(readmeRepoPath, debugFlag, verboseFlag)
 	if err != nil {
-		return fmt.Errorf("failed to initialize logger: %w", err)
+		return err
 	}
 	defer logger.Sync()
 
+	showProgress := !verboseFlag
 	logger.Info("Starting README generation",
 		logging.String("repo_path", readmeRepoPath),
 	)
@@ -109,19 +84,7 @@ func runReadme(cmd *cobra.Command, args []string) error {
 	handler := handlers.NewReadmeHandler(cfg, logger)
 
 	if err := handler.Handle(cmd.Context()); err != nil {
-		if docErr, ok := err.(*errors.AIDocGenError); ok {
-			if showProgress {
-				progress.Error(docErr.GetUserMessage())
-				progress.Failed(nil)
-			} else {
-				fmt.Fprintf(os.Stderr, "%s\n", docErr.GetUserMessage())
-			}
-			return docErr
-		}
-		if showProgress {
-			progress.Failed(err)
-		}
-		return err
+		return HandleCommandError(err, progress, showProgress)
 	}
 
 	if showProgress {
@@ -173,53 +136,28 @@ func init() {
 }
 
 func runAIRules(cmd *cobra.Command, args []string) error {
+	// Create LLM config from environment with AI rules defaults
 	cfg := config.AIRulesConfig{
 		BaseConfig: config.BaseConfig{
 			RepoPath: readmeRepoPath,
 			Debug:    debugFlag,
 		},
-		LLM: config.LLMConfig{
-			Provider:    os.Getenv("AI_RULES_LLM_PROVIDER"),
-			Model:       os.Getenv("AI_RULES_LLM_MODEL"),
-			APIKey:      os.Getenv("AI_RULES_LLM_API_KEY"),
-			BaseURL:     os.Getenv("AI_RULES_LLM_BASE_URL"),
+		LLM: LLMConfigFromEnv("AI_RULES", LLMDefaults{
 			Retries:     2,
 			Timeout:     240,
 			MaxTokens:   8192,
 			Temperature: 0.0,
-		},
+		}),
 	}
 
-	if cfg.LLM.Provider == "" {
-		cfg.LLM.Provider = os.Getenv("ANALYZER_LLM_PROVIDER")
-	}
-	if cfg.LLM.Model == "" {
-		cfg.LLM.Model = os.Getenv("ANALYZER_LLM_MODEL")
-	}
-	if cfg.LLM.APIKey == "" {
-		cfg.LLM.APIKey = os.Getenv("ANALYZER_LLM_API_KEY")
-	}
-
-	logDir := ".ai/logs"
-	if readmeRepoPath != "." {
-		logDir = readmeRepoPath + "/.ai/logs"
-	}
-
-	showProgress := !verboseFlag
-	logCfg := &logging.Config{
-		LogDir:         logDir,
-		FileLevel:      logging.LevelFromString("info"),
-		ConsoleLevel:   logging.LevelFromString("debug"),
-		EnableCaller:   debugFlag,
-		ConsoleEnabled: !showProgress,
-	}
-
-	logger, err := logging.NewLogger(logCfg)
+	// Initialize logger using helper
+	logger, err := InitLogger(readmeRepoPath, debugFlag, verboseFlag)
 	if err != nil {
-		return fmt.Errorf("failed to initialize logger: %w", err)
+		return err
 	}
 	defer logger.Sync()
 
+	showProgress := !verboseFlag
 	logger.Info("Starting AI rules generation",
 		logging.String("repo_path", readmeRepoPath),
 	)
@@ -236,19 +174,7 @@ func runAIRules(cmd *cobra.Command, args []string) error {
 	handler := handlers.NewAIRulesHandler(cfg, logger)
 
 	if err := handler.Handle(cmd.Context()); err != nil {
-		if docErr, ok := err.(*errors.AIDocGenError); ok {
-			if showProgress {
-				progress.Error(docErr.GetUserMessage())
-				progress.Failed(nil)
-			} else {
-				fmt.Fprintf(os.Stderr, "%s\n", docErr.GetUserMessage())
-			}
-			return docErr
-		}
-		if showProgress {
-			progress.Failed(err)
-		}
-		return err
+		return HandleCommandError(err, progress, showProgress)
 	}
 
 	if showProgress {
@@ -380,8 +306,6 @@ func exportToHTMLWithProgress(inputPath, outputPath string, showProgress bool) e
 
 	return nil
 }
-
-
 
 func exportToJSON(inputPath, outputPath string) error {
 	return exportToJSONWithProgress(inputPath, outputPath, false)

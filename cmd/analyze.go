@@ -78,25 +78,14 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
-	logDir := ".ai/logs"
-	if cfg.RepoPath != "." {
-		logDir = cfg.RepoPath + "/.ai/logs"
-	}
-
-	showProgress := !verboseFlag
-	logCfg := &logging.Config{
-		LogDir:         logDir,
-		FileLevel:      logging.LevelFromString("info"),
-		ConsoleLevel:   logging.LevelFromString("debug"),
-		EnableCaller:   debugFlag,
-		ConsoleEnabled: !showProgress,
-	}
-
-	logger, err := logging.NewLogger(logCfg)
+	// Initialize logger using helper
+	logger, err := InitLogger(cfg.RepoPath, debugFlag, verboseFlag)
 	if err != nil {
-		return fmt.Errorf("failed to initialize logger: %w", err)
+		return err
 	}
 	defer logger.Sync()
+
+	showProgress := !verboseFlag
 
 	logger.Info("Starting gendocs analyze",
 		logging.String("repo_path", cfg.RepoPath),

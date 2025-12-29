@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "003-implement-response-caching-for-llm-api-calls-with-",
+  "spec": "009-extract-duplicated-command-initialization-pattern-",
   "state": "building",
   "subtasks": {
-    "completed": 25,
-    "total": 26,
+    "completed": 8,
+    "total": 13,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Documentation",
+    "current": "Extend Refactoring (Optional)",
     "id": null,
-    "total": 3
+    "total": 2
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 26,
-    "started_at": "2025-12-29T01:40:22.693958"
+    "number": 10,
+    "started_at": "2025-12-29T11:28:06.098549"
   },
-  "last_update": "2025-12-29T03:16:11.821361"
+  "last_update": "2025-12-29T11:48:50.926035"
 }

@@ -11,6 +11,29 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// Progress styles for the TUI
+var (
+	progressTitleStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#FAFAFA")).
+				Background(lipgloss.Color("#7D56F4")).
+				Padding(0, 1)
+
+	progressStepStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#7D56F4"))
+
+	progressInfoStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#A0A0A0"))
+
+	progressSuccessStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#50FA7B"))
+
+	progressErrorStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#FF5F87"))
+
+	progressWarningStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#FFB86C"))
+)
+
 type ProgressReporter interface {
 	AddTask(id, name, description string)
 	StartTask(id string)
@@ -52,6 +75,7 @@ type Progress struct {
 	writer       io.Writer
 	title        string
 	tasks        []*Task
+	taskMap      map[string]*Task
 	spinnerFrame int
 	ticker       *time.Ticker
 	done         chan struct{}
@@ -61,9 +85,9 @@ type Progress struct {
 
 func NewProgress(title string) *Progress {
 	return &Progress{
-		writer:    os.Stdout,
 		title:     title,
 		tasks:     make([]*Task, 0),
+		taskMap:   make(map[string]*Task),
 		done:      make(chan struct{}),
 		startTime: time.Now(),
 	}
@@ -71,6 +95,13 @@ func NewProgress(title string) *Progress {
 
 func (p *Progress) SetWriter(w io.Writer) {
 	p.writer = w
+}
+
+func (p *Progress) getWriter() io.Writer {
+	if p.writer == nil {
+		return os.Stdout
+	}
+	return p.writer
 }
 
 func (p *Progress) AddTask(id, name, description string) {
@@ -84,45 +115,50 @@ func (p *Progress) AddTask(id, name, description string) {
 		Status:      TaskPending,
 	}
 	p.tasks = append(p.tasks, task)
+	p.taskMap[id] = task
 }
 
 func (p *Progress) StartTask(id string) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	for _, t := range p.tasks {
-		if t.ID == id {
-			t.Status = TaskRunning
-			t.StartTime = time.Now()
-			break
-		}
+	task, ok := p.taskMap[id]
+	if !ok {
+		return
 	}
+	task.Status = TaskRunning
+	task.StartTime = time.Now()
+	_, _ = fmt.Fprintf(p.getWriter(), "%s %s\n", progressStepStyle.Render("●"), task.Name)
 }
 
 func (p *Progress) CompleteTask(id string) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	for _, t := range p.tasks {
-		if t.ID == id {
-			t.Status = TaskSuccess
-			t.EndTime = time.Now()
-			break
-		}
+	task, ok := p.taskMap[id]
+	if !ok {
+		return
 	}
+	task.Status = TaskSuccess
+	task.EndTime = time.Now()
+	_, _ = fmt.Fprintf(p.getWriter(), "%s %s\n", progressSuccessStyle.Render("✓"), task.Name)
 }
 
 func (p *Progress) FailTask(id string, err error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	for _, t := range p.tasks {
-		if t.ID == id {
-			t.Status = TaskError
-			t.Error = err
-			t.EndTime = time.Now()
-			break
-		}
+	task, ok := p.taskMap[id]
+	if !ok {
+		return
+	}
+	task.Status = TaskError
+	task.Error = err
+	task.EndTime = time.Now()
+	if err != nil {
+		_, _ = fmt.Fprintf(p.getWriter(), "%s %s: %s\n", progressErrorStyle.Render("✗"), task.Name, err.Error())
+	} else {
+		_, _ = fmt.Fprintf(p.getWriter(), "%s %s\n", progressErrorStyle.Render("✗"), task.Name)
 	}
 }
 
@@ -130,12 +166,12 @@ func (p *Progress) SkipTask(id string) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	for _, t := range p.tasks {
-		if t.ID == id {
-			t.Status = TaskSkipped
-			break
-		}
+	task, ok := p.taskMap[id]
+	if !ok {
+		return
 	}
+	task.Status = TaskSkipped
+	_, _ = fmt.Fprintf(p.getWriter(), "%s %s %s\n", progressInfoStyle.Render("○"), task.Name, progressInfoStyle.Render("(skipped)"))
 }
 
 func (p *Progress) Start() {
@@ -147,9 +183,9 @@ func (p *Progress) Start() {
 	p.started = true
 	p.mu.Unlock()
 
-	fmt.Fprintln(p.writer)
-	fmt.Fprintln(p.writer, StyleTitle.Render(" "+p.title+" "))
-	fmt.Fprintln(p.writer)
+	_, _ = fmt.Fprintln(p.getWriter())
+	_, _ = fmt.Fprintln(p.getWriter(), progressTitleStyle.Render(" "+p.title+" "))
+	_, _ = fmt.Fprintln(p.getWriter())
 
 	p.ticker = time.NewTicker(100 * time.Millisecond)
 	go p.animate()
@@ -175,11 +211,11 @@ func (p *Progress) render() {
 		return
 	}
 
-	fmt.Fprint(p.writer, strings.Repeat("\033[A\033[2K", lineCount))
+	_, _ = fmt.Fprint(p.getWriter(), strings.Repeat("\033[A\033[2K", lineCount))
 
 	for _, task := range p.tasks {
 		line := p.formatTaskLine(task)
-		fmt.Fprintln(p.writer, line)
+		_, _ = fmt.Fprintln(p.getWriter(), line)
 	}
 }
 
@@ -189,33 +225,33 @@ func (p *Progress) formatTaskLine(task *Task) string {
 
 	switch task.Status {
 	case TaskPending:
-		icon = StyleStatusPending.Render(IconPending)
-		status = StyleMuted.Render("waiting")
-		style = StyleMuted
+		icon = progressInfoStyle.Render("○")
+		status = progressInfoStyle.Render("waiting")
+		style = progressInfoStyle
 	case TaskRunning:
 		spinnerIcon := SpinnerFrames[p.spinnerFrame]
-		icon = StyleStatusRunning.Render(spinnerIcon)
+		icon = progressStepStyle.Render(spinnerIcon)
 		elapsed := time.Since(task.StartTime).Round(time.Second)
-		status = StyleStatusRunning.Render(fmt.Sprintf("running %s", elapsed))
-		style = StyleStatusRunning
+		status = progressStepStyle.Render(fmt.Sprintf("running %s", elapsed))
+		style = progressStepStyle
 	case TaskSuccess:
-		icon = StyleStatusSuccess.Render(IconSuccess)
+		icon = progressSuccessStyle.Render("✓")
 		duration := task.EndTime.Sub(task.StartTime).Round(time.Millisecond)
-		status = StyleStatusSuccess.Render(fmt.Sprintf("done %s", duration))
-		style = StyleStatusSuccess
+		status = progressSuccessStyle.Render(fmt.Sprintf("done %s", duration))
+		style = progressSuccessStyle
 	case TaskError:
-		icon = StyleStatusError.Render(IconError)
-		status = StyleStatusError.Render("failed")
-		style = StyleStatusError
+		icon = progressErrorStyle.Render("✗")
+		status = progressErrorStyle.Render("failed")
+		style = progressErrorStyle
 	case TaskSkipped:
-		icon = StyleMuted.Render(IconArrow)
-		status = StyleMuted.Render("skipped")
-		style = StyleMuted
+		icon = progressInfoStyle.Render("○")
+		status = progressInfoStyle.Render("skipped")
+		style = progressInfoStyle
 	}
 
 	name := style.Render(task.Name)
 
-	return fmt.Sprintf("  %s %s %s", icon, StyleTaskName.Render(name), status)
+	return fmt.Sprintf("  %s %s %s", icon, name, status)
 }
 
 func (p *Progress) Stop() {
@@ -250,59 +286,53 @@ func (p *Progress) PrintSummary() {
 		}
 	}
 
-	elapsed := time.Since(p.startTime).Round(time.Second)
+	_, _ = fmt.Fprintln(p.getWriter())
+	_, _ = fmt.Fprintln(p.getWriter(), strings.Repeat("─", 50))
 
-	fmt.Fprintln(p.writer)
-	fmt.Fprintln(p.writer, strings.Repeat("─", 50))
-
-	if failed == 0 {
-		fmt.Fprintf(p.writer, "%s All tasks completed successfully!\n",
-			StyleSuccess.Render(IconSuccess))
-	} else {
-		fmt.Fprintf(p.writer, "%s Completed with errors\n",
-			StyleError.Render(IconError))
-	}
-
-	stats := []string{}
-	if successful > 0 {
-		stats = append(stats, StyleSuccess.Render(fmt.Sprintf("%d succeeded", successful)))
-	}
+	total := len(p.tasks)
+	summary := fmt.Sprintf("Completed: %d/%d", successful, total-skipped)
 	if failed > 0 {
-		stats = append(stats, StyleError.Render(fmt.Sprintf("%d failed", failed)))
+		summary += fmt.Sprintf(", Failed: %d", failed)
 	}
 	if skipped > 0 {
-		stats = append(stats, StyleMuted.Render(fmt.Sprintf("%d skipped", skipped)))
+		summary += fmt.Sprintf(", Skipped: %d", skipped)
 	}
 
-	fmt.Fprintf(p.writer, "  %s in %s\n", strings.Join(stats, ", "), StyleMuted.Render(elapsed.String()))
+	if failed == 0 {
+		_, _ = fmt.Fprintf(p.getWriter(), "%s %s\n",
+			progressSuccessStyle.Render("✓"),
+			progressSuccessStyle.Render(summary))
+	} else {
+		_, _ = fmt.Fprintf(p.getWriter(), "%s %s\n",
+			progressErrorStyle.Render("✗"),
+			progressWarningStyle.Render(summary))
+	}
 
 	if failed > 0 {
-		fmt.Fprintln(p.writer)
-		fmt.Fprintln(p.writer, StyleError.Render("Errors:"))
+		_, _ = fmt.Fprintln(p.getWriter())
+		_, _ = fmt.Fprintln(p.getWriter(), progressErrorStyle.Render("Failed tasks:"))
 		for _, t := range p.tasks {
 			if t.Status == TaskError && t.Error != nil {
-				fmt.Fprintf(p.writer, "  %s %s: %s\n",
-					StyleError.Render(IconBullet),
+				_, _ = fmt.Fprintf(p.getWriter(), "  %s %s: %s\n",
+					progressErrorStyle.Render("✗"),
 					t.Name,
-					StyleMuted.Render(t.Error.Error()))
+					t.Error.Error())
 			}
 		}
 	}
 
-	fmt.Fprintln(p.writer)
+	_, _ = fmt.Fprintln(p.getWriter())
 }
 
 type SimpleProgress struct {
-	writer    io.Writer
-	title     string
-	startTime time.Time
+	writer  io.Writer
+	title   string
+	started bool
 }
 
 func NewSimpleProgress(title string) *SimpleProgress {
 	return &SimpleProgress{
-		writer:    os.Stdout,
-		title:     title,
-		startTime: time.Now(),
+		title: title,
 	}
 }
 
@@ -310,63 +340,64 @@ func (sp *SimpleProgress) SetWriter(w io.Writer) {
 	sp.writer = w
 }
 
+func (sp *SimpleProgress) getWriter() io.Writer {
+	if sp.writer == nil {
+		return os.Stdout
+	}
+	return sp.writer
+}
+
 func (sp *SimpleProgress) Start() {
-	fmt.Fprintln(sp.writer)
-	fmt.Fprintln(sp.writer, StyleTitle.Render(" "+sp.title+" "))
-	fmt.Fprintln(sp.writer)
+	if sp.started {
+		return
+	}
+	sp.started = true
+	_, _ = fmt.Fprintln(sp.getWriter())
+	_, _ = fmt.Fprintln(sp.getWriter(), progressTitleStyle.Render(" "+sp.title+" "))
+	_, _ = fmt.Fprintln(sp.getWriter())
 }
 
 func (sp *SimpleProgress) Step(message string) {
-	fmt.Fprintf(sp.writer, "  %s %s\n",
-		StyleStatusRunning.Render(IconArrow),
+	_, _ = fmt.Fprintf(sp.getWriter(), "%s %s\n",
+		progressStepStyle.Render("●"),
 		message)
 }
 
 func (sp *SimpleProgress) Success(message string) {
-	fmt.Fprintf(sp.writer, "  %s %s\n",
-		StyleSuccess.Render(IconSuccess),
-		StyleSuccess.Render(message))
+	_, _ = fmt.Fprintf(sp.getWriter(), "%s %s\n",
+		progressSuccessStyle.Render("✓"),
+		progressSuccessStyle.Render(message))
 }
 
 func (sp *SimpleProgress) Error(message string) {
-	fmt.Fprintf(sp.writer, "  %s %s\n",
-		StyleError.Render(IconError),
-		StyleError.Render(message))
+	_, _ = fmt.Fprintf(sp.getWriter(), "%s %s\n",
+		progressErrorStyle.Render("✗"),
+		progressErrorStyle.Render(message))
 }
 
 func (sp *SimpleProgress) Warning(message string) {
-	fmt.Fprintf(sp.writer, "  %s %s\n",
-		StyleWarning.Render(IconWarning),
+	_, _ = fmt.Fprintf(sp.getWriter(), "%s %s\n",
+		progressWarningStyle.Render("⚠"),
 		message)
 }
 
 func (sp *SimpleProgress) Info(message string) {
-	fmt.Fprintf(sp.writer, "  %s %s\n",
-		StyleInfo.Render(IconInfo),
-		StyleMuted.Render(message))
+	_, _ = fmt.Fprintf(sp.getWriter(), "  %s\n",
+		progressInfoStyle.Render(message))
 }
 
 func (sp *SimpleProgress) Done() {
-	elapsed := time.Since(sp.startTime).Round(time.Second)
-	fmt.Fprintln(sp.writer)
-	fmt.Fprintf(sp.writer, "%s Completed in %s\n",
-		StyleSuccess.Render(IconSuccess),
-		StyleMuted.Render(elapsed.String()))
-	fmt.Fprintln(sp.writer)
+	_, _ = fmt.Fprintln(sp.getWriter())
 }
 
 func (sp *SimpleProgress) Failed(err error) {
-	elapsed := time.Since(sp.startTime).Round(time.Second)
-	fmt.Fprintln(sp.writer)
+	_, _ = fmt.Fprintln(sp.getWriter())
 	if err != nil {
-		fmt.Fprintf(sp.writer, "%s Failed after %s: %s\n",
-			StyleError.Render(IconError),
-			StyleMuted.Render(elapsed.String()),
-			StyleError.Render(err.Error()))
+		_, _ = fmt.Fprintf(sp.getWriter(), "%s %s\n",
+			progressErrorStyle.Render("✗ Failed:"),
+			err.Error())
 	} else {
-		fmt.Fprintf(sp.writer, "%s Failed after %s\n",
-			StyleError.Render(IconError),
-			StyleMuted.Render(elapsed.String()))
+		_, _ = fmt.Fprintf(sp.getWriter(), "%s\n",
+			progressErrorStyle.Render("✗ Failed"))
 	}
-	fmt.Fprintln(sp.writer)
 }
