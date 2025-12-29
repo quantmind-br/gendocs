@@ -17,9 +17,18 @@ Completed designs:
    - Excludes: max_tokens (doesn't affect response content)
    - Performance: ~2-10μs overhead vs ~500-5000ms API calls
 
+2. ✅ Cache data structures (see design_cache_data_structures.md)
+   - Two-tier architecture: in-memory LRU + persistent disk cache
+   - In-memory cache: O(1) operations with LRU eviction
+   - Disk cache: JSON-based persistence with atomic writes
+   - TTL support: configurable expiration (default 7 days)
+   - Size limits: entry count limit for memory, byte size limit for disk
+   - Thread-safety: sync.RWMutex for concurrent access
+   - Error handling: corruption recovery, write failure tolerance
+   - Performance: ~10-50ms load time, ~10-500ms save time
+
 Remaining designs:
-2. Cache data structures (in-memory LRU + persistent disk cache)
-3. Integration layer (decorator pattern around LLMClient)
+3. Cache integration layer (decorator pattern around LLMClient)
 
 ### Architecture Overview
 LLM Call Flow (Current):

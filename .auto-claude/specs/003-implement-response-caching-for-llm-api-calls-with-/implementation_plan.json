@@ -21,7 +21,7 @@
           "id": "1-2",
           "name": "Design cache data structures",
           "description": "Design in-memory and on-disk cache structures with support for TTL and size limits",
-          "status": "pending",
+          "status": "completed",
           "files_to_modify": [],
           "dependencies": ["1-1"]
         },
