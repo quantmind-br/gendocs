@@ -1,0 +1,664 @@
+{
+  "metadata": {
+    "title": "Complete Example: JSON Export Features",
+    "generated_at": "2025-12-29T10:30:00Z",
+    "generator": {
+      "name": "Gendocs",
+      "version": "1.0.0",
+      "url": "https://github.com/user/gendocs"
+    },
+    "source_file": "complete-example.md",
+    "word_count": 387,
+    "char_count": 2145
+  },
+  "content": {
+    "headings": [
+      {
+        "id": "complete-example-json-export-features",
+        "level": 1,
+        "text": "Complete Example: JSON Export Features",
+        "children": [
+          {
+            "id": "introduction",
+            "level": 2,
+            "text": "Introduction",
+            "children": [
+              {
+                "id": "why-use-json-export",
+                "level": 3,
+                "text": "Why Use JSON Export?",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "text-formatting",
+            "level": 2,
+            "text": "Text Formatting",
+            "children": []
+          },
+          {
+            "id": "lists",
+            "level": 2,
+            "text": "Lists",
+            "children": [
+              {
+                "id": "unordered-list",
+                "level": 3,
+                "text": "Unordered List",
+                "children": []
+              },
+              {
+                "id": "ordered-list",
+                "level": 3,
+                "text": "Ordered List",
+                "children": []
+              },
+              {
+                "id": "task-list",
+                "level": 3,
+                "text": "Task List",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "code-blocks",
+            "level": 2,
+            "text": "Code Blocks",
+            "children": []
+          },
+          {
+            "id": "tables",
+            "level": 2,
+            "text": "Tables",
+            "children": []
+          },
+          {
+            "id": "blockquotes",
+            "level": 2,
+            "text": "Blockquotes",
+            "children": []
+          },
+          {
+            "id": "links-and-images",
+            "level": 2,
+            "text": "Links and Images",
+            "children": [
+              {
+                "id": "different-link-types",
+                "level": 3,
+                "text": "Different Link Types",
+                "children": []
+              },
+              {
+                "id": "images",
+                "level": 3,
+                "text": "Images",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "horizontal-rules",
+            "level": 2,
+            "text": "Horizontal Rules",
+            "children": []
+          },
+          {
+            "id": "advanced-features",
+            "level": 2,
+            "text": "Advanced Features",
+            "children": [
+              {
+                "id": "inline-formatting-combinations",
+                "level": 3,
+                "text": "Inline Formatting Combinations",
+                "children": []
+              },
+              {
+                "id": "special-characters",
+                "level": 3,
+                "text": "Special Characters",
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "deep-nesting",
+            "level": 2,
+            "text": "Deep Nesting",
+            "children": []
+          },
+          {
+            "id": "code-examples-with-special-cases",
+            "level": 2,
+            "text": "Code Examples with Special Cases",
+            "children": []
+          },
+          {
+            "id": "final-notes",
+            "level": 2,
+            "text": "Final Notes",
+            "children": []
+          }
+        ]
+      }
+    ],
+    "elements": [
+      {
+        "type": "heading",
+        "level": 1,
+        "text": "Complete Example: JSON Export Features"
+      },
+      {
+        "type": "paragraph",
+        "content": "This document demonstrates all the features supported by the JSON exporter."
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "Introduction"
+      },
+      {
+        "type": "paragraph",
+        "content": "The JSON exporter converts **Markdown** documents into *structured* JSON format for programmatic processing."
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "Why Use JSON Export?"
+      },
+      {
+        "type": "list",
+        "list_type": "unordered",
+        "items": [
+          {
+            "content": "**Search indexing**: Feed documentation into search engines",
+            "items": []
+          },
+          {
+            "content": "**API integration**: Process docs with custom tools",
+            "items": []
+          },
+          {
+            "content": "**Data analysis**: Analyze documentation structure",
+            "items": []
+          },
+          {
+            "content": "**Content migration**: Convert between documentation systems",
+            "items": []
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "Text Formatting"
+      },
+      {
+        "type": "paragraph",
+        "content": "This paragraph shows **bold text**, *italic text*, `inline code`, and [links](https://example.com)."
+      },
+      {
+        "type": "paragraph",
+        "content": "You can also combine **bold and *italic* together**, or use `code` in the middle of sentences."
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "Lists"
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "Unordered List"
+      },
+      {
+        "type": "list",
+        "list_type": "unordered",
+        "items": [
+          {
+            "content": "First item",
+            "items": []
+          },
+          {
+            "content": "Second item",
+            "items": [
+              {
+                "content": "Nested item",
+                "items": []
+              },
+              {
+                "content": "Another nested item",
+                "items": []
+              }
+            ]
+          },
+          {
+            "content": "Third item",
+            "items": []
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "Ordered List"
+      },
+      {
+        "type": "list",
+        "list_type": "ordered",
+        "start": 1,
+        "items": [
+          {
+            "content": "First step",
+            "items": []
+          },
+          {
+            "content": "Second step",
+            "items": [
+              {
+                "content": "Nested step 1",
+                "items": []
+              },
+              {
+                "content": "Nested step 2",
+                "items": []
+              }
+            ]
+          },
+          {
+            "content": "Third step",
+            "items": []
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "Task List"
+      },
+      {
+        "type": "list",
+        "list_type": "task",
+        "items": [
+          {
+            "content": "Completed task",
+            "checked": true,
+            "items": []
+          },
+          {
+            "content": "Incomplete task",
+            "checked": false,
+            "items": []
+          },
+          {
+            "content": "Another completed task",
+            "checked": true,
+            "items": [
+              {
+                "content": "Nested completed task",
+                "checked": true,
+                "items": []
+              },
+              {
+                "content": "Nested incomplete task",
+                "checked": false,
+                "items": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "Code Blocks"
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "Go Example"
+      },
+      {
+        "type": "code_block",
+        "language": "go",
+        "code": "func main() {\n    fmt.Println(\"Hello, World!\")\n}\n",
+        "lines": 3
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "Python Example"
+      },
+      {
+        "type": "code_block",
+        "language": "python",
+        "code": "def hello():\n    print(\"Hello, World!\")\n",
+        "lines": 2
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "Bash Example"
+      },
+      {
+        "type": "code_block",
+        "language": "bash",
+        "code": "echo \"Hello, World!\"\n",
+        "lines": 1
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "Without Language"
+      },
+      {
+        "type": "code_block",
+        "language": "",
+        "code": "This is a code block without language specification.\n",
+        "lines": 1
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "Tables"
+      },
+      {
+        "type": "table",
+        "header": [
+          {
+            "content": "Feature",
+            "alignment": "left"
+          },
+          {
+            "content": "Status",
+            "alignment": "center"
+          },
+          {
+            "content": "Priority",
+            "alignment": "center"
+          },
+          {
+            "content": "Notes",
+            "alignment": "right"
+          }
+        ],
+        "rows": [
+          [
+            {
+              "content": "JSON Export"
+            },
+            {
+              "content": "✅ Done"
+            },
+            {
+              "content": "High"
+            },
+            {
+              "content": "Initial implementation"
+            }
+          ],
+          [
+            {
+              "content": "HTML Export"
+            },
+            {
+              "content": "✅ Done"
+            },
+            {
+              "content": "High"
+            },
+            {
+              "content": "Production ready"
+            }
+          ],
+          [
+            {
+              "content": "PDF Export"
+            },
+            {
+              "content": "🚧 WIP"
+            },
+            {
+              "content": "Medium"
+            },
+            {
+              "content": "Planned for v2.0"
+            }
+          ]
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "Blockquotes"
+      },
+      {
+        "type": "blockquote",
+        "content": "This is a simple blockquote.\n\nIt can span multiple lines.",
+        "elements": []
+      },
+      {
+        "type": "blockquote",
+        "content": "**Note:** Blockquotes can contain formatting like **bold** and `code`.",
+        "elements": []
+      },
+      {
+        "type": "blockquote",
+        "content": "Nested blockquotes are supported:",
+        "elements": []
+      },
+      {
+        "type": "blockquote",
+        "content": "This is nested inside another blockquote.",
+        "elements": []
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "Links and Images"
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "Different Link Types"
+      },
+      {
+        "type": "paragraph",
+        "content": "- Inline link: [GitHub](https://github.com)\n- Reference link: [GitLab][1]\n- Autolink: https://example.com"
+      },
+      {
+        "type": "paragraph",
+        "content": "[1]: https://gitlab.com"
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "Images"
+      },
+      {
+        "type": "paragraph",
+        "content": "Inline image with alt text:"
+      },
+      {
+        "type": "image",
+        "url": "https://example.com/image.png",
+        "title": "",
+        "alt": "Example Image"
+      },
+      {
+        "type": "paragraph",
+        "content": "Image with title:"
+      },
+      {
+        "type": "image",
+        "url": "https://example.com/screenshot.png",
+        "title": "Screenshot of the code",
+        "alt": "Code Screenshot"
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "Horizontal Rules"
+      },
+      {
+        "type": "thematic_break"
+      },
+      {
+        "type": "paragraph",
+        "content": "Above is a thematic break (horizontal rule)."
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "Advanced Features"
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "Inline Formatting Combinations"
+      },
+      {
+        "type": "paragraph",
+        "content": "You can use **bold with `code` inside**, or *italic with [links](https://example.com) embedded*, or even ***all three together***."
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "Special Characters"
+      },
+      {
+        "type": "paragraph",
+        "content": "The exporter handles special characters:"
+      },
+      {
+        "type": "list",
+        "list_type": "unordered",
+        "items": [
+          {
+            "content": "Unicode: café, naïve, 日本語",
+            "items": []
+          },
+          {
+            "content": "Math: E = mc², ∑, ∫",
+            "items": []
+          },
+          {
+            "content": "Currency: $100, €50, £30",
+            "items": []
+          },
+          {
+            "content": "Symbols: ©, ®, ™, ❤️",
+            "items": []
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "Deep Nesting"
+      },
+      {
+        "type": "paragraph",
+        "content": "Lists can be deeply nested:"
+      },
+      {
+        "type": "list",
+        "list_type": "unordered",
+        "items": [
+          {
+            "content": "Level 1",
+            "items": [
+              {
+                "content": "Level 2",
+                "items": [
+                  {
+                    "content": "Level 3",
+                    "items": [
+                      {
+                        "content": "Level 4",
+                        "items": []
+                      }
+                    ]
+                  },
+                  {
+                    "content": "Back to Level 3",
+                    "items": []
+                  }
+                ]
+              },
+              {
+                "content": "Back to Level 2",
+                "items": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "Code Examples with Special Cases"
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "String with quotes"
+      },
+      {
+        "type": "code_block",
+        "language": "javascript",
+        "code": "const message = \"He said, \\\"Hello!\\\"\";\n",
+        "lines": 1
+      },
+      {
+        "type": "heading",
+        "level": 3,
+        "text": "Multiline string"
+      },
+      {
+        "type": "code_block",
+        "language": "python",
+        "code": "text = \"\"\"\nThis is a\nmultiline string\nin Python\n\"\"\"\n",
+        "lines": 5
+      },
+      {
+        "type": "heading",
+        "level": 2,
+        "text": "Final Notes"
+      },
+      {
+        "type": "paragraph",
+        "content": "The JSON export preserves:"
+      },
+      {
+        "type": "list",
+        "list_type": "unordered",
+        "items": [
+          {
+            "content": "Document structure and hierarchy",
+            "items": []
+          },
+          {
+            "content": "All markdown element types",
+            "items": []
+          },
+          {
+            "content": "Metadata (title, timestamps, word counts)",
+            "items": []
+          },
+          {
+            "content": "Heading hierarchy for navigation",
+            "items": []
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": "For more information, see the [JSON Format Documentation](./JSON_FORMAT.md)."
+      }
+    ]
+  }
+}

@@ -265,19 +265,23 @@ func runAIRules(cmd *cobra.Command, args []string) error {
 var exportCmd = &cobra.Command{
 	Use:   "export",
 	Short: "Export documentation to different formats",
-	Long: `Export generated documentation to formats like HTML for easier sharing.
+	Long: `Export generated documentation to formats like HTML or JSON for easier sharing.
 
 Supported formats:
   - html: Standalone HTML file with embedded CSS and syntax highlighting
+  - json: Structured JSON with metadata and hierarchical content
 
 Examples:
   # Export README.md to HTML
   gendocs generate export --repo-path . --format html --output docs.html
 
+  # Export README.md to JSON
+  gendocs generate export --repo-path . --format json --output docs.json
+
   # Export specific file
   gendocs generate export --repo-path . --input .ai/docs/code_structure.md --format html
 
-  # Export with default output (README.md → README.html)
+  # Export with default output (README.md → README.html or README.json)
   gendocs generate export --repo-path .
 `,
 	RunE: runExport,
@@ -292,8 +296,8 @@ var (
 func init() {
 	generateCmd.AddCommand(exportCmd)
 
-	exportCmd.Flags().StringVar(&exportFormat, "format", "html", "Export format (html)")
-	exportCmd.Flags().StringVar(&exportOutput, "output", "", "Output file path (default: input.html)")
+	exportCmd.Flags().StringVar(&exportFormat, "format", "html", "Export format (html, json)")
+	exportCmd.Flags().StringVar(&exportOutput, "output", "", "Output file path (default: input.html or input.json)")
 	exportCmd.Flags().StringVar(&readmeRepoPath, "repo-path", ".", "Path to repository")
 	exportCmd.Flags().StringVar(&exportInput, "input", "README.md", "Input markdown file")
 }
@@ -311,7 +315,15 @@ func runExport(cmd *cobra.Command, args []string) error {
 	outputPath := exportOutput
 	if outputPath == "" {
 		ext := filepath.Ext(inputPath)
-		outputPath = strings.TrimSuffix(inputPath, ext) + ".html"
+		baseName := strings.TrimSuffix(inputPath, ext)
+		switch exportFormat {
+		case "json":
+			outputPath = baseName + ".json"
+		case "html":
+			outputPath = baseName + ".html"
+		default:
+			outputPath = baseName + ".html"
+		}
 	}
 
 	if !filepath.IsAbs(outputPath) {
@@ -323,8 +335,10 @@ func runExport(cmd *cobra.Command, args []string) error {
 	switch exportFormat {
 	case "html":
 		return exportToHTMLWithProgress(inputPath, outputPath, showProgress)
+	case "json":
+		return exportToJSONWithProgress(inputPath, outputPath, showProgress)
 	default:
-		return fmt.Errorf("unsupported format: %s (supported: html)", exportFormat)
+		return fmt.Errorf("unsupported format: %s (supported: html, json)", exportFormat)
 	}
 }
 
@@ -362,6 +376,45 @@ func exportToHTMLWithProgress(inputPath, outputPath string, showProgress bool) e
 		progress.Done()
 	} else {
 		fmt.Printf("✓ HTML exported to %s\n", outputPath)
+	}
+
+	return nil
+}
+
+func exportToJSON(inputPath, outputPath string) error {
+	return exportToJSONWithProgress(inputPath, outputPath, false)
+}
+
+func exportToJSONWithProgress(inputPath, outputPath string, showProgress bool) error {
+	var progress *tui.SimpleProgress
+	if showProgress {
+		progress = tui.NewSimpleProgress("Gendocs Export")
+		progress.Start()
+		progress.Step(fmt.Sprintf("Exporting %s...", filepath.Base(inputPath)))
+	} else {
+		fmt.Printf("Exporting %s to %s...\n", inputPath, outputPath)
+	}
+
+	exporter, err := export.NewJSONExporter()
+	if err != nil {
+		if showProgress {
+			progress.Failed(err)
+		}
+		return fmt.Errorf("failed to create exporter: %w", err)
+	}
+
+	if err := exporter.ExportToJSON(inputPath, outputPath); err != nil {
+		if showProgress {
+			progress.Failed(err)
+		}
+		return fmt.Errorf("export failed: %w", err)
+	}
+
+	if showProgress {
+		progress.Success(fmt.Sprintf("Exported to %s", outputPath))
+		progress.Done()
+	} else {
+		fmt.Printf("✓ JSON exported to %s\n", outputPath)
 	}
 
 	return nil

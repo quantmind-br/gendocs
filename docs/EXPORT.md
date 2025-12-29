@@ -5,10 +5,13 @@ This guide explains how to export Gendocs-generated documentation to various for
 ## Quick Start
 
 ```bash
-# Export README.md to HTML
+# Export README.md to HTML (default format)
 gendocs generate export
 
-# Export specific file
+# Export README.md to JSON
+gendocs generate export --format json --output docs.json
+
+# Export specific file to HTML
 gendocs generate export --input .ai/docs/code_structure.md --output structure.html
 
 # Generate and export in one command
@@ -36,9 +39,71 @@ gendocs generate export [flags]
 
 **Flags:**
 - `--input string`: Input markdown file (default: "README.md")
-- `--output string`: Output file path (default: input.html)
-- `--format string`: Export format, currently only "html" (default: "html")
+- `--output string`: Output file path (default: input.html or input.json based on format)
+- `--format string`: Export format - "html" or "json" (default: "html")
 - `--repo-path string`: Path to repository (default: ".")
+
+### JSON
+
+Generate structured JSON with metadata and hierarchical content.
+
+**Features:**
+- Structured data format for programmatic access
+- Metadata section with title, timestamps, generator info, word/character counts
+- Hierarchical headings tree for navigation and table of contents
+- All document elements in flat array (paragraphs, code blocks, lists, tables, blockquotes, links, images)
+- Language information for code blocks
+- Table column alignment information
+- Task list checkbox states
+- URL-safe heading IDs
+
+**Usage:**
+```bash
+gendocs generate export --format json [flags]
+```
+
+**When to use JSON export:**
+- **Search indexing**: Feed documentation into search engines (Elasticsearch, Algolia, Meilisearch)
+- **Static site generators**: Process with custom templates (Hugo, Jekyll, Eleventy)
+- **API documentation**: Generate API references from markdown
+- **Documentation portals**: Integrate into existing platforms
+- **Content analysis**: Analyze documentation structure and metrics
+- **Content migration**: Convert between documentation systems
+- **Custom processing**: Apply transformations or extract specific data
+
+**Example output structure:**
+```json
+{
+  "metadata": {
+    "title": "Document Title",
+    "generated_at": "2025-12-29T10:30:00Z",
+    "generator": {
+      "name": "Gendocs",
+      "version": "1.0.0"
+    },
+    "source_file": "README.md",
+    "word_count": 1234,
+    "char_count": 5678
+  },
+  "content": {
+    "headings": [
+      {
+        "id": "section-title",
+        "level": 2,
+        "text": "Section Title",
+        "children": []
+      }
+    ],
+    "elements": [
+      {"type": "heading", "level": 1, "text": "Title"},
+      {"type": "paragraph", "content": "Content..."},
+      {"type": "code_block", "language": "go", "code": "..."}
+    ]
+  }
+}
+```
+
+For detailed JSON structure documentation, see [JSON_FORMAT.md](JSON_FORMAT.md).
 
 ## Common Use Cases
 
@@ -53,12 +118,34 @@ mv README.html docs/index.html
 ### Export All Analysis Documents
 
 ```bash
-# Export each analysis document
+# Export each analysis document to HTML
 gendocs generate export --input .ai/docs/code_structure.md --output docs/structure.html
 gendocs generate export --input .ai/docs/dependencies.md --output docs/dependencies.html
 gendocs generate export --input .ai/docs/data_flow.md --output docs/data-flow.html
 gendocs generate export --input .ai/docs/request_flow.md --output docs/request-flow.html
 gendocs generate export --input .ai/docs/api_documentation.md --output docs/api.html
+```
+
+### Export Documentation for Search Indexing
+
+```bash
+# Export README to JSON for search indexing
+gendocs generate export --input README.md --output search-index.json --format json
+
+# Export all docs to JSON for indexing
+gendocs generate export --input .ai/docs/code_structure.md --output search/structure.json --format json
+gendocs generate export --input .ai/docs/dependencies.md --output search/dependencies.json --format json
+gendocs generate export --input .ai/docs/api_documentation.md --output search/api.json --format json
+```
+
+### Export for Static Site Generator
+
+```bash
+# Export to JSON for processing with Hugo/Jekyll/Eleventy
+gendocs generate export --input README.md --output content/docs/index.json --format json
+
+# Use with jq to extract specific data
+jq '{title: .metadata.title, sections: [.content.headings[] | {id, text, level}]}' search-index.json
 ```
 
 ### Batch Export Script
@@ -69,22 +156,38 @@ Create a script to export all documentation:
 #!/bin/bash
 # export-docs.sh
 
-echo "Exporting documentation to HTML..."
+FORMAT=${1:-html}  # Default to HTML if no format specified
+OUTPUT_DIR="docs/$FORMAT"
+
+echo "Exporting documentation to $FORMAT..."
 
 # Create output directory
-mkdir -p docs/html
+mkdir -p "$OUTPUT_DIR"
 
 # Export README
-gendocs generate export --input README.md --output docs/html/index.html
+gendocs generate export --input README.md --output "$OUTPUT_DIR/index.$FORMAT" --format "$FORMAT"
 
 # Export analysis documents
 for file in .ai/docs/*.md; do
-    basename=$(basename "$file" .md)
-    gendocs generate export --input "$file" --output "docs/html/${basename}.html"
-    echo "  ✓ Exported $basename"
+    if [ -f "$file" ]; then
+        basename=$(basename "$file" .md)
+        gendocs generate export --input "$file" --output "$OUTPUT_DIR/${basename}.$FORMAT" --format "$FORMAT"
+        echo "  ✓ Exported $basename to ${basename}.$FORMAT"
+    fi
 done
 
-echo "All documentation exported to docs/html/"
+echo "All documentation exported to $OUTPUT_DIR/"
+```
+
+Usage:
+```bash
+# Export to HTML (default)
+./export-docs.sh
+# or
+./export-docs.sh html
+
+# Export to JSON
+./export-docs.sh json
 ```
 
 ### Integrate with CI/CD
@@ -119,7 +222,11 @@ jobs:
 
       - name: Export Documentation
         run: |
+          # Export to HTML for GitHub Pages
           gendocs generate export --output docs/index.html
+
+          # Optionally export to JSON for search indexing
+          gendocs generate export --output docs/search-index.json --format json
         env:
           DOCUMENTER_LLM_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DOCUMENTER_LLM_PROVIDER: openai
@@ -287,6 +394,68 @@ func main() {}
 ```
 ````
 
+### JSON Export Issues
+
+#### Empty JSON output
+
+**Issue:** JSON file is generated but content is empty or missing elements
+
+**Solution:** Ensure your markdown uses proper formatting:
+```bash
+# Check that headings use # syntax, not underlines
+# Proper: ## Heading
+# Improper: Heading\n=======
+
+# Validate JSON structure
+jq . docs.json
+```
+
+#### Large JSON file size
+
+**Issue:** JSON output is much larger than source markdown
+
+**Explanation:** This is expected. JSON files are typically 2-3x larger due to:
+- Structural overhead (quotes, brackets, field names)
+- Metadata fields
+- Hierarchical heading structure
+- Detailed element information
+
+**Solution:** For very large documents, consider:
+```bash
+# Minify JSON for production
+jq -c . docs.json > docs.min.json
+
+# Extract only needed fields
+jq '{metadata, headings: .content.headings}' docs.json
+```
+
+#### Missing fields in JSON
+
+**Issue:** Expected fields like `word_count` are not present
+
+**Solution:** Some fields are optional. Always check before accessing:
+```javascript
+// Good
+const wordCount = doc.metadata.word_count || 0;
+
+// Bad - may error if undefined
+const wordCount = doc.metadata.word_count;
+```
+
+#### Processing JSON with special characters
+
+**Issue:** JSON parsing fails with Unicode or special characters
+
+**Solution:** Ensure proper encoding:
+```bash
+# Use jq for safe parsing
+jq . docs.json
+
+# In Python, use encoding parameter
+with open('docs.json', 'r', encoding='utf-8') as f:
+    doc = json.load(f)
+```
+
 ## Future Enhancements
 
 Planned features for future versions:
@@ -301,6 +470,8 @@ Planned features for future versions:
 ## See Also
 
 - [README.md](../README.md) - Main project documentation
+- [JSON Format Guide](JSON_FORMAT.md) - Detailed JSON export structure and usage examples
+- [JSON Export Examples](../examples/json-export/) - Comprehensive JSON export examples with code samples
 - [Custom Prompts](../examples/custom-prompts/) - Customize analysis behavior
 - [PLAN.md](../PLAN.md) - Development roadmap
 
