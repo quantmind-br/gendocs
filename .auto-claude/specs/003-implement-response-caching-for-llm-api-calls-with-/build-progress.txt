@@ -16,7 +16,7 @@
   - [x] Subtask 2-2: Implement cache key generation
   - [x] Subtask 2-3: Implement in-memory cache with LRU eviction
   - [x] Subtask 2-4: Implement persistent disk cache
-  - [ ] Subtask 2-5: Implement cache TTL and expiration
+  - [x] Subtask 2-5: Implement cache TTL and expiration
 
 ### Current Phase: Implement Core Caching Layer (Phase 2)
 Completed designs:
@@ -122,6 +122,31 @@ Subtask 2-1 completed - Created internal/llmcache package with basic structures.
   - Error handling (non-blocking on save errors) ✓
 - Ready for unit testing (subtask 6-3)
 
+✅ **Subtask 2-5: Implement cache TTL and expiration** (COMPLETED 2025-12-29)
+- Implemented time-based expiration with configurable TTL (default 7 days)
+- Added to `internal/llmcache/cache.go`:
+  - DefaultTTL constant: 7 * 24 * time.Hour (7 days)
+  - LRUCache.CleanupExpired() method: Proactively removes all expired entries
+    - Thread-safe with mutex protection
+    - Returns count of expired entries removed
+    - Updates eviction statistics
+- Added to `internal/llmcache/entry.go`:
+  - NewCachedResponse() helper function: Creates cache entries with proper TTL
+    - Takes TTL parameter for flexible configuration
+    - Sets CreatedAt to current time
+    - Calculates ExpiresAt as CreatedAt + TTL
+    - Initializes SizeBytes and AccessCount
+- Existing TTL checking verified:
+  - LRUCache.Get() checks expiration at line 106 (lazy expiration)
+  - DiskCache.Get() checks expiration at line 421 (lazy expiration)
+  - DiskCache.CleanupExpired() already implemented (proactive cleanup)
+- All design specifications from design_cache_data_structures.md satisfied:
+  - Configurable TTL with 7-day default ✓
+  - Lazy expiration on Get() operations ✓
+  - Proactive cleanup methods ✓
+  - Helper function for creating entries ✓
+- Phase 2 (Implement Core Caching Layer) now COMPLETE! 🎉
+
 - Created `internal/llmcache/cache.go`: Core cache operations
   - CacheStats: Thread-safe statistics tracking (hits, misses, evictions, size, hit rate)
   - LRUCache: Thread-safe in-memory LRU cache
@@ -165,11 +190,19 @@ Agent -> BaseAgent.RunOnce -> CachedLLMClient.GenerateCompletion
 5. Cache Location: .ai/llm_cache.json in project root
 
 ### Next Steps
+✅ **Phase 2 (Implement Core Caching Layer) COMPLETE!**
+All subtasks completed:
 1. ✅ Subtask 2-1: Create LLM response cache package - COMPLETED
 2. ✅ Subtask 2-2: Implement cache key generation - COMPLETED
-3. Subtask 2-3: Implement in-memory cache with LRU eviction - Note: Already implemented in cache.go, may need enhancement
-4. Subtask 2-4: Implement persistent disk cache - Note: Already implemented in cache.go, may need background auto-save
-5. Subtask 2-5: Implement cache TTL and expiration - Note: Already implemented, may need cleanup scheduling
+3. ✅ Subtask 2-3: Implement in-memory cache with LRU eviction - COMPLETED
+4. ✅ Subtask 2-4: Implement persistent disk cache - COMPLETED
+5. ✅ Subtask 2-5: Implement cache TTL and expiration - COMPLETED
+
+**Ready for Phase 3:** Integrate with LLM Client Layer
+- Subtask 3-1: Create caching LLM client decorator
+- Subtask 3-2: Update LLM factory to support caching
+- Subtask 3-3: Add cache configuration to config system
+- Subtask 3-4: Integrate caching in agent creation
 
 ### Implementation Notes
 - Subtask 2-1 actually implemented the basic structures for 2-2, 2-3, 2-4, and 2-5 as well

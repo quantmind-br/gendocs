@@ -107,12 +107,14 @@
           "id": "2-5",
           "name": "Implement cache TTL and expiration",
           "description": "Add time-based expiration with configurable TTL (default 7 days)",
-          "status": "pending",
+          "status": "completed",
           "files_to_modify": [],
           "dependencies": [
             "2-3",
             "2-4"
-          ]
+          ],
+          "notes": "Successfully implemented time-based expiration with configurable TTL. Added DefaultTTL constant (7 days) to cache.go. Implemented LRUCache.CleanupExpired() method for proactive removal of expired entries. Added NewCachedResponse() helper function to entry.go for easy creation of cache entries with proper TTL. Existing TTL checking already in place on Get() operations in both LRUCache (line 106) and DiskCache (line 421). All design specifications from design_cache_data_structures.md satisfied.",
+          "updated_at": "2025-12-29T06:45:00.000000+00:00"
         }
       ]
     },
@@ -386,5 +388,5 @@
     "estimated_effort": "medium",
     "priority": "high"
   },
-  "last_updated": "2025-12-29T05:55:00.000000+00:00"
+  "last_updated": "2025-12-29T06:45:00.000000+00:00"
 }
