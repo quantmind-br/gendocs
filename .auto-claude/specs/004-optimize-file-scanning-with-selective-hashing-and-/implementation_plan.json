@@ -83,7 +83,7 @@
           "subtask_id": "phase-2-subtask-2",
           "name": "Integrate parallel hashing into ScanFiles",
           "description": "Modify ScanFiles to collect files first, then batch the hashing operations for parallel execution.",
-          "status": "pending",
+          "status": "completed",
           "files": [
             "internal/cache/cache.go"
           ],
