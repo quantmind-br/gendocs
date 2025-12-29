@@ -262,8 +262,15 @@ func HashFile(path string) (string, error) {
 // If cache is provided, it will skip hashing files whose mtime and size haven't changed
 // If metrics is provided, it will populate statistics about cache hits and hash computations
 func ScanFiles(repoPath string, ignorePatterns []string, cache *AnalysisCache, metrics *ScanMetrics) (map[string]FileInfo, error) {
-	files := make(map[string]FileInfo)
+	// Phase 1: Walk directory tree and collect file metadata (no hashing yet)
+	type fileMetadata struct {
+		relPath  string
+		fullPath string
+		modTime  time.Time
+		size     int64
+	}
 
+	var filesToProcess []fileMetadata
 	err := filepath.Walk(repoPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			if os.IsPermission(err) {
@@ -301,52 +308,79 @@ func ScanFiles(repoPath string, ignorePatterns []string, cache *AnalysisCache, m
 			metrics.TotalFiles++
 		}
 
-		// Get file metadata
-		modTime := info.ModTime()
-		fileSize := info.Size()
+		// Collect file metadata for processing
+		filesToProcess = append(filesToProcess, fileMetadata{
+			relPath:  relPath,
+			fullPath: path,
+			modTime:  info.ModTime(),
+			size:     info.Size(),
+		})
 
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Phase 2: Separate files into cached and needs-hashing groups
+	files := make(map[string]FileInfo)
+	var filesToHash []hashFileJob
+
+	for _, meta := range filesToProcess {
 		// Check if we can reuse cached hash
 		var hash string
 		cached := false
 		if cache != nil {
-			if cachedFile, exists := cache.Files[relPath]; exists {
+			if cachedFile, exists := cache.Files[meta.relPath]; exists {
 				// If mtime and size match, reuse the cached hash
-				if cachedFile.Modified.Equal(modTime) && cachedFile.Size == fileSize {
+				if cachedFile.Modified.Equal(meta.modTime) && cachedFile.Size == meta.size {
 					hash = cachedFile.Hash
 					cached = true
 				}
 			}
 		}
 
-		// Calculate hash if not found in cache or file changed
-		if hash == "" {
-			var err error
-			hash, err = HashFile(path)
-			if err != nil {
-				// Skip files we can't read
-				return nil
-			}
+		// Track metrics for cached files
+		if metrics != nil && cached {
+			metrics.CachedFiles++
 		}
 
-		// Track metrics
-		if metrics != nil {
-			if cached {
-				metrics.CachedFiles++
-			} else {
+		// If not cached, add to parallel hashing batch
+		if !cached {
+			filesToHash = append(filesToHash, hashFileJob{
+				relPath:  meta.relPath,
+				fullPath: meta.fullPath,
+			})
+		}
+
+		// Initialize file entry (hash will be filled in after parallel hashing)
+		files[meta.relPath] = FileInfo{
+			Hash:     hash,
+			Modified: meta.modTime,
+			Size:     meta.size,
+		}
+	}
+
+	// Phase 3: Batch hash all files that need it in parallel
+	if len(filesToHash) > 0 {
+		hashResults := parallelHashFiles(filesToHash)
+
+		// Update file entries with computed hashes
+		for relPath, hash := range hashResults {
+			if file, exists := files[relPath]; exists {
+				file.Hash = hash
+				files[relPath] = file
+			}
+
+			// Track metrics for hashed files
+			if metrics != nil {
 				metrics.HashedFiles++
 			}
 		}
+	}
 
-		files[relPath] = FileInfo{
-			Hash:     hash,
-			Modified: modTime,
-			Size:     fileSize,
-		}
-
-		return nil
-	})
-
-	return files, err
+	return files, nil
 }
 
 // DetectChanges compares current files with cached files
