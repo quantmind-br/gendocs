@@ -1,0 +1,51 @@
+# Build Progress: Split large analyzer.go file into separate agent files
+
+## Overview
+Refactoring internal/agents/analyzer.go (434 lines) into separate files for better organization and maintainability.
+
+## Current File Structure
+- `analyzer.go` - Contains 3 agent types: AnalyzerAgent (orchestrator), DocumenterAgent (README generator), AIRulesGeneratorAgent (CLAUDE.md generator)
+- `factory.go` - Contains agent creation functions
+- `sub_agents.go` - Contains SubAgent implementation
+- `base.go` - Contains BaseAgent implementation
+
+## Planned File Structure
+- `analyzer.go` - AnalyzerAgent only (~260 lines)
+- `documenter.go` - DocumenterAgent (~75 lines)
+- `ai_rules_generator.go` - AIRulesGeneratorAgent (~75 lines)
+- `types.go` - Shared types (AnalysisResult, FailedAnalysis, AgentCreator) (~15 lines)
+
+## Progress
+
+### Phase 1: Analysis and Planning ✅
+- [✅] 1-1: Analyzed analyzer.go structure
+- [✅] 1-2: Designed new file structure
+
+### Phase 2: Create Shared Types File
+- [ ] 2-1: Create types.go with shared types
+
+### Phase 3: Extract DocumenterAgent
+- [ ] 3-1: Create documenter.go
+- [ ] 3-2: Remove DocumenterAgent from analyzer.go
+
+### Phase 4: Extract AIRulesGeneratorAgent
+- [ ] 4-1: Create ai_rules_generator.go
+- [ ] 4-2: Remove AIRulesGeneratorAgent from analyzer.go
+
+### Phase 5: Refactor AnalyzerAgent
+- [ ] 5-1: Update analyzer.go imports and references
+
+### Phase 6: Cleanup and Verification
+- [ ] 6-1: Remove extracted code from analyzer.go
+- [ ] 6-2: Verify package-level exports
+- [ ] 6-3: Run go build to verify compilation
+- [ ] 6-4: Run existing tests
+
+### Phase 7: Documentation
+- [ ] 7-1: Update build-progress.txt (this file)
+- [ ] 7-2: Record discoveries to session context
+
+## Notes
+- AnalyzerAgent orchestrates 5 sub-agents: structure_analyzer, dependency_analyzer, data_flow_analyzer, request_flow_analyzer, api_analyzer
+- DocumenterAgent and AIRulesGeneratorAgent have similar patterns (both load analysis documents and generate output files)
+- AgentCreator is a function type used by AnalyzerAgent's createTask method

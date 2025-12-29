@@ -1,0 +1,9 @@
+{
+  "sourceType": "ideation",
+  "ideationType": "code_quality",
+  "ideaId": "cq-001",
+  "rationale": "Large files increase cognitive load, make code reviews harder, and often lead to merge conflicts. Each agent type should be in its own file to improve organization, testability, and maintainability.",
+  "category": "refactoring",
+  "codeQualitySeverity": "major",
+  "priority": "high"
+}

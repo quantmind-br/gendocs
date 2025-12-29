@@ -1,0 +1,176 @@
+{
+  "feature": "Split large analyzer.go file into separate agent files",
+  "description": "The file internal/agents/analyzer.go has grown to 434 lines and contains three distinct agent types (AnalyzerAgent, DocumenterAgent, AIRulesGeneratorAgent) plus a shared AgentCreator type. This violates the single responsibility principle and makes navigation and testing difficult.",
+  "created_at": "2025-12-29T03:58:12.065Z",
+  "updated_at": "2025-12-29T04:00:00.000Z",
+  "status": "in_progress",
+  "planStatus": "approved",
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Analysis and Planning",
+      "status": "completed",
+      "subtasks": [
+        {
+          "id": "1-1",
+          "name": "Analyze analyzer.go structure",
+          "status": "completed",
+          "description": "Analyzed the 434-line analyzer.go file to identify three distinct agent types: AnalyzerAgent (orchestrator, lines 17-283), DocumenterAgent (README generator, lines 285-358), and AIRulesGeneratorAgent (CLAUDE.md generator, lines 360-433), plus shared AgentCreator type.",
+          "notes": "File contains three agent types that should be separated. AgentCreator is a shared function type used by AnalyzerAgent."
+        },
+        {
+          "id": "1-2",
+          "name": "Design file structure",
+          "status": "completed",
+          "description": "Design the new file structure to separate concerns while maintaining functionality.",
+          "notes": "Planned structure: analyzer.go (AnalyzerAgent only), documenter.go (DocumenterAgent), ai_rules_generator.go (AIRulesGeneratorAgent), types.go (shared types)."
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Create Shared Types File",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "2-1",
+          "name": "Create types.go with shared types",
+          "status": "pending",
+          "description": "Create internal/agents/types.go containing AnalysisResult, FailedAnalysis, and AgentCreator types that are shared between agents.",
+          "notes": "These types are currently in analyzer.go but used across the package. AgentCreator is a function type used by AnalyzerAgent's createTask method."
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Extract DocumenterAgent",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "3-1",
+          "name": "Create documenter.go",
+          "status": "pending",
+          "description": "Create internal/agents/documenter.go with DocumenterAgent type, NewDocumenterAgent constructor, and Run method.",
+          "notes": "Lines 285-358 from analyzer.go. DocumenterAgent generates README.md from analysis documents."
+        },
+        {
+          "id": "3-2",
+          "name": "Remove DocumenterAgent from analyzer.go",
+          "status": "pending",
+          "description": "Remove DocumenterAgent code from analyzer.go after documenter.go is created.",
+          "notes": "Will be done in Phase 6 cleanup."
+        }
+      ]
+    },
+    {
+      "id": "phase-4",
+      "name": "Extract AIRulesGeneratorAgent",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "4-1",
+          "name": "Create ai_rules_generator.go",
+          "status": "pending",
+          "description": "Create internal/agents/ai_rules_generator.go with AIRulesGeneratorAgent type, NewAIRulesGeneratorAgent constructor, and Run method.",
+          "notes": "Lines 360-433 from analyzer.go. AIRulesGeneratorAgent generates CLAUDE.md from analysis documents."
+        },
+        {
+          "id": "4-2",
+          "name": "Remove AIRulesGeneratorAgent from analyzer.go",
+          "status": "pending",
+          "description": "Remove AIRulesGeneratorAgent code from analyzer.go after ai_rules_generator.go is created.",
+          "notes": "Will be done in Phase 6 cleanup."
+        }
+      ]
+    },
+    {
+      "id": "phase-5",
+      "name": "Refactor AnalyzerAgent",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "5-1",
+          "name": "Update analyzer.go imports and references",
+          "status": "pending",
+          "description": "Ensure analyzer.go has proper imports and references types from types.go. AnalyzerAgent remains in analyzer.go with its supporting methods.",
+          "notes": "AnalyzerAgent orchestrates sub-agents (structure_analyzer, dependency_analyzer, data_flow_analyzer, request_flow_analyzer, api_analyzer). Keep createTask and processResults methods."
+        }
+      ]
+    },
+    {
+      "id": "phase-6",
+      "name": "Cleanup and Verification",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "6-1",
+          "name": "Remove extracted code from analyzer.go",
+          "status": "pending",
+          "description": "Remove DocumenterAgent and AIRulesGeneratorAgent code from analyzer.go now that they're in separate files.",
+          "notes": "analyzer.go should only contain AnalyzerAgent and its methods (approximately 260 lines)."
+        },
+        {
+          "id": "6-2",
+          "name": "Verify package-level exports",
+          "status": "pending",
+          "description": "Ensure all necessary types are properly exported (capitalized) and accessible from other packages.",
+          "notes": "Check that AnalyzerAgent, DocumenterAgent, AIRulesGeneratorAgent, and their constructors are exported."
+        },
+        {
+          "id": "6-3",
+          "name": "Run go build to verify compilation",
+          "status": "pending",
+          "description": "Compile the project to ensure no import errors or missing dependencies.",
+          "notes": "Run: go build ./..."
+        },
+        {
+          "id": "6-4",
+          "name": "Run existing tests",
+          "status": "pending",
+          "description": "Run all tests in internal/agents package to ensure no regressions.",
+          "notes": "Run: go test ./internal/agents/..."
+        }
+      ]
+    },
+    {
+      "id": "phase-7",
+      "name": "Documentation",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "7-1",
+          "name": "Update build-progress.txt",
+          "status": "pending",
+          "description": "Document completion status and any notes about the refactoring.",
+          "notes": "Record final file structure: analyzer.go (~260 lines), documenter.go (~75 lines), ai_rules_generator.go (~75 lines), types.go (~15 lines)."
+        },
+        {
+          "id": "7-2",
+          "name": "Record discoveries to session context",
+          "status": "pending",
+          "description": "Use mcp__auto-claude__record_discovery to note any important patterns or gotchas discovered during the refactoring.",
+          "notes": "Document the separation pattern for future reference."
+        }
+      ]
+    }
+  ],
+  "workflow_type": "development",
+  "services_involved": [
+    "internal/agents",
+    "internal/agents/analyzer.go",
+    "internal/agents/documenter.go (new)",
+    "internal/agents/ai_rules_generator.go (new)",
+    "internal/agents/types.go (new)"
+  ],
+  "final_acceptance": [
+    "analyzer.go contains only AnalyzerAgent and its methods (~260 lines)",
+    "documenter.go contains DocumenterAgent and its methods (~75 lines)",
+    "ai_rules_generator.go contains AIRulesGeneratorAgent and its methods (~75 lines)",
+    "types.go contains shared types (AnalysisResult, FailedAnalysis, AgentCreator)",
+    "All files compile without errors (go build ./...)",
+    "All tests pass (go test ./internal/agents/...)",
+    "No functionality is broken - existing behavior is preserved",
+    "Package exports remain the same - no breaking changes for external consumers"
+  ],
+  "spec_file": "spec.md"
+}
