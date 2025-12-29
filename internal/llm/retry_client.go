@@ -10,21 +10,34 @@ import (
 	"time"
 )
 
-// RetryConfig holds retry configuration
+// RetryConfig holds retry and connection pooling configuration
 type RetryConfig struct {
 	MaxAttempts       int           // Maximum number of retry attempts
 	Multiplier        int           // Exponential backoff multiplier
 	MaxWaitPerAttempt time.Duration // Maximum wait time per attempt
 	MaxTotalWait      time.Duration // Maximum total wait time
+
+	// Connection pooling settings
+	MaxIdleConns        int           // Maximum number of idle connections across all hosts (default: 100)
+	MaxIdleConnsPerHost int           // Maximum number of idle connections per host (default: 10)
+	IdleConnTimeout     time.Duration // Maximum idle time for a connection (default: 90s)
+	TLSHandshakeTimeout time.Duration // Maximum time to wait for TLS handshake (default: 10s)
+	ExpectContinueTimeout time.Duration // Maximum time to wait for 100-continue response (default: 1s)
 }
 
-// DefaultRetryConfig returns default retry configuration
+// DefaultRetryConfig returns default retry configuration with optimized connection pooling
 func DefaultRetryConfig() *RetryConfig {
 	return &RetryConfig{
 		MaxAttempts:       5,
 		Multiplier:        1,
 		MaxWaitPerAttempt: 60 * time.Second,
 		MaxTotalWait:      300 * time.Second,
+		// Connection pooling defaults optimized for LLM APIs
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 10,
+		IdleConnTimeout:     90 * time.Second,
+		TLSHandshakeTimeout: 10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
 	}
 }
 
