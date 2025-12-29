@@ -400,8 +400,53 @@ The implementation matches the duplicated pattern from all three LLM clients:
 - No code changes required (already correctly implemented in subtask 1)
 - Updated `implementation_plan.json` to mark subtask as completed
 
-**Next Subtask:**
-- Phase 2, Subtask 6: Handle non-OK status codes (already implemented in subtask 1)
+#### ✅ Subtask 6: Handle non-OK status codes (Completed)
+
+**Verification Summary:**
+Verified proper error wrapping for non-OK status codes in the doHTTPRequest method:
+
+**Implementation Location:** Lines 149-152 of `internal/llm/client.go`
+
+```go
+// Check for error status
+if resp.StatusCode != http.StatusOK {
+    return nil, fmt.Errorf("API error: status %d, body: %s", resp.StatusCode, string(responseBody))
+}
+```
+
+**Acceptance Criteria Met:**
+- ✅ Checks if resp.StatusCode != http.StatusOK
+- ✅ Returns wrapped error with status code and response body
+- ✅ Error message format exactly matches: 'API error: status %d, body: %s'
+- ✅ Returns nil for bytes parameter on error (consistent with helper return type)
+- ✅ Includes full response body in error message for debugging
+
+**Pattern Consistency:**
+The implementation matches the duplicated pattern from all three LLM clients:
+- OpenAI: Lines 146-148 - `fmt.Errorf("API error: status %d, body: %s", resp.StatusCode, string(body))`
+- Anthropic: Lines 145-147 - `fmt.Errorf("API error: status %d, body: %s", resp.StatusCode, string(body))`
+- Gemini: Lines 148-150 - `fmt.Errorf("API error: status %d, body: %s", resp.StatusCode, string(body))`
+- **New Helper:** Lines 149-152 - `fmt.Errorf("API error: status %d, body: %s", resp.StatusCode, string(responseBody))`
+
+**Note:** The implementation uses `responseBody` variable name instead of `body` to be more descriptive, and returns `nil` (for `[]byte`) instead of `CompletionResponse{}` because the helper function signature returns `[]byte, error` instead of `CompletionResponse, error`.
+
+**Files Modified:**
+- No code changes required (already correctly implemented in subtask 1)
+- Updated `implementation_plan.json` to mark subtask as completed
+
+**Commit:**
+- Commit hash: 7cfe3bd
+- Commit message: "auto-claude: phase-2-subtask-6 - Ensure proper error wrapping for non-200 status co"
+
+### Phase 2 Status: ✅ COMPLETE
+
+All Phase 2 subtasks completed:
+1. ✅ Subtask 1: Add doHTTPRequest method to BaseLLMClient (COMPLETED)
+2. ✅ Subtask 2: Handle JSON marshaling errors (COMPLETED)
+3. ✅ Subtask 3: Handle HTTP request creation errors (COMPLETED)
+4. ✅ Subtask 4: Handle request execution errors (COMPLETED)
+5. ✅ Subtask 5: Handle response reading errors (COMPLETED)
+6. ✅ Subtask 6: Handle non-OK status codes (COMPLETED)
 
 ### Implementation Plan Created
 - ✅ 6 phases defined with 19 subtasks
