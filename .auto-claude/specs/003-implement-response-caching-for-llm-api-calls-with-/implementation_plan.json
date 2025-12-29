@@ -270,11 +270,16 @@
           "id": "5-2",
           "name": "Implement cache validation and recovery",
           "description": "Add checksums and validation to detect corrupted cache entries",
-          "status": "pending",
-          "files_to_modify": [],
+          "status": "completed",
+          "files_to_modify": [
+            "internal/llmcache/entry.go",
+            "internal/llmcache/cache.go"
+          ],
           "dependencies": [
             "2-4"
-          ]
+          ],
+          "notes": "Successfully implemented checksum-based validation for cache entries. Added Checksum field to CachedResponse struct to store SHA256 hash. Implemented CalculateChecksum() method that computes SHA256 hash over key, request, and response data. Implemented ValidateChecksum() method that verifies stored checksum against calculated checksum, with backward compatibility for entries without checksums. Implemented UpdateChecksum() method to recalculate checksums when entries are modified. Updated DiskCache.Load() to validate all entry checksums after loading from disk and automatically remove corrupted entries with warning logs. Updated DiskCache.Put() to automatically calculate and store checksums before saving entries. Added structured logging: disk_cache_corrupted_entry (warn level for each corrupted entry removed), disk_cache_validation (info level with summary of corrupted and valid entries). Implementation detects individual corrupted entries and removes them rather than discarding entire cache, enhancing reliability and data recovery.",
+          "updated_at": "2025-12-29T11:00:00.000000+00:00"
         },
         {
           "id": "5-3",

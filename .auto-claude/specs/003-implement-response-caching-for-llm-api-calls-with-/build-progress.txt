@@ -454,9 +454,9 @@ Working on Phase 5 (Add Cache Management Utilities).
 
 **Completed Subtasks:**
 - Subtask 5-1: Implement cache clearing command ✅
+- Subtask 5-2: Implement cache validation and recovery ✅
 
 **Remaining Subtasks:**
-- Subtask 5-2: Implement cache validation and recovery
 - Subtask 5-3: Add cache size estimation
 
 ### Recent Implementation Work
@@ -484,5 +484,50 @@ Working on Phase 5 (Add Cache Management Utilities).
   - gendocs cache-clear --repo-path .
   - gendocs cache-clear (defaults to current directory)
 - Manual verification completed successfully
-- Ready for subtask 5-2 (Implement cache validation and recovery)
+
+✅ **Subtask 5-2: Implement cache validation and recovery** (COMPLETED 2025-12-29)
+- Modified `internal/llmcache/entry.go`:
+  - Added Checksum field to CachedResponse struct (string, SHA256 hash)
+  - Implemented CalculateChecksum() method:
+    - Computes SHA256 hash over key, request, and response data
+    - Serializes data to JSON for consistent hashing
+    - Returns hex-encoded checksum string
+    - Includes fallback to hash just the key if serialization fails
+  - Implemented ValidateChecksum() method:
+    - Compares stored checksum with calculated checksum
+    - Returns true if checksums match
+    - Returns true if no checksum stored (backward compatibility)
+    - Returns false if checksum mismatch (corruption detected)
+  - Implemented UpdateChecksum() method:
+    - Recalculates and updates the Checksum field
+    - Should be called after modifying cache entries
+- Modified `internal/llmcache/cache.go`:
+  - Updated DiskCache.Load() method:
+    - After loading cache data from disk, validates all entry checksums
+    - Iterates through all loaded entries
+    - Removes entries with invalid checksums
+    - Counts corrupted entries
+    - Logs warning for each corrupted entry removed
+    - Logs info summary if any corrupted entries found
+  - Updated DiskCache.Put() method:
+    - Calls value.UpdateChecksum() before storing entry
+    - Ensures all saved entries have valid checksums
+- Enhanced logging for corruption detection:
+  - disk_cache_corrupted_entry: Warn level for each corrupted entry removed
+    - Includes key and action taken
+  - disk_cache_validation: Info level summary after validation
+    - Includes corrupted_entries count, valid_entries count, file_path
+- Key features:
+  - Individual entry validation rather than whole-file validation
+  - Automatic removal of corrupted entries on load
+  - Preserves valid entries even if some are corrupted
+  - Backward compatible with existing cache files (entries without checksums are considered valid)
+  - Checksums calculated automatically on save, no manual intervention needed
+- Benefits:
+  - Detects data corruption from disk errors, software bugs, or manual file modification
+  - Prevents corrupted data from being served to LLM clients
+  - Improves cache reliability and fault tolerance
+  - Graceful degradation: removes corrupted entries but keeps valid ones
+- Implementation verified and committed
+- Ready for subtask 5-3 (Add cache size estimation)
 
