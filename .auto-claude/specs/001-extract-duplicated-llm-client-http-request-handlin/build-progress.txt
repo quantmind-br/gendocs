@@ -3,7 +3,7 @@
 ## Summary
 Extracting duplicated HTTP request handling logic from OpenAI, Anthropic, and Gemini LLM clients into a shared helper function in BaseLLMClient.
 
-## Status: Phase 4 - Complete
+## Status: Phase 5 - In Progress
 
 ### Phase 1: Design HTTP Request Helper
 
@@ -724,3 +724,82 @@ All Phase 4 subtasks completed:
 - All 7 test cases verified to pass with no regressions
 - Provider-specific logic preserved intact
 - Error handling unchanged
+
+---
+
+### Phase 5: Refactor Gemini Client
+
+#### ✅ Subtask 1: Update GenerateCompletion to use doHTTPRequest (Completed)
+
+**Implementation Summary:**
+Successfully refactored Gemini client's GenerateCompletion method to use the centralized doHTTPRequest helper:
+
+**Changes Made:**
+1. **Replaced lines 115-150** (36 lines) with single call to c.doHTTPRequest
+2. **Removed duplicated code:**
+   - JSON marshaling (lines 115-118)
+   - HTTP request creation (lines 120-130)
+   - Header setting (line 132)
+   - Request execution with retry (lines 134-139)
+   - Response reading (lines 141-145)
+   - Status code checking (lines 147-150)
+
+3. **Added new code:**
+   ```go
+   // Build URL and headers
+   // Model format: models/gemini-1.5-pro or models/gemini-pro
+   modelName := c.model
+   if !strings.HasPrefix(modelName, "models/") {
+       modelName = "models/" + modelName
+   }
+   url := fmt.Sprintf("%s/v1beta/%s:generateContent?key=%s", c.baseURL, modelName, c.apiKey)
+   headers := map[string]string{
+       "Content-Type": "application/json",
+   }
+
+   // Execute HTTP request with retry
+   body, err := c.doHTTPRequest(ctx, "POST", url, headers, gemReq)
+   if err != nil {
+       return CompletionResponse{}, err
+   }
+   ```
+
+4. **Removed unused imports:** bytes, io, net/http
+
+5. **Preserved provider-specific logic:**
+   - Request format conversion via c.convertRequest(req)
+   - Response format conversion via c.convertResponse(gemResp)
+   - API error field checking (gemResp.Error)
+   - Safety block validation (FinishReason == "SAFETY")
+   - Empty candidates validation
+
+**Code Metrics:**
+- **Before:** 64 lines in GenerateCompletion method
+- **After:** 44 lines in GenerateCompletion method
+- **Reduction:** 20 lines (31% reduction)
+
+**Acceptance Criteria Met:**
+- ✅ Removes duplicated JSON marshaling code
+- ✅ Removes duplicated HTTP request creation code
+- ✅ Removes duplicated header setting code
+- ✅ Removes duplicated request execution code
+- ✅ Removes duplicated response reading code
+- ✅ Removes duplicated status code checking code
+- ✅ Calls c.doHTTPRequest with proper parameters (ctx, "POST", url, headers, gemReq)
+
+**Files Modified:**
+- `internal/llm/gemini.go` - Refactored GenerateCompletion method, removed unused imports
+
+**Commit:**
+- Commit hash: 2fdf71d
+- Commit message: "auto-claude: phase-5-subtask-1 - Replace lines 115-150 in gemini.go with call to c.doHTTPRequest"
+
+**Error Handling Verification:**
+- Error propagation unchanged - errors from doHTTPRequest bubble up with same wrapping
+- Error messages match original implementation exactly
+- Provider-specific API error checking preserved (lines 136-138)
+- Safety block checking preserved (lines 146-148)
+- Empty candidates checking preserved (lines 141-143)
+
+**Next Subtask:**
+- Phase 5, Subtask 2: Run Gemini client tests
