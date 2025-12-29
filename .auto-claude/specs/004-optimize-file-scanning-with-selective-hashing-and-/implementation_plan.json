@@ -98,15 +98,19 @@
           "subtask_id": "phase-2-subtask-3",
           "name": "Add configurable parallelism limit",
           "description": "Add a configuration option or environment variable to control the maximum number of parallel hash workers.",
-          "status": "pending",
+          "status": "completed",
           "files": [
             "internal/cache/cache.go",
-            "internal/config/models.go"
+            "internal/config/models.go",
+            "internal/config/loader.go",
+            "internal/agents/analyzer.go"
           ],
           "implementation_details": [
             "Add MaxHashWorkers config field (default to runtime.NumCPU())",
             "Pass configuration through to ScanFiles",
-            "Respect configured limit in parallel hash worker pool"
+            "Respect configured limit in parallel hash worker pool",
+            "Support configuration via .ai/config.yaml (analyzer.max_hash_workers)",
+            "Support configuration via environment variable (GENDOCS_ANALYZER_MAX_HASH_WORKERS)"
           ]
         }
       ]
