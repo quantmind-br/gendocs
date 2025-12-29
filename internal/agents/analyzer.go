@@ -20,6 +20,7 @@ type AnalyzerAgent struct {
 	promptManager *prompts.Manager
 	logger        *logging.Logger
 	workerPool    *worker_pool.WorkerPool
+	cacheCleanup  func() // Cleanup function for LLM cache
 }
 
 
@@ -28,8 +29,15 @@ func NewAnalyzerAgent(cfg config.AnalyzerConfig, promptManager *prompts.Manager,
 	// Create retry client
 	retryClient := llm.NewRetryClient(llm.DefaultRetryConfig())
 
-	// Create LLM factory
-	factory := llm.NewFactory(retryClient, nil, nil, false, 0)
+	// Setup LLM response caches
+	memoryCache, diskCache, cacheCleanup, err := setupCaches(cfg.LLM, logger)
+	if err != nil {
+		logger.Warn(fmt.Sprintf("Failed to setup LLM cache: %v (caching disabled)", err))
+		cacheCleanup = func() {} // No-op cleanup
+	}
+
+	// Create LLM factory with cache support
+	factory := llm.NewFactory(retryClient, memoryCache, diskCache, cfg.LLM.Cache.IsEnabled(), cfg.LLM.Cache.GetTTL())
 
 	return &AnalyzerAgent{
 		config:        cfg,
@@ -37,11 +45,15 @@ func NewAnalyzerAgent(cfg config.AnalyzerConfig, promptManager *prompts.Manager,
 		promptManager: promptManager,
 		logger:        logger,
 		workerPool:    worker_pool.NewWorkerPool(cfg.MaxWorkers),
+		cacheCleanup:  cacheCleanup,
 	}
 }
 
 // Run executes all sub-agents concurrently
 func (aa *AnalyzerAgent) Run(ctx context.Context) (*AnalysisResult, error) {
+	// Ensure cache cleanup runs on exit
+	defer aa.cacheCleanup()
+
 	aa.logger.Info("Starting analysis",
 		logging.String("repo_path", aa.config.RepoPath),
 		logging.Int("max_workers", aa.config.MaxWorkers),

@@ -6,9 +6,11 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/user/gendocs/internal/config"
 	"github.com/user/gendocs/internal/llm"
+	"github.com/user/gendocs/internal/llmcache"
 	"github.com/user/gendocs/internal/logging"
 	"github.com/user/gendocs/internal/prompts"
 	"github.com/user/gendocs/internal/tools"
@@ -62,6 +64,46 @@ func NewSubAgent(cfg SubAgentConfig, llmFactory *llm.Factory, promptManager *pro
 		BaseAgent: baseAgent,
 		config:    cfg,
 	}, nil
+}
+
+// setupCaches initializes LLM response caches based on configuration
+// Returns memory cache, disk cache, cleanup function, and error
+// The cleanup function should be called when done to stop auto-save
+func setupCaches(llmCfg config.LLMConfig, logger *logging.Logger) (*llmcache.LRUCache, *llmcache.DiskCache, func(), error) {
+	// Check if caching is enabled
+	if !llmCfg.Cache.IsEnabled() {
+		return nil, nil, func() {}, nil
+	}
+
+	// Create memory cache
+	memoryCache := llmcache.NewLRUCache(llmCfg.Cache.GetMaxSize())
+
+	// Create disk cache
+	diskCache := llmcache.NewDiskCache(
+		llmCfg.Cache.GetCachePath(),
+		llmCfg.Cache.GetTTL(),
+		100*1024*1024, // 100MB max disk size
+	)
+
+	// Load existing disk cache
+	if err := diskCache.Load(); err != nil {
+		logger.Warn(fmt.Sprintf("Failed to load disk cache: %v (starting with empty cache)", err))
+	}
+
+	// Start auto-save (every 5 minutes)
+	diskCache.StartAutoSave(5 * time.Minute)
+
+	// Create cleanup function
+	cleanup := func() {
+		diskCache.Stop()
+	}
+
+	logger.Info(fmt.Sprintf("LLM response caching enabled (max_size=%d, ttl=%s, path=%s)",
+		llmCfg.Cache.GetMaxSize(),
+		llmCfg.Cache.GetTTL(),
+		llmCfg.Cache.GetCachePath()))
+
+	return memoryCache, diskCache, cleanup, nil
 }
 
 // Run executes the sub-agent
