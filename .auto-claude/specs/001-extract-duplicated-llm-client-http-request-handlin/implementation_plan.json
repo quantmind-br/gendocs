@@ -169,7 +169,7 @@
       "id": "phase-3",
       "name": "Refactor OpenAI client",
       "description": "Update OpenAI client's GenerateCompletion method to use the new helper function",
-      "status": "in_progress",
+      "status": "completed",
       "subtasks": [
         {
           "id": "phase-3-subtask-1",
@@ -384,5 +384,5 @@
     "No breaking changes to public APIs"
   ],
   "spec_file": "spec.md",
-  "last_updated": "2025-12-29T04:45:00.000000+00:00"
+  "last_updated": "2025-12-29T04:50:00.000000+00:00"
 }
