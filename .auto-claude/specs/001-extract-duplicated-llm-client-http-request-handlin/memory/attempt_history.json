@@ -95,11 +95,23 @@
         }
       ],
       "status": "completed"
+    },
+    "phase-2-subtask-6": {
+      "attempts": [
+        {
+          "session": 10,
+          "timestamp": "2025-12-29T01:20:30.831944",
+          "approach": "Implemented: Ensure proper error wrapping for non-200 status codes with response body in error message",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
     }
   },
   "stuck_subtasks": [],
   "metadata": {
     "created_at": "2025-12-29T00:58:35.286044",
-    "last_updated": "2025-12-29T01:18:34.248748"
+    "last_updated": "2025-12-29T01:20:30.831946"
   }
 }
