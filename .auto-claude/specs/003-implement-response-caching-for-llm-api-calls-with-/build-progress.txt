@@ -282,6 +282,65 @@ Working on Phase 3 (Integrate with LLM Client Layer).
 - Factory functions in `factory.go` require no changes (use factory passed as parameter)
 - **Phase 3 (Integrate with LLM Client Layer) now COMPLETE!** 🎉
 
+### Phase 4 Status: IN PROGRESS 🚧
+Working on Phase 4 (Add Metrics and Observability).
+
+**Completed Subtasks:**
+- Subtask 4-1: Implement cache statistics tracking ✅
+
+**Remaining Subtasks:**
+- Subtask 4-2: Add cache logging
+- Subtask 4-3: Add cache statistics output
+
+### Recent Implementation Work
+✅ **Subtask 4-1: Implement cache statistics tracking** (COMPLETED 2025-12-29)
+- Enhanced `DiskCacheStats` structure in `internal/llmcache/cache.go`:
+  - Added Hits field (int64) to track successful cache retrievals
+  - Added Misses field (int64) to track failed cache lookups
+  - Added Evictions field (int64) to track removed entries
+  - Added HitRate field (float64) to track hit ratio (hits / total lookups)
+- Added thread-safety to `DiskCacheData`:
+  - Added mu field (sync.RWMutex) to protect statistics updates
+- Added statistics tracking methods:
+  - `updateHitRate()` - Recalculates hit rate from hits and misses
+  - `recordHit()` - Thread-safe hit recording with mutex lock
+  - `recordMiss()` - Thread-safe miss recording with mutex lock
+  - `recordEviction(count int)` - Thread-safe eviction recording with mutex lock
+  - `Stats()` - Returns a copy of current disk cache statistics
+- Updated `DiskCache.Get()` method:
+  - Calls recordHit() when entry is found and not expired
+  - Calls recordMiss() when entry is not found or is expired
+- Updated `DiskCache.CleanupExpired()` method:
+  - Calls recordEviction(count) when expired entries are removed
+- Enhanced `CachedLLMClient.GetStats()` in `internal/llm/cached_client.go`:
+  - Retrieves statistics from both memory and disk caches
+  - Aggregates hits, misses, and evictions from both caches
+  - Recalculates hit rate based on combined totals
+  - Returns unified CacheStats with complete picture of cache performance
+- Statistics now tracked for both memory and disk caches:
+  - ✅ Hits - Number of successful cache retrievals
+  - ✅ Misses - Number of failed cache lookups
+  - ✅ Evictions - Number of entries removed from cache
+  - ✅ Size - Current number of entries in memory cache
+  - ✅ MaxSize - Maximum number of entries in memory cache
+  - ✅ TotalSizeBytes - Total size of cached data in bytes
+  - ✅ HitRate - Ratio of hits to total lookups (0.0 to 1.0)
+- Thread-safety guaranteed:
+  - Memory cache stats protected by LRUCache.mu (sync.RWMutex)
+  - Disk cache stats protected by DiskCacheData.mu (sync.RWMutex)
+  - All stat updates use mutex locks to ensure atomicity
+  - Stats retrieval returns a copy to avoid race conditions
+- Persistence:
+  - Disk cache statistics saved to .ai/llm_cache.json
+  - Survives program restarts
+  - Updated on every save operation
+- Backward compatibility maintained:
+  - No breaking changes to public APIs
+  - Existing CacheStats structure unchanged
+  - New fields only in DiskCacheStats
+- Implementation verified and documented in verification_4-1.md
+- Ready for subtask 4-2 (Add cache logging)
+
 ### Implementation Notes
 - Subtask 2-1 actually implemented the basic structures for 2-2, 2-3, 2-4, and 2-5 as well
 - The core functionality is in place, subsequent subtasks may focus on:
