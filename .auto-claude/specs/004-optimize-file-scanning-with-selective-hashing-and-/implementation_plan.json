@@ -125,7 +125,7 @@
           "subtask_id": "phase-3-subtask-1",
           "name": "Create unit tests for selective hashing",
           "description": "Write tests that verify selective hashing correctly skips files with unchanged mtime/size and correctly rehashes changed files.",
-          "status": "pending",
+          "status": "completed",
           "files": [
             "internal/cache/cache_test.go"
           ],

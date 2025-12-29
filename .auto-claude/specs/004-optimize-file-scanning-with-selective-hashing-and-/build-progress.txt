@@ -16,7 +16,7 @@ Target improvement: 3-5x faster for incremental scans on large repositories.
 
 ---
 
-## Current Phase: Phase 2 - Parallel Hashing
+## Current Phase: Phase 3 - Comprehensive Testing
 
 ### Completed Tasks
 - [x] Read and analyzed spec.md
@@ -29,6 +29,7 @@ Target improvement: 3-5x faster for incremental scans on large repositories.
 - [x] **Phase 2, Subtask 1**: Created parallel hash worker implementation with goroutines
 - [x] **Phase 2, Subtask 2**: Integrated parallel hashing into ScanFiles with three-phase approach
 - [x] **Phase 2, Subtask 3**: Added configurable parallelism limit via MaxHashWorkers config field
+- [x] **Phase 3, Subtask 1**: Created comprehensive unit tests for selective hashing (11 test cases)
 
 ### Implementation Plan Structure
 
@@ -83,7 +84,8 @@ Target improvement: 3-5x faster for incremental scans on large repositories.
 4. ~~Phase 2, Subtask 1~~: ✅ COMPLETED - Create parallel hash worker implementation
 5. ~~Phase 2, Subtask 2~~: ✅ COMPLETED - Integrate parallel hashing into ScanFiles
 6. ~~Phase 2, Subtask 3~~: ✅ COMPLETED - Add configurable parallelism limit
-7. **Phase 3, Subtask 1**: Create unit tests for selective hashing (next)
+7. ~~Phase 3, Subtask 1~~: ✅ COMPLETED - Create unit tests for selective hashing
+8. **Phase 3, Subtask 2**: Create benchmarks for performance (next)
 
 ---
 
@@ -91,6 +93,7 @@ Target improvement: 3-5x faster for incremental scans on large repositories.
 
 - Phase 1 complete! Selective hashing is now functional
 - Phase 2 complete! Parallel hashing with configurable worker limit is now implemented
+- Phase 3 in progress: Unit tests completed, benchmarks and integration tests pending
 - Implementation details:
   - ScanFiles now uses a three-phase approach:
     - Phase 1: Walk directory tree and collect file metadata (I/O bound, no hashing)
@@ -109,4 +112,17 @@ Target improvement: 3-5x faster for incremental scans on large repositories.
     - Via environment variable: `GENDOCS_ANALYZER_MAX_HASH_WORKERS=4`
     - Default (0): Auto-detect using runtime.NumCPU() capped at 8
     - All configured values are capped at DefaultMaxHashWorkers (8) for safety
-- Next: Phase 3 - Add comprehensive testing
+- Phase 3, Subtask 1 completed: Created comprehensive unit tests (11 test cases):
+  - TestScanFiles_CacheHit: Verifies cache hit behavior (same mtime/size reuses hash)
+  - TestScanFiles_CacheMissDifferentMTime: Verifies cache miss on mtime change
+  - TestScanFiles_CacheMissDifferentSize: Verifies cache miss on size change
+  - TestScanFiles_NewFiles: Verifies new files get hashed
+  - TestScanFiles_DeletedFiles: Verifies deleted files are handled correctly
+  - TestScanFiles_MultipleFilesMixedCache: Tests mixed scenario with multiple files
+  - TestScanFiles_NoCache: Verifies backward compatibility with nil cache
+  - TestScanFiles_WithIgnorePatterns: Verifies ignore patterns work correctly
+  - TestScanFiles_MetricsNil: Verifies nil metrics parameter is handled
+  - TestHashFile: Unit test for hash computation
+  - TestHashFile_NonExistent: Error handling test
+  All tests follow project patterns and verify selective hashing correctness
+- Next: Phase 3, Subtask 2 - Create benchmarks for performance
