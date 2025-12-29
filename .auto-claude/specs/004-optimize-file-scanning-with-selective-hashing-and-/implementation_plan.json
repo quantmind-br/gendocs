@@ -31,7 +31,7 @@
           "subtask_id": "phase-1-subtask-2",
           "name": "Add metrics tracking for cache hits/misses",
           "description": "Track statistics about how many files were skipped due to cache hits vs actual hashes computed, for logging and debugging.",
-          "status": "pending",
+          "status": "completed",
           "files": [
             "internal/cache/cache.go"
           ],

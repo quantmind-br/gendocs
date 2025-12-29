@@ -24,6 +24,7 @@ Target improvement: 3-5x faster for incremental scans on large repositories.
 - [x] Reviewed ScanFiles usage in internal/agents/analyzer.go
 - [x] Created detailed implementation plan with 4 phases and 12 subtasks
 - [x] **Phase 1, Subtask 1**: Modified ScanFiles function to accept optional *AnalysisCache parameter
+- [x] **Phase 1, Subtask 2**: Added ScanMetrics struct to track cache hits/misses and updated logging
 - [x] **Phase 1, Subtask 3**: Updated analyzer.go to load cache before ScanFiles and pass it as parameter
 
 ### Implementation Plan Structure
@@ -74,9 +75,9 @@ Target improvement: 3-5x faster for incremental scans on large repositories.
 ## Next Steps
 
 1. ~~Phase 1, Subtask 1~~: COMPLETED - Refactor ScanFiles to accept optional cache parameter
-2. **Phase 1, Subtask 2**: Add metrics tracking for cache hits/misses
+2. ~~Phase 1, Subtask 2~~: COMPLETED - Add metrics tracking for cache hits/misses
 3. ~~Phase 1, Subtask 3~~: COMPLETED - Update analyzer.go to pass cache to ScanFiles
-4. Create comprehensive tests
+4. **Phase 2**: Start parallel hashing implementation (Phase 1 complete!)
 
 ---
 
