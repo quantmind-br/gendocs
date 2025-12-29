@@ -3,13 +3,13 @@
   "spec": "001-extract-duplicated-llm-client-http-request-handlin",
   "state": "building",
   "subtasks": {
-    "completed": 11,
+    "completed": 13,
     "total": 20,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Refactor Anthropic client",
+    "current": "Refactor Gemini client",
     "id": null,
     "total": 2
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 13,
+    "number": 15,
     "started_at": "2025-12-29T00:58:35.286150"
   },
-  "last_update": "2025-12-29T01:25:19.241251"
+  "last_update": "2025-12-29T01:28:47.524445"
 }

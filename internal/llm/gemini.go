@@ -1,12 +1,9 @@
 package llm
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"strings"
 
 	"github.com/user/gendocs/internal/config"
@@ -112,41 +109,21 @@ func (c *GeminiClient) GenerateCompletion(ctx context.Context, req CompletionReq
 	// Convert to Gemini format
 	gemReq := c.convertRequest(req)
 
-	jsonData, err := json.Marshal(gemReq)
-	if err != nil {
-		return CompletionResponse{}, fmt.Errorf("failed to marshal request: %w", err)
-	}
-
-	// Create HTTP request
+	// Build URL and headers
 	// Model format: models/gemini-1.5-pro or models/gemini-pro
 	modelName := c.model
 	if !strings.HasPrefix(modelName, "models/") {
 		modelName = "models/" + modelName
 	}
 	url := fmt.Sprintf("%s/v1beta/%s:generateContent?key=%s", c.baseURL, modelName, c.apiKey)
-	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonData))
-	if err != nil {
-		return CompletionResponse{}, fmt.Errorf("failed to create request: %w", err)
+	headers := map[string]string{
+		"Content-Type": "application/json",
 	}
 
-	httpReq.Header.Set("Content-Type", "application/json")
-
-	// Execute with retry
-	resp, err := c.retryClient.Do(httpReq)
+	// Execute HTTP request with retry
+	body, err := c.doHTTPRequest(ctx, "POST", url, headers, gemReq)
 	if err != nil {
-		return CompletionResponse{}, fmt.Errorf("request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	// Read response
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return CompletionResponse{}, fmt.Errorf("failed to read response: %w", err)
-	}
-
-	// Check for error status
-	if resp.StatusCode != http.StatusOK {
-		return CompletionResponse{}, fmt.Errorf("API error: status %d, body: %s", resp.StatusCode, string(body))
+		return CompletionResponse{}, err
 	}
 
 	// Parse response
