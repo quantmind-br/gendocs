@@ -85,7 +85,8 @@ Target improvement: 3-5x faster for incremental scans on large repositories.
 5. ~~Phase 2, Subtask 2~~: ✅ COMPLETED - Integrate parallel hashing into ScanFiles
 6. ~~Phase 2, Subtask 3~~: ✅ COMPLETED - Add configurable parallelism limit
 7. ~~Phase 3, Subtask 1~~: ✅ COMPLETED - Create unit tests for selective hashing
-8. **Phase 3, Subtask 2**: Create benchmarks for performance (next)
+8. ~~Phase 3, Subtask 2~~: ✅ COMPLETED - Create benchmarks for performance
+9. **Phase 3, Subtask 3**: Add integration tests (next)
 
 ---
 
@@ -93,7 +94,7 @@ Target improvement: 3-5x faster for incremental scans on large repositories.
 
 - Phase 1 complete! Selective hashing is now functional
 - Phase 2 complete! Parallel hashing with configurable worker limit is now implemented
-- Phase 3 in progress: Unit tests completed, benchmarks and integration tests pending
+- Phase 3 in progress: Unit tests and benchmarks completed, integration tests pending
 - Implementation details:
   - ScanFiles now uses a three-phase approach:
     - Phase 1: Walk directory tree and collect file metadata (I/O bound, no hashing)
@@ -125,4 +126,14 @@ Target improvement: 3-5x faster for incremental scans on large repositories.
   - TestHashFile: Unit test for hash computation
   - TestHashFile_NonExistent: Error handling test
   All tests follow project patterns and verify selective hashing correctness
-- Next: Phase 3, Subtask 2 - Create benchmarks for performance
+- Phase 3, Subtask 2 completed: Created comprehensive benchmarks (8 benchmark suites):
+  - BenchmarkScanFiles_NoCacheSequential: Baseline without cache or parallelism
+  - BenchmarkScanFiles_WithCacheSequential: Selective hashing only
+  - BenchmarkScanFiles_WithCacheParallel: Selective hashing + parallelism
+  - BenchmarkScanFiles_PartialCacheParallel: Realistic incremental scan (20% changes)
+  - BenchmarkScanFiles_NoCacheParallel: Parallelism without cache
+  - BenchmarkScanFiles_LargeRepository: Performance on 500 files
+  - BenchmarkScanFiles_WithStats: Detailed throughput metrics (files/sec, MB/sec)
+  - BenchmarkParallelHashWorkers: Worker count scaling (1, 2, 4, 8 workers)
+  All benchmarks create realistic test repositories and measure both latency and throughput
+- Next: Phase 3, Subtask 3 - Add integration tests

@@ -141,7 +141,7 @@
           "subtask_id": "phase-3-subtask-2",
           "name": "Create benchmarks for performance",
           "description": "Create benchmarks to measure the performance improvement from selective hashing and parallel processing.",
-          "status": "pending",
+          "status": "completed",
           "files": [
             "internal/cache/cache_bench_test.go"
           ],
