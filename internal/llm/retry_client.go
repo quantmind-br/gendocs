@@ -84,7 +84,8 @@ func NewRetryClient(config *RetryConfig) *RetryClient {
 
 	return &RetryClient{
 		client: &http.Client{
-			Timeout: 180 * time.Second, // Default timeout
+			Timeout:   180 * time.Second, // Default timeout
+			Transport: createOptimizedTransport(config),
 		},
 		config: config,
 	}
@@ -98,7 +99,8 @@ func NewRetryClientWithTimeout(timeout time.Duration, config *RetryConfig) *Retr
 
 	return &RetryClient{
 		client: &http.Client{
-			Timeout: timeout,
+			Timeout:   timeout,
+			Transport: createOptimizedTransport(config),
 		},
 		config: config,
 	}
