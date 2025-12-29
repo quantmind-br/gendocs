@@ -83,7 +83,7 @@ func (c *CachedLLMClient) GenerateCompletion(
 	if c.diskCache != nil {
 		if cached, found := c.diskCache.Get(cacheKey); found {
 			// Cache hit on disk - promote to memory cache and return
-			c.memoryCache.Put(cacheKey, &cached)
+			c.memoryCache.Put(cacheKey, cached)
 			return cached.Response, nil
 		}
 	}

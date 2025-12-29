@@ -16,7 +16,6 @@ import (
 )
 
 var (
-
 	repoPath         string
 	excludeStructure bool
 	excludeDataFlow  bool
@@ -26,16 +25,6 @@ var (
 	maxWorkers       int
 	forceAnalysis    bool
 	showCacheStats   bool
-
-	repoPath            string
-	excludeStructure    bool
-	excludeDataFlow     bool
-	excludeDeps         bool
-	excludeReqFlow      bool
-	excludeAPI          bool
-	maxWorkers          int
-	forceAnalysis       bool
-
 )
 
 // analyzeCmd represents the analyze command
@@ -132,7 +121,7 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 
 	if err != nil {
 		if docErr, ok := err.(*errors.AIDocGenError); ok {
-			if !showProgress && !showCacheStats {
+			if !showProgress {
 				fmt.Fprintf(os.Stderr, "%s\n", docErr.GetUserMessage())
 			}
 			return docErr
@@ -140,16 +129,13 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-
-	if !showProgress && !showCacheStats {
+	if !showProgress {
 		logger.Info("Analysis complete")
-
-	logger.Info("Analysis complete")
+	}
 
 	// Show cache statistics if requested
 	if showCacheStats {
 		displayCacheStats(repoPath)
-
 	}
 
 	return nil
@@ -187,7 +173,7 @@ func displayCacheStats(repoPath string) {
 
 	// Display statistics
 	fmt.Println("\n📊 LLM Cache Statistics")
-	fmt.Println("
+	fmt.Println("======================")
 	fmt.Printf("Cache File: %s\n", cachePath)
 	fmt.Printf("Version: %d\n", cacheData.Version)
 	fmt.Printf("Created: %s\n", cacheData.CreatedAt.Format("2006-01-02 15:04:05"))
@@ -213,5 +199,5 @@ func displayCacheStats(repoPath string) {
 	}
 	fmt.Printf("  Evictions: %d\n\n", stats.Evictions)
 
-	fmt.Println("
+	fmt.Println("======================\n")
 }

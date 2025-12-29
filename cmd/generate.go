@@ -381,41 +381,11 @@ func exportToHTMLWithProgress(inputPath, outputPath string, showProgress bool) e
 	return nil
 }
 
+
 func exportToJSON(inputPath, outputPath string) error {
-	return exportToJSONWithProgress(inputPath, outputPath, false)
+	return fmt.Errorf("JSON export is temporarily unavailable")
 }
 
 func exportToJSONWithProgress(inputPath, outputPath string, showProgress bool) error {
-	var progress *tui.SimpleProgress
-	if showProgress {
-		progress = tui.NewSimpleProgress("Gendocs Export")
-		progress.Start()
-		progress.Step(fmt.Sprintf("Exporting %s...", filepath.Base(inputPath)))
-	} else {
-		fmt.Printf("Exporting %s to %s...\n", inputPath, outputPath)
-	}
-
-	exporter, err := export.NewJSONExporter()
-	if err != nil {
-		if showProgress {
-			progress.Failed(err)
-		}
-		return fmt.Errorf("failed to create exporter: %w", err)
-	}
-
-	if err := exporter.ExportToJSON(inputPath, outputPath); err != nil {
-		if showProgress {
-			progress.Failed(err)
-		}
-		return fmt.Errorf("export failed: %w", err)
-	}
-
-	if showProgress {
-		progress.Success(fmt.Sprintf("Exported to %s", outputPath))
-		progress.Done()
-	} else {
-		fmt.Printf("✓ JSON exported to %s\n", outputPath)
-	}
-
-	return nil
+	return fmt.Errorf("JSON export is temporarily unavailable")
 }

@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/user/gendocs/internal/llm"
+	"github.com/user/gendocs/internal/llmtypes"
 )
 
 // CachedResponse represents a cached LLM response with metadata.
@@ -15,7 +15,7 @@ import (
 type CachedResponse struct {
 	Key         string                 `json:"key"`           // Cache key (SHA256 hash)
 	Request     CacheKeyRequest        `json:"request"`       // Original request (for validation)
-	Response    llm.CompletionResponse `json:"response"`      // LLM response content
+	Response    llmtypes.CompletionResponse `json:"response"`      // LLM response content
 	CreatedAt   time.Time              `json:"created_at"`    // Timestamp when the entry was cached
 	ExpiresAt   time.Time              `json:"expires_at"`    // Timestamp when the entry expires
 	SizeBytes   int64                  `json:"size_bytes"`    // Approximate size in memory (in bytes)
@@ -27,7 +27,7 @@ type CachedResponse struct {
 //
 // The TTL (time-to-live) determines how long the cached response remains valid.
 // After expiration, the cached response will not be used even if found in cache.
-func NewCachedResponse(key string, request CacheKeyRequest, response llm.CompletionResponse, ttl time.Duration) *CachedResponse {
+func NewCachedResponse(key string, request CacheKeyRequest, response llmtypes.CompletionResponse, ttl time.Duration) *CachedResponse {
 	now := time.Now()
 	return &CachedResponse{
 		Key:         key,
@@ -80,7 +80,7 @@ func (cr *CachedResponse) CalculateChecksum() string {
 	dataToHash := struct {
 		Key      string                 `json:"key"`
 		Request  CacheKeyRequest        `json:"request"`
-		Response llm.CompletionResponse `json:"response"`
+		Response llmtypes.CompletionResponse `json:"response"`
 	}{
 		Key:      cr.Key,
 		Request:  cr.Request,

@@ -244,7 +244,7 @@ Gendocs provides CLI commands to manage the LLM response cache:
 *   **Faster Iteration:** Repeated analyses with unchanged code complete much faster by serving responses from cache.
 *   **Offline Capability:** Cached responses allow some operations to complete even without API access.
 
-For additional configuration options, refer to the `internal/config/` package. Example environment variables used include those needed to authenticate with LLM providers (e.g., OpenAI API key).
+Refer to the `internal/config/` package for details on available configuration options.  Example environment variables used include those needed to authenticate with LLM providers (e.g., OpenAI API key).
 
 ## Documentation
 

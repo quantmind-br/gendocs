@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fiowagd/gendocs/internal/logging"
+	"github.com/user/gendocs/internal/logging"
 )
 
 const (
@@ -578,7 +578,7 @@ func (dc *DiskCache) saveLocked() error {
 	dc.dirty = false
 	dc.logger.Debug("disk_cache_save",
 		logging.Int("entries", len(dc.data.Entries)),
-		logging.Int("total_size_bytes", dc.data.Stats.TotalSizeBytes),
+		logging.Int("total_size_bytes", int(dc.data.Stats.TotalSizeBytes)),
 		logging.String("file_path", dc.filePath))
 	return nil
 }
@@ -647,7 +647,8 @@ func (dc *DiskCache) Put(key string, value *CachedResponse) error {
 	// Ensure checksum is calculated and up-to-date before storing
 	value.UpdateChecksum()
 
-	isNew := !dc.data.Entries[key].IsExpired()
+	existing, exists := dc.data.Entries[key]
+	isNew := !exists || (&existing).IsExpired()
 	dc.data.Entries[key] = *value
 	dc.dirty = true
 

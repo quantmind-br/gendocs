@@ -34,6 +34,7 @@ func Execute() {
 }
 
 func init() {
+	// Persistent flags (available to all subcommands)
 	rootCmd.PersistentFlags().BoolVar(&debugFlag, "debug", false, "Enable debug mode")
 	rootCmd.PersistentFlags().BoolVarP(&verboseFlag, "verbose", "v", false, "Show detailed log output instead of progress UI")
 
@@ -43,7 +44,6 @@ func init() {
 
 	// Add cache-clear command
 	rootCmd.AddCommand(cacheClearCmd)
-	cacheClearCmd.Flags().StringVar(&cacheClearRepoPath, "repo-path", ".", "Path to repository")
 }
 
 // cacheStatsCmd represents the cache-stats command

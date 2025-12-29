@@ -12,15 +12,15 @@ type BaseConfig struct {
 
 // LLMConfig holds LLM provider configuration
 type LLMConfig struct {
-	Provider    string       `mapstructure:"provider"`     // openai, anthropic, gemini
-	Model       string       `mapstructure:"model"`
-	APIKey      string       `mapstructure:"api_key"`
-	BaseURL     string       `mapstructure:"base_url"`      // Optional, for OpenAI-compatible APIs
-	Retries     int          `mapstructure:"retries"`
-	Timeout     int          `mapstructure:"timeout"`       // Timeout in seconds
-	MaxTokens   int          `mapstructure:"max_tokens"`
-	Temperature float64      `mapstructure:"temperature"`
-	Cache       LLMCacheConfig `mapstructure:"cache"`       // Cache configuration
+	Provider    string         `mapstructure:"provider"`     // openai, anthropic, gemini
+	Model       string         `mapstructure:"model"`
+	APIKey      string         `mapstructure:"api_key"`
+	BaseURL     string         `mapstructure:"base_url"`      // Optional, for OpenAI-compatible APIs
+	Retries     int            `mapstructure:"retries"`
+	Timeout     int            `mapstructure:"timeout"`       // Timeout in seconds
+	MaxTokens   int            `mapstructure:"max_tokens"`
+	Temperature float64        `mapstructure:"temperature"`
+	Cache       LLMCacheConfig `mapstructure:"cache"`         // Cache configuration
 }
 
 // LLMCacheConfig holds LLM response cache configuration
@@ -87,11 +87,11 @@ type CronjobConfig struct {
 
 // GitLabConfig holds GitLab integration configuration
 type GitLabConfig struct {
-	APIURL     string `mapstructure:"api_url"`
-	UserName   string `mapstructure:"user_name"`
+	APIURL       string `mapstructure:"api_url"`
+	UserName     string `mapstructure:"user_name"`
 	UserUsername string `mapstructure:"user_username"`
-	UserEmail  string `mapstructure:"user_email"`
-	OAuthToken string `mapstructure:"oauth_token"`
+	UserEmail    string `mapstructure:"user_email"`
+	OAuthToken   string `mapstructure:"oauth_token"`
 }
 
 // LoggingConfig holds logging configuration
@@ -103,13 +103,13 @@ type LoggingConfig struct {
 
 // GlobalConfig holds top-level configuration from .ai/config.yaml
 type GlobalConfig struct {
-	Analyzer  AnalyzerConfig  `mapstructure:"analyzer"`
+	Analyzer   AnalyzerConfig   `mapstructure:"analyzer"`
 	Documenter DocumenterConfig `mapstructure:"documenter"`
-	AIRules   AIRulesConfig   `mapstructure:"ai_rules"`
-	Cronjob   CronjobConfig   `mapstructure:"cronjob"`
-	GitLab    GitLabConfig    `mapstructure:"gitlab"`
-	Gemini    GeminiConfig    `mapstructure:"gemini"`
-	Logging   LoggingConfig   `mapstructure:"logging"`
+	AIRules    AIRulesConfig    `mapstructure:"ai_rules"`
+	Cronjob    CronjobConfig    `mapstructure:"cronjob"`
+	GitLab     GitLabConfig     `mapstructure:"gitlab"`
+	Gemini     GeminiConfig     `mapstructure:"gemini"`
+	Logging    LoggingConfig    `mapstructure:"logging"`
 }
 
 // GetTimeout returns the timeout as a time.Duration
@@ -144,12 +144,6 @@ func (c *LLMConfig) GetRetries() int {
 	return c.Retries
 }
 
-
-// GetMaxHashWorkers returns the max hash workers with a default (0 = use CPU count with max of 8)
-func (c *AnalyzerConfig) GetMaxHashWorkers() int {
-	return c.MaxHashWorkers
-}
-
 // IsEnabled returns whether caching is enabled
 func (c *LLMCacheConfig) IsEnabled() bool {
 	return c.Enabled
@@ -177,4 +171,9 @@ func (c *LLMCacheConfig) GetCachePath() string {
 		return ".ai/llm_cache.json" // Default cache path
 	}
 	return c.CachePath
+}
+
+// GetMaxHashWorkers returns the max hash workers with a default (0 = use CPU count with max of 8)
+func (c *AnalyzerConfig) GetMaxHashWorkers() int {
+	return c.MaxHashWorkers
 }

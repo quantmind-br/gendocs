@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/user/gendocs/internal/llm"
+	"github.com/user/gendocs/internal/llmtypes"
 )
 
 // CacheKeyRequest represents the fields used for cache key generation.
@@ -49,7 +49,7 @@ type CacheKeyTool struct {
 // - Temperature is included (affects response randomness)
 //
 // Returns an error if JSON marshaling fails.
-func GenerateCacheKey(req llm.CompletionRequest) (string, error) {
+func GenerateCacheKey(req llmtypes.CompletionRequest) (string, error) {
 	// Create cache key request
 	keyReq := CacheKeyRequest{
 		SystemPrompt: strings.TrimSpace(req.SystemPrompt),
@@ -98,7 +98,7 @@ func GenerateCacheKey(req llm.CompletionRequest) (string, error) {
 // This function extracts and normalizes the fields needed for cache key generation.
 // It's useful when you need to store the request alongside the cached response
 // for validation or debugging purposes.
-func CacheKeyRequestFrom(req llm.CompletionRequest) CacheKeyRequest {
+func CacheKeyRequestFrom(req llmtypes.CompletionRequest) CacheKeyRequest {
 	keyReq := CacheKeyRequest{
 		SystemPrompt: strings.TrimSpace(req.SystemPrompt),
 		Temperature:  req.Temperature,

@@ -208,6 +208,16 @@ func (c *AnthropicClient) convertRequest(req CompletionRequest) anthropicRequest
 		}
 	}
 
+	// If no messages yet, add initial user message
+	if len(messages) == 0 {
+		messages = append(messages, anthropicMessage{
+			Role: "user",
+			Content: []anthropicContentBlock{
+				{Type: "text", Text: "Analyze this codebase."},
+			},
+		})
+	}
+
 	// Build tools
 	var tools []anthropicTool
 	if len(req.Tools) > 0 {
@@ -233,7 +243,7 @@ func (c *AnthropicClient) convertRequest(req CompletionRequest) anthropicRequest
 }
 
 // convertResponse converts Anthropic response to internal format
-func (c *AnthropicClient) convertResponse(resp anthropicResponse) CompletionResponse {
+func (c *AnthropicClient) convertResponse(resp anthropicResponse) CompletionResponse{
 	result := CompletionResponse{
 		Usage: TokenUsage{
 			InputTokens:  resp.Usage.InputTokens,
