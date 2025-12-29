@@ -195,17 +195,22 @@
     {
       "id": "phase-4",
       "name": "Add Metrics and Observability",
-      "status": "pending",
+      "status": "in_progress",
       "subtasks": [
         {
           "id": "4-1",
           "name": "Implement cache statistics tracking",
           "description": "Track hits, misses, evictions, size, and hit rate",
-          "status": "pending",
-          "files_to_modify": [],
+          "status": "completed",
+          "files_to_modify": [
+            "internal/llmcache/cache.go",
+            "internal/llm/cached_client.go"
+          ],
           "dependencies": [
             "2-3"
-          ]
+          ],
+          "notes": "Successfully implemented comprehensive statistics tracking for LLM response caching. Enhanced DiskCacheStats with Hits, Misses, Evictions, and HitRate fields. Added thread-safe statistics tracking to DiskCache with dedicated mutex (data.mu). Updated DiskCache.Get() to record hits and misses for all cache lookups. Updated DiskCache.CleanupExpired() to record evictions when expired entries are removed. Added helper methods: recordHit(), recordMiss(), recordEviction(count), updateHitRate(). Added DiskCache.Stats() method to retrieve statistics safely. Enhanced CachedLLMClient.GetStats() to aggregate memory and disk cache statistics into a single unified view. All statistics tracked include: Hits (successful retrievals), Misses (failed lookups), Evictions (removed entries), Size (current entry count), MaxSize (maximum entry limit), TotalSizeBytes (total memory usage), HitRate (ratio of hits to total lookups). Thread-safety guaranteed with mutex locks for all stat updates. Disk cache statistics persist to .ai/llm_cache.json and survive program restarts. Implementation verified and documented in verification_4-1.md.",
+          "updated_at": "2025-12-29T08:00:00.000000+00:00"
         },
         {
           "id": "4-2",
@@ -400,5 +405,5 @@
     "estimated_effort": "medium",
     "priority": "high"
   },
-  "last_updated": "2025-12-29T07:45:00.000000+00:00"
+  "last_updated": "2025-12-29T08:00:00.000000+00:00"
 }
