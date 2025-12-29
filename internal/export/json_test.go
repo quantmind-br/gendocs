@@ -835,3 +835,928 @@ func TestGenerateID(t *testing.T) {
 		})
 	}
 }
+
+func TestJSONExtractor_Paragraphs(t *testing.T) {
+	exporter, err := NewJSONExporter()
+	if err != nil {
+		t.Fatalf("Failed to create exporter: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "paragraphs.md")
+	jsonFile := filepath.Join(tmpDir, "paragraphs.json")
+
+	markdown := `# Document
+
+First paragraph with **bold** and *italic* text.
+
+Second paragraph with ` + "`code`" + ` and [links](https://example.com).
+
+Third paragraph on its own.
+`
+
+	err = os.WriteFile(mdFile, []byte(markdown), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write markdown: %v", err)
+	}
+
+	err = exporter.ExportToJSON(mdFile, jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to export: %v", err)
+	}
+
+	jsonData, err := os.ReadFile(jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to read JSON: %v", err)
+	}
+
+	var doc JSONDocument
+	if err := json.Unmarshal(jsonData, &doc); err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	// Count paragraphs
+	paragraphCount := 0
+	for _, elem := range doc.Content.Elements {
+		if elemType, ok := elem["type"].(string); ok && elemType == "paragraph" {
+			paragraphCount++
+			content, ok := elem["content"].(string)
+			if !ok {
+				t.Error("Expected paragraph to have content")
+				continue
+			}
+			if content == "" {
+				t.Error("Expected paragraph content to be non-empty")
+			}
+		}
+	}
+
+	if paragraphCount != 3 {
+		t.Errorf("Expected 3 paragraphs, got %d", paragraphCount)
+	}
+}
+
+func TestJSONExtractor_HeadingsHierarchy(t *testing.T) {
+	exporter, err := NewJSONExporter()
+	if err != nil {
+		t.Fatalf("Failed to create exporter: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "headings.md")
+	jsonFile := filepath.Join(tmpDir, "headings.json")
+
+	markdown := `# H1 One
+
+## H2 One
+
+### H3 One
+
+#### H4 One
+
+## H2 Two
+
+# H1 Two
+
+### H3 Under H1 Two
+`
+
+	err = os.WriteFile(mdFile, []byte(markdown), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write markdown: %v", err)
+	}
+
+	err = exporter.ExportToJSON(mdFile, jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to export: %v", err)
+	}
+
+	jsonData, err := os.ReadFile(jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to read JSON: %v", err)
+	}
+
+	var doc JSONDocument
+	if err := json.Unmarshal(jsonData, &doc); err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	// Should have 2 root headings
+	if len(doc.Content.Headings) != 2 {
+		t.Errorf("Expected 2 root headings, got %d", len(doc.Content.Headings))
+	}
+
+	// First H1 should have one H2 child
+	firstH1 := doc.Content.Headings[0]
+	if firstH1.Text != "H1 One" {
+		t.Errorf("Expected 'H1 One', got '%s'", firstH1.Text)
+	}
+	if len(firstH1.Children) != 1 {
+		t.Errorf("Expected first H1 to have 1 child, got %d", len(firstH1.Children))
+	}
+
+	// H2 should have one H3 child
+	if len(firstH1.Children) > 0 {
+		firstH2 := firstH1.Children[0]
+		if firstH2.Text != "H2 One" {
+			t.Errorf("Expected 'H2 One', got '%s'", firstH2.Text)
+		}
+		if len(firstH2.Children) != 1 {
+			t.Errorf("Expected H2 to have 1 child, got %d", len(firstH2.Children))
+		}
+
+		// H3 should have one H4 child
+		if len(firstH2.Children) > 0 {
+			firstH3 := firstH2.Children[0]
+			if firstH3.Text != "H3 One" {
+				t.Errorf("Expected 'H3 One', got '%s'", firstH3.Text)
+			}
+			if len(firstH3.Children) != 1 {
+				t.Errorf("Expected H3 to have 1 child, got %d", len(firstH3.Children))
+			}
+
+			// H4 should have no children
+			if len(firstH3.Children) > 0 {
+				firstH4 := firstH3.Children[0]
+				if firstH4.Text != "H4 One" {
+					t.Errorf("Expected 'H4 One', got '%s'", firstH4.Text)
+				}
+				if len(firstH4.Children) != 0 {
+					t.Errorf("Expected H4 to have 0 children, got %d", len(firstH4.Children))
+				}
+			}
+		}
+
+		// Second H2 should be sibling of first H2 (child of H1)
+		if len(firstH1.Children) != 2 {
+			t.Errorf("Expected H1 to have 2 H2 children, got %d", len(firstH1.Children))
+		} else {
+			secondH2 := firstH1.Children[1]
+			if secondH2.Text != "H2 Two" {
+				t.Errorf("Expected 'H2 Two', got '%s'", secondH2.Text)
+			}
+		}
+	}
+
+	// Second H1 should have one H3 child
+	secondH1 := doc.Content.Headings[1]
+	if secondH1.Text != "H1 Two" {
+		t.Errorf("Expected 'H1 Two', got '%s'", secondH1.Text)
+	}
+	if len(secondH1.Children) != 1 {
+		t.Errorf("Expected second H1 to have 1 child, got %d", len(secondH1.Children))
+	}
+}
+
+func TestJSONExtractor_UnorderedLists(t *testing.T) {
+	exporter, err := NewJSONExporter()
+	if err != nil {
+		t.Fatalf("Failed to create exporter: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "unordered.md")
+	jsonFile := filepath.Join(tmpDir, "unordered.json")
+
+	markdown := `# Lists
+
+- Simple item
+- Item with **bold**
+  - Nested item 1
+  - Nested item 2
+- Item with ` + "`code`" + `
+`
+
+	err = os.WriteFile(mdFile, []byte(markdown), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write markdown: %v", err)
+	}
+
+	err = exporter.ExportToJSON(mdFile, jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to export: %v", err)
+	}
+
+	jsonData, err := os.ReadFile(jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to read JSON: %v", err)
+	}
+
+	var doc JSONDocument
+	if err := json.Unmarshal(jsonData, &doc); err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	// Find unordered list
+	foundList := false
+	for _, elem := range doc.Content.Elements {
+		if elemType, ok := elem["type"].(string); ok && elemType == "list" {
+			if listType, ok := elem["list_type"].(string); ok && listType == "unordered" {
+				foundList = true
+				items, ok := elem["items"].([]interface{})
+				if !ok {
+					t.Fatal("Expected list to have items")
+				}
+
+				// Should have 3 top-level items
+				if len(items) != 3 {
+					t.Errorf("Expected 3 list items, got %d", len(items))
+				}
+
+				// Check first item has nested items
+				if len(items) > 0 {
+					firstItem, ok := items[0].(map[string]interface{})
+					if !ok {
+						t.Fatal("Expected item to be a map")
+					}
+
+					content, ok := firstItem["content"].(string)
+					if !ok {
+						t.Error("Expected item to have content")
+					}
+					if content != "Simple item" {
+						t.Errorf("Expected 'Simple item', got '%s'", content)
+					}
+
+					// Check nested items
+					nested, ok := firstItem["items"].([]interface{})
+					if !ok {
+						t.Error("Expected first item to have nested items")
+					} else if len(nested) != 2 {
+						t.Errorf("Expected 2 nested items, got %d", len(nested))
+					}
+				}
+			}
+		}
+	}
+
+	if !foundList {
+		t.Fatal("Expected to find unordered list")
+	}
+}
+
+func TestJSONExtractor_OrderedLists(t *testing.T) {
+	exporter, err := NewJSONExporter()
+	if err != nil {
+		t.Fatalf("Failed to create exporter: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "ordered.md")
+	jsonFile := filepath.Join(tmpDir, "ordered.json")
+
+	markdown := `# Ordered Lists
+
+1. First item
+2. Second item
+   1. Nested ordered 1
+   2. Nested ordered 2
+3. Third item
+`
+
+	err = os.WriteFile(mdFile, []byte(markdown), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write markdown: %v", err)
+	}
+
+	err = exporter.ExportToJSON(mdFile, jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to export: %v", err)
+	}
+
+	jsonData, err := os.ReadFile(jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to read JSON: %v", err)
+	}
+
+	var doc JSONDocument
+	if err := json.Unmarshal(jsonData, &doc); err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	foundList := false
+	for _, elem := range doc.Content.Elements {
+		if elemType, ok := elem["type"].(string); ok && elemType == "list" {
+			if listType, ok := elem["list_type"].(string); ok && listType == "ordered" {
+				foundList = true
+				items, ok := elem["items"].([]interface{})
+				if !ok {
+					t.Fatal("Expected list to have items")
+				}
+
+				if len(items) != 3 {
+					t.Errorf("Expected 3 items, got %d", len(items))
+				}
+
+				// Check start number
+				start, ok := elem["start"].(float64)
+				if !ok {
+					t.Error("Expected ordered list to have start number")
+				} else if int(start) != 1 {
+					t.Errorf("Expected start 1, got %v", start)
+				}
+
+				// Check nested ordered list
+				if len(items) > 1 {
+					secondItem, ok := items[1].(map[string]interface{})
+					if ok {
+						nested, ok := secondItem["items"].([]interface{})
+						if !ok {
+							t.Error("Expected second item to have nested items")
+						} else if len(nested) != 2 {
+							t.Errorf("Expected 2 nested items, got %d", len(nested))
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if !foundList {
+		t.Fatal("Expected to find ordered list")
+	}
+}
+
+func TestJSONExtractor_TaskLists(t *testing.T) {
+	exporter, err := NewJSONExporter()
+	if err != nil {
+		t.Fatalf("Failed to create exporter: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "tasks.md")
+	jsonFile := filepath.Join(tmpDir, "tasks.json")
+
+	markdown := `# Task List
+
+- [x] Completed task 1
+- [ ] Incomplete task
+- [x] Completed task 2
+  - [ ] Nested incomplete
+  - [x] Nested completed
+`
+
+	err = os.WriteFile(mdFile, []byte(markdown), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write markdown: %v", err)
+	}
+
+	err = exporter.ExportToJSON(mdFile, jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to export: %v", err)
+	}
+
+	jsonData, err := os.ReadFile(jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to read JSON: %v", err)
+	}
+
+	var doc JSONDocument
+	if err := json.Unmarshal(jsonData, &doc); err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	foundTaskList := false
+	for _, elem := range doc.Content.Elements {
+		if elemType, ok := elem["type"].(string); ok && elemType == "list" {
+			if listType, ok := elem["list_type"].(string); ok && listType == "task" {
+				foundTaskList = true
+				items, ok := elem["items"].([]interface{})
+				if !ok {
+					t.Fatal("Expected task list to have items")
+				}
+
+				if len(items) != 3 {
+					t.Errorf("Expected 3 task items, got %d", len(items))
+				}
+
+				// Check first item
+				if len(items) > 0 {
+					firstItem, ok := items[0].(map[string]interface{})
+					if !ok {
+						t.Fatal("Expected item to be a map")
+					}
+
+					checked, ok := firstItem["checked"].(bool)
+					if !ok {
+						t.Error("Expected task item to have checked field")
+					}
+					if !checked {
+						t.Error("Expected first task to be checked")
+					}
+
+					content, ok := firstItem["content"].(string)
+					if !ok {
+						t.Error("Expected item to have content")
+					}
+					if content != "Completed task 1" {
+						t.Errorf("Expected 'Completed task 1', got '%s'", content)
+					}
+				}
+
+				// Check second item (unchecked)
+				if len(items) > 1 {
+					secondItem, ok := items[1].(map[string]interface{})
+					if ok {
+						checked, ok := secondItem["checked"].(bool)
+						if !ok {
+							t.Error("Expected task item to have checked field")
+						}
+						if checked {
+							t.Error("Expected second task to be unchecked")
+						}
+					}
+				}
+
+				// Check nested tasks
+				if len(items) > 2 {
+					thirdItem, ok := items[2].(map[string]interface{})
+					if ok {
+						nested, ok := thirdItem["items"].([]interface{})
+						if !ok {
+							t.Error("Expected third item to have nested tasks")
+						} else if len(nested) != 2 {
+							t.Errorf("Expected 2 nested tasks, got %d", len(nested))
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if !foundTaskList {
+		t.Fatal("Expected to find task list")
+	}
+}
+
+func TestJSONExtractor_CodeBlocksWithLanguage(t *testing.T) {
+	exporter, err := NewJSONExporter()
+	if err != nil {
+		t.Fatalf("Failed to create exporter: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "code.md")
+	jsonFile := filepath.Join(tmpDir, "code.json")
+
+	markdown := `# Code Blocks
+
+` + "```go\nfunc hello() {\n    fmt.Println(\"Hello\")\n}\n```" + `
+
+` + "```python\ndef hello():\n    print('Hello')\n```" + `
+
+` + "```javascript\nfunction hello() {\n    console.log('Hello');\n}\n```" + `
+
+` + "```bash\necho 'Hello'\n```" + `
+
+    indented code
+    block without
+    language
+`
+
+	err = os.WriteFile(mdFile, []byte(markdown), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write markdown: %v", err)
+	}
+
+	err = exporter.ExportToJSON(mdFile, jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to export: %v", err)
+	}
+
+	jsonData, err := os.ReadFile(jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to read JSON: %v", err)
+	}
+
+	var doc JSONDocument
+	if err := json.Unmarshal(jsonData, &doc); err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	codeBlocks := make(map[string]string)
+	for _, elem := range doc.Content.Elements {
+		if elemType, ok := elem["type"].(string); ok && elemType == "code_block" {
+			language, ok := elem["language"].(string)
+			if !ok {
+				t.Error("Expected code_block to have language")
+				continue
+			}
+
+			code, ok := elem["code"].(string)
+			if !ok {
+				t.Error("Expected code_block to have code")
+				continue
+			}
+
+			if code == "" {
+				t.Errorf("Expected non-empty code for language %s", language)
+			}
+
+			codeBlocks[language] = code
+		}
+	}
+
+	// Should have 5 code blocks (4 with language, 1 without)
+	if len(codeBlocks) != 5 {
+		t.Errorf("Expected 5 code blocks, got %d", len(codeBlocks))
+	}
+
+	// Check specific languages
+	expectedLanguages := []string{"go", "python", "javascript", "bash", ""}
+	for _, lang := range expectedLanguages {
+		if _, ok := codeBlocks[lang]; !ok {
+			t.Errorf("Expected to find code block with language '%s'", lang)
+		}
+	}
+
+	// Verify Go code content
+	goCode := codeBlocks["go"]
+	if !strings.Contains(goCode, "func hello") {
+		t.Error("Expected Go code to contain 'func hello'")
+	}
+	if !strings.Contains(goCode, "fmt.Println") {
+		t.Error("Expected Go code to contain 'fmt.Println'")
+	}
+}
+
+func TestJSONExtractor_Tables(t *testing.T) {
+	exporter, err := NewJSONExporter()
+	if err != nil {
+		t.Fatalf("Failed to create exporter: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "tables.md")
+	jsonFile := filepath.Join(tmpDir, "tables.json")
+
+	markdown := `# Tables
+
+| Left | Center | Right | Default |
+|:-----|:------:|------:|---------|
+| L1   | C1     | R1    | D1      |
+| L2   | C2     | R2    | D2      |
+| L3   | C3     | R3    | D3      |
+`
+
+	err = os.WriteFile(mdFile, []byte(markdown), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write markdown: %v", err)
+	}
+
+	err = exporter.ExportToJSON(mdFile, jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to export: %v", err)
+	}
+
+	jsonData, err := os.ReadFile(jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to read JSON: %v", err)
+	}
+
+	var doc JSONDocument
+	if err := json.Unmarshal(jsonData, &doc); err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	foundTable := false
+	for _, elem := range doc.Content.Elements {
+		if elemType, ok := elem["type"].(string); ok && elemType == "table" {
+			foundTable = true
+
+			// Check header
+			header, ok := elem["header"].([]interface{})
+			if !ok {
+				t.Fatal("Expected table to have header")
+			}
+
+			if len(header) != 4 {
+				t.Errorf("Expected 4 header columns, got %d", len(header))
+			}
+
+			// Check first column alignment
+			if len(header) > 0 {
+				firstCol, ok := header[0].(map[string]interface{})
+				if !ok {
+					t.Fatal("Expected header column to be a map")
+				}
+
+				text, ok := firstCol["text"].(string)
+				if !ok {
+					t.Error("Expected header column to have text")
+				}
+				if text != "Left" {
+					t.Errorf("Expected 'Left', got '%s'", text)
+				}
+
+				alignment, ok := firstCol["alignment"].(string)
+				if !ok {
+					t.Error("Expected header column to have alignment")
+				}
+				if alignment != "left" {
+					t.Errorf("Expected alignment 'left', got '%s'", alignment)
+				}
+			}
+
+			// Check second column (center)
+			if len(header) > 1 {
+				secondCol, ok := header[1].(map[string]interface{})
+				if ok {
+					alignment, ok := secondCol["alignment"].(string)
+					if !ok {
+						t.Error("Expected header column to have alignment")
+					}
+					if alignment != "center" {
+						t.Errorf("Expected alignment 'center', got '%s'", alignment)
+					}
+				}
+			}
+
+			// Check third column (right)
+			if len(header) > 2 {
+				thirdCol, ok := header[2].(map[string]interface{})
+				if ok {
+					alignment, ok := thirdCol["alignment"].(string)
+					if !ok {
+						t.Error("Expected header column to have alignment")
+					}
+					if alignment != "right" {
+						t.Errorf("Expected alignment 'right', got '%s'", alignment)
+					}
+				}
+			}
+
+			// Check rows
+			rows, ok := elem["rows"].([]interface{})
+			if !ok {
+				t.Fatal("Expected table to have rows")
+			}
+
+			if len(rows) != 3 {
+				t.Errorf("Expected 3 rows, got %d", len(rows))
+			}
+
+			// Check first row
+			if len(rows) > 0 {
+				firstRow, ok := rows[0].([]interface{})
+				if !ok {
+					t.Fatal("Expected row to be an array")
+				}
+
+				if len(firstRow) != 4 {
+					t.Errorf("Expected 4 columns in row, got %d", len(firstRow))
+				}
+
+				// Check first cell
+				if len(firstRow) > 0 {
+					firstCell, ok := firstRow[0].(map[string]interface{})
+					if !ok {
+						t.Fatal("Expected cell to be a map")
+					}
+
+					text, ok := firstCell["text"].(string)
+					if !ok {
+						t.Error("Expected cell to have text")
+					}
+					if text != "L1" {
+						t.Errorf("Expected 'L1', got '%s'", text)
+					}
+				}
+			}
+		}
+	}
+
+	if !foundTable {
+		t.Fatal("Expected to find table")
+	}
+}
+
+func TestJSONExtractor_Blockquotes(t *testing.T) {
+	exporter, err := NewJSONExporter()
+	if err != nil {
+		t.Fatalf("Failed to create exporter: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "blockquote.md")
+	jsonFile := filepath.Join(tmpDir, "blockquote.json")
+
+	markdown := `# Blockquotes
+
+> Simple blockquote
+> with multiple lines
+
+> Blockquote with **bold** and *italic*
+> and ` + "`code`" + `
+
+> Nested blockquote
+> > Inner blockquote
+> > Still inner
+> Back to outer
+`
+
+	err = os.WriteFile(mdFile, []byte(markdown), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write markdown: %v", err)
+	}
+
+	err = exporter.ExportToJSON(mdFile, jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to export: %v", err)
+	}
+
+	jsonData, err := os.ReadFile(jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to read JSON: %v", err)
+	}
+
+	var doc JSONDocument
+	if err := json.Unmarshal(jsonData, &doc); err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	blockquoteCount := 0
+	for _, elem := range doc.Content.Elements {
+		if elemType, ok := elem["type"].(string); ok && elemType == "blockquote" {
+			blockquoteCount++
+			content, ok := elem["content"].(string)
+			if !ok {
+				t.Error("Expected blockquote to have content")
+				continue
+			}
+
+			if content == "" {
+				t.Error("Expected blockquote content to be non-empty")
+			}
+
+			// Check that content contains expected words
+			if blockquoteCount == 1 {
+				if !strings.Contains(content, "Simple") {
+					t.Error("Expected first blockquote to contain 'Simple'")
+				}
+			}
+		}
+	}
+
+	if blockquoteCount != 2 {
+		t.Errorf("Expected 2 blockquotes, got %d", blockquoteCount)
+	}
+}
+
+func TestJSONExtractor_Links(t *testing.T) {
+	exporter, err := NewJSONExporter()
+	if err != nil {
+		t.Fatalf("Failed to create exporter: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "links.md")
+	jsonFile := filepath.Join(tmpDir, "links.json")
+
+	markdown := `# Links
+
+Simple [link](https://example.com).
+
+Link with [title](https://example.com "Example Title").
+
+[Reference link][ref]
+
+[ref]: https://example.com
+
+Auto link: <https://auto.com>
+`
+
+	err = os.WriteFile(mdFile, []byte(markdown), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write markdown: %v", err)
+	}
+
+	err = exporter.ExportToJSON(mdFile, jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to export: %v", err)
+	}
+
+	jsonData, err := os.ReadFile(jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to read JSON: %v", err)
+	}
+
+	var doc JSONDocument
+	if err := json.Unmarshal(jsonData, &doc); err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	linkCount := 0
+	for _, elem := range doc.Content.Elements {
+		if elemType, ok := elem["type"].(string); ok && elemType == "link" {
+			linkCount++
+
+			url, ok := elem["url"].(string)
+			if !ok {
+				t.Error("Expected link to have url")
+				continue
+			}
+
+			if url == "" {
+				t.Error("Expected link URL to be non-empty")
+			}
+
+			text, ok := elem["text"].(string)
+			if !ok {
+				t.Error("Expected link to have text")
+				continue
+			}
+
+			// Check specific link
+			if text == "link" {
+				if url != "https://example.com" {
+					t.Errorf("Expected 'https://example.com', got '%s'", url)
+				}
+			}
+		}
+	}
+
+	if linkCount < 2 {
+		t.Errorf("Expected at least 2 links, got %d", linkCount)
+	}
+}
+
+func TestJSONExtractor_Images(t *testing.T) {
+	exporter, err := NewJSONExporter()
+	if err != nil {
+		t.Fatalf("Failed to create exporter: %v", err)
+	}
+
+	tmpDir := t.TempDir()
+	mdFile := filepath.Join(tmpDir, "images.md")
+	jsonFile := filepath.Join(tmpDir, "images.json")
+
+	markdown := `# Images
+
+![Alt text](image.png)
+
+![Image with title](photo.jpg "Photo Title")
+
+![Remote](https://example.com/image.png)
+`
+
+	err = os.WriteFile(mdFile, []byte(markdown), 0644)
+	if err != nil {
+		t.Fatalf("Failed to write markdown: %v", err)
+	}
+
+	err = exporter.ExportToJSON(mdFile, jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to export: %v", err)
+	}
+
+	jsonData, err := os.ReadFile(jsonFile)
+	if err != nil {
+		t.Fatalf("Failed to read JSON: %v", err)
+	}
+
+	var doc JSONDocument
+	if err := json.Unmarshal(jsonData, &doc); err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	imageCount := 0
+	for _, elem := range doc.Content.Elements {
+		if elemType, ok := elem["type"].(string); ok && elemType == "image" {
+			imageCount++
+
+			src, ok := elem["src"].(string)
+			if !ok {
+				t.Error("Expected image to have src")
+				continue
+			}
+
+			if src == "" {
+				t.Error("Expected image src to be non-empty")
+			}
+
+			alt, ok := elem["alt"].(string)
+			if !ok {
+				t.Error("Expected image to have alt")
+				continue
+			}
+
+			// Check specific image
+			if alt == "Alt text" {
+				if src != "image.png" {
+					t.Errorf("Expected 'image.png', got '%s'", src)
+				}
+			}
+
+			if alt == "Remote" {
+				if src != "https://example.com/image.png" {
+					t.Errorf("Expected 'https://example.com/image.png', got '%s'", src)
+				}
+			}
+		}
+	}
+
+	if imageCount != 3 {
+		t.Errorf("Expected 3 images, got %d", imageCount)
+	}
+}
