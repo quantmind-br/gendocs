@@ -29,7 +29,7 @@ func NewAnalyzerAgent(cfg config.AnalyzerConfig, promptManager *prompts.Manager,
 	retryClient := llm.NewRetryClient(llm.DefaultRetryConfig())
 
 	// Create LLM factory
-	factory := llm.NewFactory(retryClient)
+	factory := llm.NewFactory(retryClient, nil, nil, false, 0)
 
 	return &AnalyzerAgent{
 		config:        cfg,

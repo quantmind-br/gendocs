@@ -53,7 +53,7 @@ func (aa *AIRulesGeneratorAgent) Run(ctx context.Context) error {
 	}
 
 	retryClient := llm.NewRetryClient(llm.DefaultRetryConfig())
-	factory := llm.NewFactory(retryClient)
+	factory := llm.NewFactory(retryClient, nil, nil, false, 0)
 
 	// For now, generate CLAUDE.md
 	agent, err := CreateAIRulesGeneratorAgent(aa.config.LLM, aa.config.RepoPath, factory, aa.promptManager, aa.logger)

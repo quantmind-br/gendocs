@@ -53,7 +53,7 @@ func (da *DocumenterAgent) Run(ctx context.Context) error {
 	}
 
 	retryClient := llm.NewRetryClient(llm.DefaultRetryConfig())
-	factory := llm.NewFactory(retryClient)
+	factory := llm.NewFactory(retryClient, nil, nil, false, 0)
 
 	// Create documenter agent
 	agent, err := CreateDocumenterAgent(da.config.LLM, da.config.RepoPath, factory, da.promptManager, da.logger)
