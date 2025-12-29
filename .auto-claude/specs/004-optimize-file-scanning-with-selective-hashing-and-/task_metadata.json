@@ -1,0 +1,9 @@
+{
+  "sourceType": "ideation",
+  "ideationType": "performance_optimizations",
+  "ideaId": "perf-002",
+  "rationale": "ScanFiles walks the entire repository and computes SHA256 for every file using HashFile, which reads complete file contents through io.Copy. For a typical project with 1000+ files averaging 50KB each, this means reading 50MB+ on every analysis. Hashing is CPU-bound and the file walking is I/O bound - both can be parallelized. Additionally, we can skip hashing files whose mtime hasn't changed since the last scan.",
+  "category": "performance",
+  "performanceCategory": "runtime",
+  "impact": "high"
+}
