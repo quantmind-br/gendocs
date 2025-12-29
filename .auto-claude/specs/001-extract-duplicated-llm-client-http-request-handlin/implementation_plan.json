@@ -6,7 +6,9 @@
   "status": "planned",
   "planStatus": "ready",
   "workflow_type": "development",
-  "services_involved": ["internal/llm"],
+  "services_involved": [
+    "internal/llm"
+  ],
   "phases": [
     {
       "id": "phase-1",
@@ -20,16 +22,24 @@
           "description": "Document the exact duplicated pattern across openai.go, anthropic.go, and gemini.go GenerateCompletion methods",
           "status": "completed",
           "estimatedMinutes": 10,
-          "files_involved": ["internal/llm/openai.go", "internal/llm/anthropic.go", "internal/llm/gemini.go"],
+          "files_involved": [
+            "internal/llm/openai.go",
+            "internal/llm/anthropic.go",
+            "internal/llm/gemini.go"
+          ],
           "notes": "Created pattern-analysis.md documenting the 8-step duplicated pattern, code metrics (101 lines), and provider-specific logic"
         },
         {
           "id": "phase-1-subtask-2",
           "name": "Design helper function signature",
           "description": "Design doHTTPRequest helper function with parameters: context, method, url, headers, requestBody. Returns: responseBody bytes",
-          "status": "pending",
+          "status": "completed",
           "estimatedMinutes": 15,
-          "files_involved": ["internal/llm/client.go"]
+          "files_involved": [
+            "internal/llm/client.go"
+          ],
+          "notes": "Created comprehensive helper-function-design.md documenting:\n- Complete function signature with full documentation\n- Design decisions for each parameter and return type\n- Step-by-step implementation behavior\n- Error handling strategy\n- Usage examples for all three providers (OpenAI, Anthropic, Gemini)\n- Benefits analysis (code reduction, maintainability, consistency)\n- Verification criteria\n- Implementation notes (thread safety, context support, memory management, extensibility)",
+          "updated_at": "2025-12-29T04:03:40.138624+00:00"
         },
         {
           "id": "phase-1-subtask-3",
@@ -53,7 +63,9 @@
           "description": "Implement method with signature: doHTTPRequest(ctx context.Context, method, url string, headers map[string]string, body interface{}) ([]byte, error)",
           "status": "pending",
           "estimatedMinutes": 20,
-          "files_involved": ["internal/llm/client.go"],
+          "files_involved": [
+            "internal/llm/client.go"
+          ],
           "acceptance_criteria": [
             "Method accepts method, url, headers map, and body interface",
             "Marshals body to JSON",
@@ -71,7 +83,9 @@
           "description": "Ensure proper error wrapping for JSON marshaling failures",
           "status": "pending",
           "estimatedMinutes": 5,
-          "files_involved": ["internal/llm/client.go"],
+          "files_involved": [
+            "internal/llm/client.go"
+          ],
           "acceptance_criteria": [
             "Returns wrapped error with context 'failed to marshal request'"
           ]
@@ -82,7 +96,9 @@
           "description": "Ensure proper error wrapping for HTTP request creation failures",
           "status": "pending",
           "estimatedMinutes": 5,
-          "files_involved": ["internal/llm/client.go"],
+          "files_involved": [
+            "internal/llm/client.go"
+          ],
           "acceptance_criteria": [
             "Returns wrapped error with context 'failed to create request'"
           ]
@@ -93,7 +109,9 @@
           "description": "Ensure proper error wrapping for request execution failures",
           "status": "pending",
           "estimatedMinutes": 5,
-          "files_involved": ["internal/llm/client.go"],
+          "files_involved": [
+            "internal/llm/client.go"
+          ],
           "acceptance_criteria": [
             "Returns wrapped error with context 'request failed'",
             "Properly defers response.Body.Close()"
@@ -105,7 +123,9 @@
           "description": "Ensure proper error wrapping for response body reading failures",
           "status": "pending",
           "estimatedMinutes": 5,
-          "files_involved": ["internal/llm/client.go"],
+          "files_involved": [
+            "internal/llm/client.go"
+          ],
           "acceptance_criteria": [
             "Returns wrapped error with context 'failed to read response'"
           ]
@@ -116,7 +136,9 @@
           "description": "Ensure proper error wrapping for non-200 status codes with response body in error message",
           "status": "pending",
           "estimatedMinutes": 5,
-          "files_involved": ["internal/llm/client.go"],
+          "files_involved": [
+            "internal/llm/client.go"
+          ],
           "acceptance_criteria": [
             "Checks if resp.StatusCode != http.StatusOK",
             "Returns wrapped error with status code and response body",
@@ -137,7 +159,9 @@
           "description": "Replace lines 117-148 in openai.go with call to c.doHTTPRequest, passing URL, headers, and request body",
           "status": "pending",
           "estimatedMinutes": 15,
-          "files_involved": ["internal/llm/openai.go"],
+          "files_involved": [
+            "internal/llm/openai.go"
+          ],
           "acceptance_criteria": [
             "Removes duplicated JSON marshaling code",
             "Removes duplicated HTTP request creation code",
@@ -154,7 +178,9 @@
           "description": "Run go test on internal/llm/openai_test.go to ensure no regressions",
           "status": "pending",
           "estimatedMinutes": 5,
-          "files_involved": ["internal/llm/openai_test.go"],
+          "files_involved": [
+            "internal/llm/openai_test.go"
+          ],
           "acceptance_criteria": [
             "All tests pass",
             "No test modifications required"
@@ -174,7 +200,9 @@
           "description": "Replace lines 115-147 in anthropic.go with call to c.doHTTPRequest, passing URL, headers, and request body",
           "status": "pending",
           "estimatedMinutes": 15,
-          "files_involved": ["internal/llm/anthropic.go"],
+          "files_involved": [
+            "internal/llm/anthropic.go"
+          ],
           "acceptance_criteria": [
             "Removes duplicated JSON marshaling code",
             "Removes duplicated HTTP request creation code",
@@ -191,7 +219,9 @@
           "description": "Run go test on internal/llm/anthropic_test.go to ensure no regressions",
           "status": "pending",
           "estimatedMinutes": 5,
-          "files_involved": ["internal/llm/anthropic_test.go"],
+          "files_involved": [
+            "internal/llm/anthropic_test.go"
+          ],
           "acceptance_criteria": [
             "All tests pass",
             "No test modifications required"
@@ -211,7 +241,9 @@
           "description": "Replace lines 115-150 in gemini.go with call to c.doHTTPRequest, passing URL, headers, and request body",
           "status": "pending",
           "estimatedMinutes": 15,
-          "files_involved": ["internal/llm/gemini.go"],
+          "files_involved": [
+            "internal/llm/gemini.go"
+          ],
           "acceptance_criteria": [
             "Removes duplicated JSON marshaling code",
             "Removes duplicated HTTP request creation code",
@@ -228,7 +260,9 @@
           "description": "Run go test on internal/llm/gemini_test.go to ensure no regressions",
           "status": "pending",
           "estimatedMinutes": 5,
-          "files_involved": ["internal/llm/gemini_test.go"],
+          "files_involved": [
+            "internal/llm/gemini_test.go"
+          ],
           "acceptance_criteria": [
             "All tests pass",
             "No test modifications required"
@@ -248,7 +282,9 @@
           "description": "Execute 'go test ./internal/llm/...' to ensure all tests pass across all clients",
           "status": "pending",
           "estimatedMinutes": 10,
-          "files_involved": ["internal/llm/..."],
+          "files_involved": [
+            "internal/llm/..."
+          ],
           "acceptance_criteria": [
             "All OpenAI tests pass",
             "All Anthropic tests pass",
@@ -288,7 +324,11 @@
           "description": "Count lines of code removed and document the reduction in duplication",
           "status": "pending",
           "estimatedMinutes": 5,
-          "files_involved": ["internal/llm/openai.go", "internal/llm/anthropic.go", "internal/llm/gemini.go"],
+          "files_involved": [
+            "internal/llm/openai.go",
+            "internal/llm/anthropic.go",
+            "internal/llm/gemini.go"
+          ],
           "acceptance_criteria": [
             "Approximately 30 lines removed from each client",
             "HTTP request logic centralized in one location",
@@ -321,5 +361,6 @@
     "Project builds successfully",
     "No breaking changes to public APIs"
   ],
-  "spec_file": "spec.md"
+  "spec_file": "spec.md",
+  "last_updated": "2025-12-29T04:03:40.138630+00:00"
 }

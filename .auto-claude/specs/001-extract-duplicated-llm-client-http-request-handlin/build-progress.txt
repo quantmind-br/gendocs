@@ -3,7 +3,7 @@
 ## Summary
 Extracting duplicated HTTP request handling logic from OpenAI, Anthropic, and Gemini LLM clients into a shared helper function in BaseLLMClient.
 
-## Status: Phase 1 - Subtask 1 Complete
+## Status: Phase 1 - Subtask 2 Complete
 
 ### Phase 1: Design HTTP Request Helper
 
@@ -29,10 +29,55 @@ Created detailed pattern-analysis.md documenting:
 - **Provider-specific logic** clearly identified and documented
 - **Proposed helper function** signature designed
 
+#### ✅ Subtask 2: Design Helper Function Signature (Completed)
+Created comprehensive helper-function-design.md documenting:
+
+**Function Signature:**
+```go
+func (c *BaseLLMClient) doHTTPRequest(
+    ctx context.Context,
+    method string,
+    url string,
+    headers map[string]string,
+    body interface{},
+) ([]byte, error)
+```
+
+**Key Design Decisions:**
+- **Location**: BaseLLMClient method to access retryClient
+- **Body Parameter**: interface{} type for provider-specific request structs
+- **Headers Parameter**: map[string]string for flexibility
+- **Return Type**: Raw []byte to allow provider-specific parsing
+
+**Implementation Behavior:**
+1. Marshal request body to JSON
+2. Create HTTP request with context
+3. Set headers from map
+4. Execute with retryClient.Do
+5. Read response body
+6. Validate status code (200 OK)
+7. Return raw bytes for provider-specific parsing
+
+**Error Handling:**
+- `"failed to marshal request: %w"`
+- `"failed to create request: %w"`
+- `"request failed: %w"`
+- `"failed to read response: %w"`
+- `"API error: status %d, body: %s"`
+
+**Benefits:**
+- ~70 lines of code reduction
+- Single source of truth for HTTP handling
+- Consistent error messages and retry behavior
+- Provider-specific logic preserved
+
+**Verification Criteria:**
+- 10 specific criteria covering signature, behavior, error handling, and resource cleanup
+
 ### Next Steps
 1. ✅ Subtask 1: Document pattern (COMPLETED)
-2. ⏳ Subtask 2: Design helper function signature
-3. ⏳ Subtask 3: Identify provider-specific logic (already documented)
+2. ✅ Subtask 2: Design helper function signature (COMPLETED)
+3. ⏳ Subtask 3: Identify provider-specific logic (already documented in pattern-analysis.md)
 
 ### Implementation Plan Created
 - ✅ 6 phases defined with 19 subtasks
