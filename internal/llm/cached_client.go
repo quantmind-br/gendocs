@@ -8,7 +8,14 @@ import (
 	"github.com/user/gendocs/internal/llmcache"
 )
 
-// CachedLLMClient wraps an LLMClient with caching functionality
+// CachedLLMClient wraps an LLMClient with caching functionality.
+//
+// The client implements a two-tier caching strategy:
+// 1. Memory cache (LRU): Fast in-memory cache for frequently accessed responses
+// 2. Disk cache: Persistent cache across program restarts
+//
+// Cache hits avoid making API calls entirely, saving both cost and latency.
+// When an entry is found in the disk cache, it's promoted to the memory cache.
 type CachedLLMClient struct {
 	client      LLMClient                // Underlying LLM client
 	memoryCache *llmcache.LRUCache       // In-memory LRU cache
@@ -17,7 +24,13 @@ type CachedLLMClient struct {
 	ttl         time.Duration            // Time-to-live for cache entries
 }
 
-// NewCachedLLMClient creates a new cached LLM client
+// NewCachedLLMClient creates a new cached LLM client.
+//
+// client: The underlying LLM client to wrap
+// memoryCache: In-memory LRU cache (can be nil)
+// diskCache: Persistent disk cache (can be nil)
+// enabled: Whether caching is enabled
+// ttl: Time-to-live for cached responses
 func NewCachedLLMClient(
 	client LLMClient,
 	memoryCache *llmcache.LRUCache,
@@ -34,7 +47,16 @@ func NewCachedLLMClient(
 	}
 }
 
-// GenerateCompletion implements LLMClient interface with caching
+// GenerateCompletion implements LLMClient interface with caching.
+//
+// The caching strategy is:
+// 1. If caching is disabled, delegate directly to the underlying client
+// 2. Check memory cache for a hit
+// 3. Check disk cache for a hit (promote to memory cache if found)
+// 4. Call underlying client and cache the successful response
+//
+// Cache key generation failures are handled gracefully by bypassing the cache.
+// API errors are not cached.
 func (c *CachedLLMClient) GenerateCompletion(
 	ctx context.Context,
 	req CompletionRequest,
@@ -90,17 +112,21 @@ func (c *CachedLLMClient) GenerateCompletion(
 	return resp, nil
 }
 
-// SupportsTools delegates to underlying client
+// SupportsTools delegates to underlying client.
 func (c *CachedLLMClient) SupportsTools() bool {
 	return c.client.SupportsTools()
 }
 
-// GetProvider returns the underlying provider name with "cached-" prefix
+// GetProvider returns the underlying provider name with "cached-" prefix.
+// This makes it easy to identify when a cached client is being used.
 func (c *CachedLLMClient) GetProvider() string {
 	return fmt.Sprintf("cached-%s", c.client.GetProvider())
 }
 
-// GetStats returns aggregated statistics from both memory and disk cache
+// GetStats returns aggregated statistics from both memory and disk cache.
+//
+// Combines hits, misses, and evictions from both caches.
+// Recalculates the hit rate based on the combined data.
 func (c *CachedLLMClient) GetStats() llmcache.CacheStats {
 	if c.memoryCache == nil {
 		return llmcache.CacheStats{}
@@ -127,7 +153,10 @@ func (c *CachedLLMClient) GetStats() llmcache.CacheStats {
 	return memStats
 }
 
-// CleanupExpired removes expired entries from both caches
+// CleanupExpired removes expired entries from both caches.
+//
+// Returns the number of entries removed from each cache.
+// Note: diskExpired is always 0 as the disk cache doesn't report counts.
 func (c *CachedLLMClient) CleanupExpired() (memoryExpired, diskExpired int) {
 	memoryExpired = 0
 	if c.memoryCache != nil {
@@ -145,7 +174,8 @@ func (c *CachedLLMClient) CleanupExpired() (memoryExpired, diskExpired int) {
 	return memoryExpired, diskExpired
 }
 
-// Clear clears both memory and disk cache
+// Clear clears both memory and disk cache.
+// The disk cache is immediately saved to disk after clearing.
 func (c *CachedLLMClient) Clear() error {
 	if c.memoryCache != nil {
 		c.memoryCache.Clear()
@@ -158,7 +188,8 @@ func (c *CachedLLMClient) Clear() error {
 	return nil
 }
 
-// GetUnderlyingClient returns the underlying unwrapped LLM client
+// GetUnderlyingClient returns the underlying unwrapped LLM client.
+// This is useful when you need to bypass the caching layer.
 func (c *CachedLLMClient) GetUnderlyingClient() LLMClient {
 	return c.client
 }

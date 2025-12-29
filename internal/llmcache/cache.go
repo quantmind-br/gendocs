@@ -12,27 +12,31 @@ import (
 )
 
 const (
-	// CacheVersion is the current cache format version
+	// CacheVersion is the current cache format version.
+	// This is used to detect incompatible cache formats when loading from disk.
 	CacheVersion = 1
-	// DefaultCacheFileName is the default cache file name
+	// DefaultCacheFileName is the default cache file name.
 	DefaultCacheFileName = ".ai/llm_cache.json"
-	// DefaultTTL is the default time-to-live for cache entries
+	// DefaultTTL is the default time-to-live for cache entries.
+	// Cached responses older than this are considered stale.
 	DefaultTTL = 7 * 24 * time.Hour // 7 days
 )
 
-// CacheStats tracks cache performance metrics
+// CacheStats tracks cache performance metrics.
+// These statistics help monitor cache effectiveness and efficiency.
 type CacheStats struct {
-	Hits          int64    `json:"hits"`
-	Misses        int64    `json:"misses"`
-	Evictions     int64    `json:"evictions"`
-	Size          int      `json:"size"`
-	MaxSize       int      `json:"max_size"`
-	TotalSizeBytes int64   `json:"total_size_bytes"`
-	HitRate       float64  `json:"hit_rate"`
+	Hits          int64    `json:"hits"`            // Number of cache hits
+	Misses        int64    `json:"misses"`          // Number of cache misses
+	Evictions     int64    `json:"evictions"`       // Number of entries evicted
+	Size          int      `json:"size"`            // Current number of entries
+	MaxSize       int      `json:"max_size"`        // Maximum number of entries allowed
+	TotalSizeBytes int64   `json:"total_size_bytes"` // Total size of all entries in bytes
+	HitRate       float64  `json:"hit_rate"`        // Cache hit rate (0.0 to 1.0)
 	mu            sync.RWMutex
 }
 
-// updateHitRate updates the hit rate calculation
+// updateHitRate updates the hit rate calculation.
+// Hit rate is the ratio of hits to total requests (hits + misses).
 func (s *CacheStats) updateHitRate() {
 	total := s.Hits + s.Misses
 	if total > 0 {
@@ -40,7 +44,8 @@ func (s *CacheStats) updateHitRate() {
 	}
 }
 
-// RecordHit records a cache hit
+// RecordHit records a cache hit.
+// This should be called when a cache lookup succeeds.
 func (s *CacheStats) RecordHit() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -48,7 +53,8 @@ func (s *CacheStats) RecordHit() {
 	s.updateHitRate()
 }
 
-// RecordMiss records a cache miss
+// RecordMiss records a cache miss.
+// This should be called when a cache lookup fails.
 func (s *CacheStats) RecordMiss() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -56,35 +62,42 @@ func (s *CacheStats) RecordMiss() {
 	s.updateHitRate()
 }
 
-// RecordEviction records a cache eviction
+// RecordEviction records a cache eviction.
+// This should be called when an entry is evicted from the cache.
 func (s *CacheStats) RecordEviction() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.Evictions++
 }
 
-// lruEntry represents a single cache entry in the LRU list
+// lruEntry represents a single cache entry in the LRU list.
+// It's an internal type used by LRUCache to track cached items.
 type lruEntry struct {
-	key        string
-	value      *CachedResponse
-	createdAt  time.Time
-	accessedAt time.Time
-	sizeBytes  int64
-	prev, next *lruEntry
+	key        string            // Cache key for this entry
+	value      *CachedResponse   // The cached response
+	createdAt  time.Time         // When the entry was created
+	accessedAt time.Time         // When the entry was last accessed
+	sizeBytes  int64             // Approximate size in bytes
+	prev, next *lruEntry         // Pointers for LRU doubly-linked list
 }
 
-// LRUCache implements a thread-safe LRU cache for LLM responses
+// LRUCache implements a thread-safe LRU (Least Recently Used) cache for LLM responses.
+//
+// The cache automatically evicts the least recently used entries when it reaches capacity.
+// It tracks hit/miss statistics and provides thread-safe access to cached data.
 type LRUCache struct {
-	maxSize    int
-	size       int
-	cache      map[string]*lruEntry
-	head, tail *lruEntry
-	mu         sync.RWMutex
-	stats      CacheStats
-	logger     *logging.Logger
+	maxSize    int                    // Maximum number of entries allowed
+	size       int                    // Current number of entries
+	cache      map[string]*lruEntry   // Map from key to entry
+	head, tail *lruEntry              // Head (most recent) and tail (least recent) of LRU list
+	mu         sync.RWMutex           // Protects all cache access
+	stats      CacheStats             // Cache performance statistics
+	logger     *logging.Logger        // Logger for cache operations
 }
 
-// NewLRUCache creates a new LRU cache with the given maximum size
+// NewLRUCache creates a new LRU cache with the given maximum size.
+//
+// The cache will evict entries when it exceeds this size, using LRU policy.
 func NewLRUCache(maxSize int) *LRUCache {
 	return &LRUCache{
 		maxSize: maxSize,
@@ -94,14 +107,18 @@ func NewLRUCache(maxSize int) *LRUCache {
 	}
 }
 
-// SetLogger sets the logger for the cache
+// SetLogger sets the logger for the cache.
 func (c *LRUCache) SetLogger(logger *logging.Logger) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.logger = logger
 }
 
-// Get retrieves a value from the cache
+// Get retrieves a value from the cache.
+//
+// Returns the cached response and true if found and not expired.
+// Returns nil and false if not found or expired.
+// Updates the LRU order on cache hits.
 func (c *LRUCache) Get(key string) (*CachedResponse, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -146,7 +163,10 @@ func (c *LRUCache) Get(key string) (*CachedResponse, bool) {
 	return entry.value, true
 }
 
-// Put stores a value in the cache
+// Put stores a value in the cache.
+//
+// If the key already exists, the value is updated.
+// If the cache is at capacity, the least recently used entry is evicted.
 func (c *LRUCache) Put(key string, value *CachedResponse) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -200,7 +220,8 @@ func (c *LRUCache) Put(key string, value *CachedResponse) {
 	}
 }
 
-// Delete removes a value from the cache
+// Delete removes a value from the cache.
+// Does nothing if the key doesn't exist.
 func (c *LRUCache) Delete(key string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -210,7 +231,8 @@ func (c *LRUCache) Delete(key string) {
 	}
 }
 
-// Clear removes all entries from the cache
+// Clear removes all entries from the cache.
+// Resets all statistics except MaxSize.
 func (c *LRUCache) Clear() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -223,14 +245,15 @@ func (c *LRUCache) Clear() {
 	c.stats.TotalSizeBytes = 0
 }
 
-// Size returns the current number of entries in the cache
+// Size returns the current number of entries in the cache.
 func (c *LRUCache) Size() int {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.size
 }
 
-// Stats returns a copy of the cache statistics
+// Stats returns a copy of the cache statistics.
+// The copy is thread-safe and won't be affected by subsequent cache operations.
 func (c *LRUCache) Stats() CacheStats {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -240,7 +263,8 @@ func (c *LRUCache) Stats() CacheStats {
 	return stats
 }
 
-// moveToFront moves an entry to the front of the LRU list
+// moveToFront moves an entry to the front of the LRU list.
+// This is called when an entry is accessed to mark it as recently used.
 func (c *LRUCache) moveToFront(entry *lruEntry) {
 	if entry == c.head {
 		return
@@ -253,7 +277,7 @@ func (c *LRUCache) moveToFront(entry *lruEntry) {
 	c.addToFront(entry)
 }
 
-// addToFront adds an entry to the front of the LRU list
+// addToFront adds an entry to the front of the LRU list.
 func (c *LRUCache) addToFront(entry *lruEntry) {
 	entry.prev = nil
 	entry.next = c.head
@@ -269,7 +293,8 @@ func (c *LRUCache) addToFront(entry *lruEntry) {
 	}
 }
 
-// removeEntry removes an entry from the cache and LRU list
+// removeEntry removes an entry from the cache and LRU list.
+// Updates size statistics and decrements the cache size.
 func (c *LRUCache) removeEntry(entry *lruEntry) {
 	// Remove from map
 	delete(c.cache, entry.key)
@@ -283,7 +308,8 @@ func (c *LRUCache) removeEntry(entry *lruEntry) {
 	c.removeEntryList(entry)
 }
 
-// removeEntryList removes an entry from the LRU list only
+// removeEntryList removes an entry from the LRU list only.
+// Does not remove from the map or update statistics.
 func (c *LRUCache) removeEntryList(entry *lruEntry) {
 	if entry.prev != nil {
 		entry.prev.next = entry.next
@@ -298,7 +324,8 @@ func (c *LRUCache) removeEntryList(entry *lruEntry) {
 	}
 }
 
-// evictLRU evicts the least recently used entry
+// evictLRU evicts the least recently used entry from the cache.
+// This is called automatically when the cache exceeds its maximum size.
 func (c *LRUCache) evictLRU() {
 	if c.tail == nil {
 		return
@@ -333,7 +360,8 @@ func (c *LRUCache) evictLRU() {
 		logging.Int("current_size", c.size))
 }
 
-// CleanupExpired removes all expired entries from the cache
+// CleanupExpired removes all expired entries from the cache.
+// Returns the number of entries that were removed.
 func (c *LRUCache) CleanupExpired() int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -363,28 +391,29 @@ func (c *LRUCache) CleanupExpired() int {
 	return len(expired)
 }
 
-// DiskCacheData represents the on-disk cache format
+// DiskCacheData represents the on-disk cache format.
+// This structure is serialized to JSON for persistent storage.
 type DiskCacheData struct {
-	Version   int                         `json:"version"`
-	CreatedAt time.Time                   `json:"created_at"`
-	UpdatedAt time.Time                   `json:"updated_at"`
-	Entries   map[string]CachedResponse   `json:"entries"`
-	Stats     DiskCacheStats              `json:"stats"`
+	Version   int                         `json:"version"`    // Cache format version
+	CreatedAt time.Time                   `json:"created_at"` // When the cache was created
+	UpdatedAt time.Time                   `json:"updated_at"` // When the cache was last updated
+	Entries   map[string]CachedResponse   `json:"entries"`    // Cached entries
+	Stats     DiskCacheStats              `json:"stats"`      // Cache statistics
 	mu        sync.RWMutex                // Protects stats fields
 }
 
-// DiskCacheStats tracks disk cache statistics
+// DiskCacheStats tracks disk cache statistics.
 type DiskCacheStats struct {
-	TotalEntries   int   `json:"total_entries"`
-	ExpiredEntries int   `json:"expired_entries"`
-	TotalSizeBytes int64 `json:"total_size_bytes"`
-	Hits           int64 `json:"hits"`
-	Misses         int64 `json:"misses"`
-	Evictions      int64 `json:"evictions"`
-	HitRate        float64 `json:"hit_rate"`
+	TotalEntries   int     `json:"total_entries"`    // Total number of entries in the cache
+	ExpiredEntries int     `json:"expired_entries"`  // Number of entries that have expired
+	TotalSizeBytes int64   `json:"total_size_bytes"` // Total size of all entries in bytes
+	Hits           int64   `json:"hits"`             // Number of cache hits
+	Misses         int64   `json:"misses"`           // Number of cache misses
+	Evictions      int64   `json:"evictions"`        // Number of entries evicted
+	HitRate        float64 `json:"hit_rate"`         // Cache hit rate (0.0 to 1.0)
 }
 
-// updateHitRate updates the hit rate calculation for disk cache stats
+// updateHitRate updates the hit rate calculation for disk cache stats.
 func (s *DiskCacheStats) updateHitRate() {
 	total := s.Hits + s.Misses
 	if total > 0 {
@@ -392,20 +421,28 @@ func (s *DiskCacheStats) updateHitRate() {
 	}
 }
 
-// DiskCache manages persistent storage of cached responses
+// DiskCache manages persistent storage of cached responses.
+//
+// The disk cache provides persistence across program restarts, allowing
+// cached LLM responses to be reused between runs. It uses a JSON file
+// for storage and supports atomic writes and checksum validation.
 type DiskCache struct {
-	filePath    string
-	ttl         time.Duration
-	maxDiskSize int64
-	mu          sync.Mutex
-	data        *DiskCacheData
-	dirty       bool
-	autoSave    bool
-	stopSave    chan struct{}
-	logger      *logging.Logger
+	filePath    string            // Path to the cache file
+	ttl         time.Duration     // Default TTL for entries
+	maxDiskSize int64             // Maximum disk size (not currently enforced)
+	mu          sync.Mutex        // Protects all access
+	data        *DiskCacheData    // In-memory cache data
+	dirty       bool              // Whether data has changed since last save
+	autoSave    bool              // Whether auto-save is running
+	stopSave    chan struct{}     // Channel to stop auto-save goroutine
+	logger      *logging.Logger   // Logger for disk cache operations
 }
 
-// NewDiskCache creates a new disk cache
+// NewDiskCache creates a new disk cache.
+//
+// filePath: Path to the cache file (will be created if it doesn't exist)
+// ttl: Default time-to-live for cached entries
+// maxDiskSize: Maximum size of the disk cache in bytes (reserved for future use)
 func NewDiskCache(filePath string, ttl time.Duration, maxDiskSize int64) *DiskCache {
 	return &DiskCache{
 		filePath:    filePath,
@@ -415,14 +452,19 @@ func NewDiskCache(filePath string, ttl time.Duration, maxDiskSize int64) *DiskCa
 	}
 }
 
-// SetLogger sets the logger for the disk cache
+// SetLogger sets the logger for the disk cache.
 func (dc *DiskCache) SetLogger(logger *logging.Logger) {
 	dc.mu.Lock()
 	defer dc.mu.Unlock()
 	dc.logger = logger
 }
 
-// Load loads the cache from disk
+// Load loads the cache from disk.
+//
+// If the cache file doesn't exist, creates an empty cache.
+// If the file is corrupted or has an incompatible version,
+// backs up the file and starts fresh.
+// Validates checksums of all entries and removes corrupted ones.
 func (dc *DiskCache) Load() error {
 	dc.mu.Lock()
 	defer dc.mu.Unlock()
@@ -489,7 +531,9 @@ func (dc *DiskCache) Load() error {
 	return nil
 }
 
-// Save saves the cache to disk
+// Save saves the cache to disk.
+//
+// Uses atomic writes (write to temp file, then rename) to prevent corruption.
 func (dc *DiskCache) Save() error {
 	dc.mu.Lock()
 	defer dc.mu.Unlock()
@@ -497,7 +541,7 @@ func (dc *DiskCache) Save() error {
 	return dc.saveLocked()
 }
 
-// saveLocked saves the cache to disk (must be called with lock held)
+// saveLocked saves the cache to disk (must be called with lock held).
 func (dc *DiskCache) saveLocked() error {
 	// Ensure directory exists
 	dir := filepath.Dir(dc.filePath)
@@ -539,7 +583,11 @@ func (dc *DiskCache) saveLocked() error {
 	return nil
 }
 
-// Get retrieves a value from the disk cache
+// Get retrieves a value from the disk cache.
+//
+// Returns the cached response and true if found and not expired.
+// Returns nil and false if not found or expired.
+// Expired entries are removed from the cache.
 func (dc *DiskCache) Get(key string) (*CachedResponse, bool) {
 	dc.mu.Lock()
 	defer dc.mu.Unlock()
@@ -584,7 +632,10 @@ func (dc *DiskCache) Get(key string) (*CachedResponse, bool) {
 	return &result, true
 }
 
-// Put stores a value in the disk cache
+// Put stores a value in the disk cache.
+//
+// The value's checksum is automatically calculated and updated before storage.
+// Marks the cache as dirty (needs to be saved to disk).
 func (dc *DiskCache) Put(key string, value *CachedResponse) error {
 	dc.mu.Lock()
 	defer dc.mu.Unlock()
@@ -614,7 +665,7 @@ func (dc *DiskCache) Put(key string, value *CachedResponse) error {
 	return nil
 }
 
-// recordHit records a disk cache hit
+// recordHit records a disk cache hit.
 func (dc *DiskCache) recordHit() {
 	if dc.data == nil {
 		return
@@ -625,7 +676,7 @@ func (dc *DiskCache) recordHit() {
 	dc.data.Stats.updateHitRate()
 }
 
-// recordMiss records a disk cache miss
+// recordMiss records a disk cache miss.
 func (dc *DiskCache) recordMiss() {
 	if dc.data == nil {
 		return
@@ -636,7 +687,7 @@ func (dc *DiskCache) recordMiss() {
 	dc.data.Stats.updateHitRate()
 }
 
-// recordEviction records a disk cache eviction
+// recordEviction records a disk cache eviction.
 func (dc *DiskCache) recordEviction(count int) {
 	if dc.data == nil {
 		return
@@ -646,7 +697,8 @@ func (dc *DiskCache) recordEviction(count int) {
 	dc.data.Stats.Evictions += int64(count)
 }
 
-// Stats returns a copy of the disk cache statistics
+// Stats returns a copy of the disk cache statistics.
+// The copy is thread-safe and won't be affected by subsequent cache operations.
 func (dc *DiskCache) Stats() DiskCacheStats {
 	dc.mu.Lock()
 	defer dc.mu.Unlock()
@@ -663,7 +715,8 @@ func (dc *DiskCache) Stats() DiskCacheStats {
 	return stats
 }
 
-// Delete removes a value from the disk cache
+// Delete removes a value from the disk cache.
+// Marks the cache as dirty (needs to be saved to disk).
 func (dc *DiskCache) Delete(key string) error {
 	dc.mu.Lock()
 	defer dc.mu.Unlock()
@@ -680,7 +733,8 @@ func (dc *DiskCache) Delete(key string) error {
 	return nil
 }
 
-// Clear removes all entries from the disk cache
+// Clear removes all entries from the disk cache.
+// Saves the empty cache to disk immediately.
 func (dc *DiskCache) Clear() error {
 	dc.mu.Lock()
 	defer dc.mu.Unlock()
@@ -691,7 +745,8 @@ func (dc *DiskCache) Clear() error {
 	return dc.saveLocked()
 }
 
-// CleanupExpired removes expired entries from the disk cache
+// CleanupExpired removes expired entries from the disk cache.
+// Saves the cache to disk if any entries were removed.
 func (dc *DiskCache) CleanupExpired() error {
 	dc.mu.Lock()
 	defer dc.mu.Unlock()
@@ -724,7 +779,7 @@ func (dc *DiskCache) CleanupExpired() error {
 	return nil
 }
 
-// newCacheData creates a new empty cache data structure
+// newCacheData creates a new empty cache data structure.
 func (dc *DiskCache) newCacheData() *DiskCacheData {
 	return &DiskCacheData{
 		Version:   CacheVersion,
@@ -734,7 +789,8 @@ func (dc *DiskCache) newCacheData() *DiskCacheData {
 	}
 }
 
-// updateStats updates the disk cache statistics
+// updateStats updates the disk cache statistics.
+// Calculates total entries, expired entries, and total size.
 func (dc *DiskCache) updateStats() {
 	if dc.data == nil {
 		return
@@ -758,14 +814,18 @@ func (dc *DiskCache) updateStats() {
 	}
 }
 
-// backupCorruptedCache backs up a corrupted cache file
+// backupCorruptedCache backs up a corrupted cache file.
+// Adds a timestamp to the backup file name.
 func (dc *DiskCache) backupCorruptedCache() {
 	timestamp := time.Now().Format("20060102-150405")
 	backupPath := dc.filePath + ".corrupted." + timestamp
 	os.Rename(dc.filePath, backupPath)
 }
 
-// StartAutoSave starts background auto-save with the given interval
+// StartAutoSave starts background auto-save with the given interval.
+//
+// The cache is saved automatically at the specified interval if it has been modified.
+// The save operation is non-blocking and runs in a separate goroutine.
 func (dc *DiskCache) StartAutoSave(interval time.Duration) {
 	dc.mu.Lock()
 	if dc.autoSave {
@@ -818,7 +878,9 @@ func (dc *DiskCache) StartAutoSave(interval time.Duration) {
 	}()
 }
 
-// Stop stops the disk cache and performs final save if needed
+// Stop stops the disk cache and performs final save if needed.
+//
+// Waits for the auto-save goroutine to finish and saves any pending changes.
 func (dc *DiskCache) Stop() {
 	dc.mu.Lock()
 	if !dc.autoSave {
@@ -835,7 +897,8 @@ func (dc *DiskCache) Stop() {
 	}
 }
 
-// saveData saves the cache data to disk without holding the lock
+// saveData saves the cache data to disk without holding the lock.
+// This is used by the auto-save goroutine to avoid blocking cache operations.
 func (dc *DiskCache) saveData(data *DiskCacheData) error {
 	// Ensure directory exists
 	dir := filepath.Dir(dc.filePath)
