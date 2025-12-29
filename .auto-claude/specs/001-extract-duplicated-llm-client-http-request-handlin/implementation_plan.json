@@ -61,7 +61,7 @@
       "id": "phase-2",
       "name": "Implement HTTP request helper",
       "description": "Create the doHTTPRequest helper function in BaseLLMClient that handles the common pattern",
-      "status": "pending",
+      "status": "completed",
       "subtasks": [
         {
           "id": "phase-2-subtask-1",
