@@ -1,13 +1,16 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/user/gendocs/internal/config"
 	"github.com/user/gendocs/internal/errors"
 	"github.com/user/gendocs/internal/handlers"
+	"github.com/user/gendocs/internal/llmcache"
 	"github.com/user/gendocs/internal/logging"
 )
 
@@ -20,6 +23,7 @@ var (
 	excludeAPI          bool
 	maxWorkers          int
 	forceAnalysis       bool
+	showCacheStats      bool
 )
 
 // analyzeCmd represents the analyze command
@@ -52,6 +56,7 @@ func init() {
 	analyzeCmd.Flags().BoolVar(&excludeAPI, "exclude-api-analysis", false, "Exclude API analysis")
 	analyzeCmd.Flags().IntVar(&maxWorkers, "max-workers", 0, "Maximum concurrent workers (0=auto)")
 	analyzeCmd.Flags().BoolVarP(&forceAnalysis, "force", "f", false, "Force full re-analysis, ignoring cache")
+	analyzeCmd.Flags().BoolVar(&showCacheStats, "show-cache-stats", false, "Show LLM cache statistics after analysis")
 }
 
 func runAnalyze(cmd *cobra.Command, args []string) error {
@@ -110,5 +115,63 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Info("Analysis complete")
+
+	// Show cache statistics if requested
+	if showCacheStats {
+		displayCacheStats(repoPath)
+	}
+
 	return nil
+}
+
+// displayCacheStats loads and displays cache statistics from the disk cache
+func displayCacheStats(repoPath string) {
+	cachePath := filepath.Join(repoPath, llmcache.DefaultCacheFileName)
+
+	// Check if cache file exists
+	if _, err := os.Stat(cachePath); os.IsNotExist(err) {
+		fmt.Println("\n📊 LLM Cache Statistics")
+		fmt.Println("   Cache file not found. Run analysis with caching enabled first.")
+		fmt.Printf("   Expected location: %s\n\n", cachePath)
+		return
+	}
+
+	// Read cache file
+	data, err := os.ReadFile(cachePath)
+	if err != nil {
+		fmt.Printf("\n❌ Failed to read cache file: %v\n\n", err)
+		return
+	}
+
+	// Parse cache data
+	var cacheData llmcache.DiskCacheData
+	if err := json.Unmarshal(data, &cacheData); err != nil {
+		fmt.Printf("\n❌ Failed to parse cache file: %v\n\n", err)
+		return
+	}
+
+	// Display statistics
+	fmt.Println("\n📊 LLM Cache Statistics")
+	fmt.Println("======================")
+	fmt.Printf("Cache File: %s\n", cachePath)
+	fmt.Printf("Version: %d\n", cacheData.Version)
+	fmt.Printf("Created: %s\n", cacheData.CreatedAt.Format("2006-01-02 15:04:05"))
+	fmt.Printf("Last Updated: %s\n\n", cacheData.UpdatedAt.Format("2006-01-02 15:04:05"))
+
+	stats := cacheData.Stats
+	fmt.Println("Entries:")
+	fmt.Printf("  Total Entries: %d\n", stats.TotalEntries)
+	fmt.Printf("  Expired Entries: %d\n", stats.ExpiredEntries)
+	fmt.Printf("  Active Entries: %d\n\n", stats.TotalEntries-stats.ExpiredEntries)
+
+	fmt.Println("Performance:")
+	fmt.Printf("  Cache Hits: %d\n", stats.Hits)
+	fmt.Printf("  Cache Misses: %d\n", stats.Misses)
+	fmt.Printf("  Hit Rate: %.2f%%\n\n", stats.HitRate*100)
+
+	fmt.Println("Storage:")
+	fmt.Printf("  Total Size: %.2f MB\n", float64(stats.TotalSizeBytes)/(1024*1024))
+	fmt.Printf("  Evictions: %d\n\n", stats.Evictions)
+
+	fmt.Println("======================\n")
 }

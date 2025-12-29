@@ -9,6 +9,7 @@ import (
 
 var (
 	debugFlag bool
+	cacheStatsRepoPath string
 )
 
 // rootCmd represents the base command
@@ -34,4 +35,26 @@ func Execute() {
 func init() {
 	// Persistent flags (available to all subcommands)
 	rootCmd.PersistentFlags().BoolVar(&debugFlag, "debug", false, "Enable debug mode")
+
+	// Add cache-stats command
+	rootCmd.AddCommand(cacheStatsCmd)
+	cacheStatsCmd.Flags().StringVar(&cacheStatsRepoPath, "repo-path", ".", "Path to repository")
+}
+
+// cacheStatsCmd represents the cache-stats command
+var cacheStatsCmd = &cobra.Command{
+	Use:   "cache-stats",
+	Short: "Display LLM cache statistics",
+	Long: `Display statistics about the LLM response cache, including:
+  - Total entries and expired entries
+  - Cache hits, misses, and hit rate
+  - Storage size and evictions
+
+This command shows statistics from the disk cache file without running analysis.`,
+	RunE: runCacheStats,
+}
+
+func runCacheStats(cmd *cobra.Command, args []string) error {
+	displayCacheStats(cacheStatsRepoPath)
+	return nil
 }
