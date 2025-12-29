@@ -87,6 +87,30 @@ func createOptimizedTransport(config *RetryConfig) *http.Transport {
 	return transport
 }
 
+// ConnectionStats represents connection pool statistics and configuration
+type ConnectionStats struct {
+	// Transport type
+	TransportType string // "http.Transport", "custom", or "unknown"
+
+	// Connection pool configuration
+	MaxIdleConns        int           // Maximum idle connections across all hosts
+	MaxIdleConnsPerHost int           // Maximum idle connections per host
+	IdleConnTimeout     time.Duration // Maximum idle time for a connection
+
+	// Timeout configuration
+	TLSHandshakeTimeout   time.Duration // TLS handshake timeout
+	ExpectContinueTimeout time.Duration // Expect continue timeout
+
+	// HTTP/2 support
+	HTTP2Enabled bool // Whether HTTP/2 is enabled
+
+	// TLS configuration
+	TLSMinVersion uint16 // Minimum TLS version
+
+	// Client configuration
+	ClientTimeout time.Duration // Client timeout
+}
+
 // RetryClient wraps http.Client with retry logic
 type RetryClient struct {
 	client *http.Client
@@ -223,4 +247,42 @@ func (rc *RetryClient) SetTimeout(timeout time.Duration) {
 // GetTimeout returns the current client timeout
 func (rc *RetryClient) GetTimeout() time.Duration {
 	return rc.client.Timeout
+}
+
+// GetConnectionStats returns connection pool statistics and configuration
+// This is useful for debugging, monitoring, and verifying connection pooling settings
+func (rc *RetryClient) GetConnectionStats() ConnectionStats {
+	stats := ConnectionStats{
+		ClientTimeout: rc.client.Timeout,
+	}
+
+	// Use type assertion to check if we have an http.Transport
+	if transport, ok := rc.client.Transport.(*http.Transport); ok {
+		stats.TransportType = "http.Transport"
+		stats.MaxIdleConns = transport.MaxIdleConns
+		stats.MaxIdleConnsPerHost = transport.MaxIdleConnsPerHost
+		stats.IdleConnTimeout = transport.IdleConnTimeout
+		stats.TLSHandshakeTimeout = transport.TLSHandshakeTimeout
+		stats.ExpectContinueTimeout = transport.ExpectContinueTimeout
+		stats.HTTP2Enabled = transport.ForceAttemptHTTP2
+
+		// Get TLS configuration if available
+		if transport.TLSClientConfig != nil {
+			stats.TLSMinVersion = transport.TLSClientConfig.MinVersion
+		}
+	} else if rc.client.Transport != nil {
+		stats.TransportType = "custom"
+	} else {
+		stats.TransportType = "unknown"
+	}
+
+	return stats
+}
+
+// CloseIdleConnections closes any idle connections in the transport's connection pool
+// This can be useful to free up resources when the client will no longer be used
+func (rc *RetryClient) CloseIdleConnections() {
+	if transport, ok := rc.client.Transport.(*http.Transport); ok {
+		transport.CloseIdleConnections()
+	}
 }
