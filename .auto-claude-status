@@ -1,15 +1,15 @@
 {
   "active": true,
-  "spec": "009-extract-duplicated-command-initialization-pattern-",
+  "spec": "010-torne-funcional-todas-as-configura-es-existentes-a",
   "state": "building",
   "subtasks": {
-    "completed": 8,
-    "total": 13,
+    "completed": 1,
+    "total": 4,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Extend Refactoring (Optional)",
+    "current": "Fix Component Focus Guards",
     "id": null,
     "total": 2
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 10,
-    "started_at": "2025-12-29T11:28:06.098549"
+    "number": 2,
+    "started_at": "2025-12-29T17:22:36.269531"
   },
-  "last_update": "2025-12-29T11:48:50.926035"
+  "last_update": "2025-12-29T17:23:45.185094"
 }

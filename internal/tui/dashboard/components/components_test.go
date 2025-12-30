@@ -94,8 +94,9 @@ func TestTextField_WithValidator_RunsValidation(t *testing.T) {
 		return nil
 	}))
 
+	tf.Focus()
 	tf.input.SetValue("test")
-	tf.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'x'}})
+	tf, _ = tf.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'x'}})
 
 	if !validatorCalled {
 		t.Error("Validator should have been called on Update")

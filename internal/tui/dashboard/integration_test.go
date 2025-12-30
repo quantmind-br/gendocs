@@ -134,11 +134,11 @@ func TestIntegration_Navigation_SidebarToContent(t *testing.T) {
 		t.Error("Tab should move focus to content")
 	}
 
-	model, _ = d.Update(tea.KeyMsg{Type: tea.KeyShiftTab})
+	model, _ = d.Update(tea.KeyMsg{Type: tea.KeyEsc})
 	d = model.(DashboardModel)
 
 	if d.focusPane != FocusSidebar {
-		t.Error("Shift+Tab should move focus back to sidebar")
+		t.Error("Esc should move focus back to sidebar")
 	}
 }
 

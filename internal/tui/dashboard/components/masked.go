@@ -23,6 +23,8 @@ func NewMaskedInput(label string, helpText string) MaskedInputModel {
 	input.EchoMode = textinput.EchoPassword
 	input.EchoCharacter = '•'
 	input.CharLimit = 256
+	input.Width = 36
+	input.SetValue("")
 
 	return MaskedInputModel{
 		input:    input,
@@ -36,9 +38,13 @@ func (m MaskedInputModel) Init() tea.Cmd {
 }
 
 func (m MaskedInputModel) Update(msg tea.Msg) (MaskedInputModel, tea.Cmd) {
+	if !m.input.Focused() {
+		return m, nil
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if msg.String() == "ctrl+u" && m.input.Focused() {
+		if msg.String() == "ctrl+u" {
 			m.revealed = !m.revealed
 			if m.revealed {
 				m.input.EchoMode = textinput.EchoNormal
@@ -97,6 +103,7 @@ func (m MaskedInputModel) View() string {
 
 func (m *MaskedInputModel) SetValue(v string) {
 	m.input.SetValue(v)
+	m.input.SetCursor(len(v))
 	m.originalVal = v
 	m.dirty = false
 }

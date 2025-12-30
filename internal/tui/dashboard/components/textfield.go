@@ -53,6 +53,11 @@ func WithCharLimit(limit int) TextFieldOption {
 func NewTextField(label string, opts ...TextFieldOption) TextFieldModel {
 	input := textinput.New()
 	input.CharLimit = 256
+	// Set width to match form input style (40 total - 2 padding - 2 for prompt "> ")
+	// This ensures proper placeholder rendering with bubbles textinput
+	input.Width = 36
+	// Explicitly initialize with empty value to prevent placeholder leakage
+	input.SetValue("")
 
 	m := TextFieldModel{
 		input: input,
@@ -71,6 +76,10 @@ func (m TextFieldModel) Init() tea.Cmd {
 }
 
 func (m TextFieldModel) Update(msg tea.Msg) (TextFieldModel, tea.Cmd) {
+	if !m.input.Focused() {
+		return m, nil
+	}
+
 	var cmd tea.Cmd
 	m.input, cmd = m.input.Update(msg)
 
@@ -117,6 +126,7 @@ func (m TextFieldModel) View() string {
 
 func (m *TextFieldModel) SetValue(v string) {
 	m.input.SetValue(v)
+	m.input.SetCursor(len(v))
 	m.originalVal = v
 	m.dirty = false
 }

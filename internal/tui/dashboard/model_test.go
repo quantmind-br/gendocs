@@ -63,23 +63,23 @@ func TestDashboard_Update_TabSwitchesFocus(t *testing.T) {
 		t.Error("Tab should switch focus to content")
 	}
 
-	model, _ = d.Update(tea.KeyMsg{Type: tea.KeyTab})
+	model, _ = d.Update(tea.KeyMsg{Type: tea.KeyEsc})
 	d = model.(DashboardModel)
 
 	if d.focusPane != FocusSidebar {
-		t.Error("Tab should switch focus back to sidebar")
+		t.Error("Esc should switch focus back to sidebar")
 	}
 }
 
-func TestDashboard_Update_ShiftTabSwitchesFocus(t *testing.T) {
+func TestDashboard_Update_EscSwitchesFocusToSidebar(t *testing.T) {
 	d := NewDashboard()
 	d.focusPane = FocusContent
 
-	model, _ := d.Update(tea.KeyMsg{Type: tea.KeyShiftTab})
+	model, _ := d.Update(tea.KeyMsg{Type: tea.KeyEsc})
 	d = model.(DashboardModel)
 
 	if d.focusPane != FocusSidebar {
-		t.Error("Shift+Tab should switch focus to sidebar")
+		t.Error("Esc should switch focus to sidebar")
 	}
 }
 

@@ -88,6 +88,32 @@ type ConfigResult struct {
 	Error error
 }
 
+// NewWizardModel creates a new wizard model with properly initialized textinput fields
+func NewWizardModel() Model {
+	apiKeyInput := textinput.New()
+	apiKeyInput.Placeholder = "sk-..."
+	apiKeyInput.EchoMode = textinput.EchoPassword
+	apiKeyInput.EchoCharacter = '•'
+	apiKeyInput.CharLimit = 256
+	apiKeyInput.SetValue("")
+
+	modelInput := textinput.New()
+	modelInput.Placeholder = "gpt-4o"
+	modelInput.CharLimit = 100
+	modelInput.SetValue("")
+
+	baseURLInput := textinput.New()
+	baseURLInput.Placeholder = "https://api.openai.com/v1"
+	baseURLInput.CharLimit = 256
+	baseURLInput.SetValue("")
+
+	return Model{
+		APIKeyInput:  apiKeyInput,
+		ModelInput:   modelInput,
+		BaseURLInput: baseURLInput,
+	}
+}
+
 // Init initializes the model
 func (m Model) Init() tea.Cmd {
 	return textinput.Blink
