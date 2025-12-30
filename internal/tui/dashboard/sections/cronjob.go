@@ -156,11 +156,19 @@ func (m *CronjobSectionModel) SetValues(values map[string]any) error {
 }
 
 func (m *CronjobSectionModel) FocusFirst() tea.Cmd {
+	m.blurAll()
 	m.focusIndex = 0
 	return m.maxDaysSinceLastCommit.Focus()
 }
 
 func (m *CronjobSectionModel) FocusLast() tea.Cmd {
+	m.blurAll()
 	m.focusIndex = 2
 	return m.groupProjectID.Focus()
+}
+
+func (m *CronjobSectionModel) blurAll() {
+	m.maxDaysSinceLastCommit.Blur()
+	m.workingPath.Blur()
+	m.groupProjectID.Blur()
 }

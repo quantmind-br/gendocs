@@ -239,11 +239,25 @@ func (m *AnalysisSectionModel) SetValues(values map[string]any) error {
 }
 
 func (m *AnalysisSectionModel) FocusFirst() tea.Cmd {
+	m.blurAll()
 	m.focusIndex = 0
 	return m.excludeStructure.Focus()
 }
 
 func (m *AnalysisSectionModel) FocusLast() tea.Cmd {
+	m.blurAll()
 	m.focusIndex = 8
 	return m.incremental.Focus()
+}
+
+func (m *AnalysisSectionModel) blurAll() {
+	m.excludeStructure.Blur()
+	m.excludeDataFlow.Blur()
+	m.excludeDeps.Blur()
+	m.excludeReqFlow.Blur()
+	m.excludeAPI.Blur()
+	m.maxWorkers.Blur()
+	m.maxHashWorkers.Blur()
+	m.force.Blur()
+	m.incremental.Blur()
 }

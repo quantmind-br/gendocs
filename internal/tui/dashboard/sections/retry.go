@@ -181,11 +181,20 @@ func (m *RetrySectionModel) SetValues(values map[string]any) error {
 }
 
 func (m *RetrySectionModel) FocusFirst() tea.Cmd {
+	m.blurAll()
 	m.focusIndex = 0
 	return m.maxAttempts.Focus()
 }
 
 func (m *RetrySectionModel) FocusLast() tea.Cmd {
+	m.blurAll()
 	m.focusIndex = 3
 	return m.maxTotalWait.Focus()
+}
+
+func (m *RetrySectionModel) blurAll() {
+	m.maxAttempts.Blur()
+	m.multiplier.Blur()
+	m.maxWaitPerAttempt.Blur()
+	m.maxTotalWait.Blur()
 }

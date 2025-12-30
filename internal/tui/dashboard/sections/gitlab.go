@@ -173,11 +173,21 @@ func (m *GitLabSectionModel) SetValues(values map[string]any) error {
 }
 
 func (m *GitLabSectionModel) FocusFirst() tea.Cmd {
+	m.blurAll()
 	m.focusIndex = 0
 	return m.apiURL.Focus()
 }
 
 func (m *GitLabSectionModel) FocusLast() tea.Cmd {
+	m.blurAll()
 	m.focusIndex = 4
 	return m.oauthToken.Focus()
+}
+
+func (m *GitLabSectionModel) blurAll() {
+	m.apiURL.Blur()
+	m.userName.Blur()
+	m.userUsername.Blur()
+	m.userEmail.Blur()
+	m.oauthToken.Blur()
 }

@@ -374,13 +374,27 @@ func (m *LLMSectionModel) SetValues(values map[string]any) error {
 }
 
 func (m *LLMSectionModel) FocusFirst() tea.Cmd {
+	m.blurAll()
 	m.focusIndex = 0
 	return m.provider.Focus()
 }
 
 func (m *LLMSectionModel) FocusLast() tea.Cmd {
+	m.blurAll()
 	m.focusIndex = 8
 	return m.testConnButton.Focus()
+}
+
+func (m *LLMSectionModel) blurAll() {
+	m.provider.Blur()
+	m.model.Blur()
+	m.apiKey.Blur()
+	m.baseURL.Blur()
+	m.temperature.Blur()
+	m.maxTokens.Blur()
+	m.timeout.Blur()
+	m.retries.Blur()
+	m.testConnButton.Blur()
 }
 
 func (m *LLMSectionModel) testConnection() tea.Msg {

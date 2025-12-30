@@ -69,7 +69,9 @@ func (m SidebarModel) Update(msg tea.Msg) (SidebarModel, tea.Cmd) {
 			m.activeIndex = len(m.items) - 1
 		}
 	case tea.WindowSizeMsg:
-		m.height = msg.Height - 4
+		const minSidebarHeight = 5
+		const statusbarHeight = 4
+		m.height = max(msg.Height-statusbarHeight, minSidebarHeight)
 	}
 	return m, nil
 }

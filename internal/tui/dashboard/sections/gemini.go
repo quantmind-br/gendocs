@@ -162,11 +162,19 @@ func (m *GeminiSectionModel) SetValues(values map[string]any) error {
 }
 
 func (m *GeminiSectionModel) FocusFirst() tea.Cmd {
+	m.blurAll()
 	m.focusIndex = 0
 	return m.useVertexAI.Focus()
 }
 
 func (m *GeminiSectionModel) FocusLast() tea.Cmd {
+	m.blurAll()
 	m.focusIndex = 2
 	return m.location.Focus()
+}
+
+func (m *GeminiSectionModel) blurAll() {
+	m.useVertexAI.Blur()
+	m.projectID.Blur()
+	m.location.Blur()
 }

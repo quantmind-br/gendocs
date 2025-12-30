@@ -170,11 +170,20 @@ func (m *CacheSectionModel) SetValues(values map[string]any) error {
 }
 
 func (m *CacheSectionModel) FocusFirst() tea.Cmd {
+	m.blurAll()
 	m.focusIndex = 0
 	return m.enabled.Focus()
 }
 
 func (m *CacheSectionModel) FocusLast() tea.Cmd {
+	m.blurAll()
 	m.focusIndex = 3
 	return m.cachePath.Focus()
+}
+
+func (m *CacheSectionModel) blurAll() {
+	m.enabled.Blur()
+	m.maxSize.Blur()
+	m.ttl.Blur()
+	m.cachePath.Blur()
 }

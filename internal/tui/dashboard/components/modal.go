@@ -167,9 +167,10 @@ func (m ModalModel) View() string {
 		return ""
 	}
 
+	const minModalWidth = 30
 	modalWidth := 50
 	if m.width > 0 && m.width < modalWidth+10 {
-		modalWidth = m.width - 10
+		modalWidth = max(m.width-10, minModalWidth)
 	}
 
 	titleStyle := lipgloss.NewStyle().

@@ -83,6 +83,12 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.statusbar, _ = m.statusbar.Update(msg)
 		m.modal.SetSize(msg.Width, msg.Height)
 
+		if section := m.activeSection(); section != nil {
+			activeID := m.sidebar.ActiveItem().ID
+			updated, _ := section.Update(msg)
+			m.sections[activeID] = updated.(SectionModel)
+		}
+
 	case tea.KeyMsg:
 		if m.modal.Visible() {
 			var modalCmd tea.Cmd
@@ -240,8 +246,13 @@ func (m DashboardModel) View() string {
 		return m.renderHelp()
 	}
 
-	contentWidth := m.width - 28
-	contentHeight := m.height - 3
+	const minContentWidth = 20
+	const minContentHeight = 10
+	const sidebarWidth = 28
+	const statusbarHeight = 3
+
+	contentWidth := max(m.width-sidebarWidth, minContentWidth)
+	contentHeight := max(m.height-statusbarHeight, minContentHeight)
 
 	sidebarView := m.sidebar.View()
 

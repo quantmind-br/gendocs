@@ -144,11 +144,19 @@ func (m *LoggingSectionModel) SetValues(values map[string]any) error {
 }
 
 func (m *LoggingSectionModel) FocusFirst() tea.Cmd {
+	m.blurAll()
 	m.focusIndex = 0
 	return m.logDir.Focus()
 }
 
 func (m *LoggingSectionModel) FocusLast() tea.Cmd {
+	m.blurAll()
 	m.focusIndex = 2
 	return m.consoleLevel.Focus()
+}
+
+func (m *LoggingSectionModel) blurAll() {
+	m.logDir.Blur()
+	m.fileLevel.Blur()
+	m.consoleLevel.Blur()
 }
