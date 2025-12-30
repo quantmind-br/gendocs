@@ -53,6 +53,9 @@ func WithCharLimit(limit int) TextFieldOption {
 func NewTextField(label string, opts ...TextFieldOption) TextFieldModel {
 	input := textinput.New()
 	input.CharLimit = 256
+	// Set width to match form input style (40 total - 2 padding - 2 for prompt "> ")
+	// This ensures proper placeholder rendering with bubbles textinput
+	input.Width = 36
 	// Explicitly initialize with empty value to prevent placeholder leakage
 	input.SetValue("")
 
