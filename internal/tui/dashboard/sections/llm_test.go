@@ -22,7 +22,7 @@ func TestLLMSection_NewLLMSection_InitializesCorrectly(t *testing.T) {
 
 func TestLLMSection_Title_ReturnsExpectedValue(t *testing.T) {
 	s := NewLLMSection()
-	expected := "LLM Provider Settings"
+	expected := "Analyzer LLM"
 
 	if s.Title() != expected {
 		t.Errorf("Expected title %q, got %q", expected, s.Title())
@@ -40,7 +40,7 @@ func TestLLMSection_Icon_ReturnsExpectedValue(t *testing.T) {
 
 func TestLLMSection_Description_ReturnsExpectedValue(t *testing.T) {
 	s := NewLLMSection()
-	expected := "Configure your AI model provider and parameters"
+	expected := "LLM settings for codebase analysis (gendocs analyze)"
 
 	if s.Description() != expected {
 		t.Errorf("Expected description %q, got %q", expected, s.Description())
@@ -308,7 +308,7 @@ func TestLLMSection_View_ContainsTitle(t *testing.T) {
 	s := NewLLMSection()
 	view := s.View()
 
-	if !strings.Contains(view, "LLM Provider Settings") {
+	if !strings.Contains(view, "Analyzer LLM") {
 		t.Error("View should contain section title")
 	}
 }
@@ -326,7 +326,7 @@ func TestLLMSection_View_ContainsDescription(t *testing.T) {
 	s := NewLLMSection()
 	view := s.View()
 
-	if !strings.Contains(view, "Configure your AI model provider") {
+	if !strings.Contains(view, "LLM settings for codebase analysis") {
 		t.Error("View should contain section description")
 	}
 }

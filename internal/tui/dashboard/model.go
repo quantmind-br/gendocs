@@ -354,6 +354,32 @@ func (m *DashboardModel) populateSections() {
 		})
 	}
 
+	if section, ok := m.sections["documenter_llm"]; ok {
+		section.SetValues(map[string]any{
+			"documenter_provider":    m.cfg.Documenter.LLM.Provider,
+			"documenter_model":       m.cfg.Documenter.LLM.Model,
+			"documenter_api_key":     m.cfg.Documenter.LLM.APIKey,
+			"documenter_base_url":    m.cfg.Documenter.LLM.BaseURL,
+			"documenter_temperature": m.cfg.Documenter.LLM.Temperature,
+			"documenter_max_tokens":  m.cfg.Documenter.LLM.MaxTokens,
+			"documenter_timeout":     m.cfg.Documenter.LLM.Timeout,
+			"documenter_retries":     m.cfg.Documenter.LLM.Retries,
+		})
+	}
+
+	if section, ok := m.sections["ai_rules_llm"]; ok {
+		section.SetValues(map[string]any{
+			"ai_rules_provider":    m.cfg.AIRules.LLM.Provider,
+			"ai_rules_model":       m.cfg.AIRules.LLM.Model,
+			"ai_rules_api_key":     m.cfg.AIRules.LLM.APIKey,
+			"ai_rules_base_url":    m.cfg.AIRules.LLM.BaseURL,
+			"ai_rules_temperature": m.cfg.AIRules.LLM.Temperature,
+			"ai_rules_max_tokens":  m.cfg.AIRules.LLM.MaxTokens,
+			"ai_rules_timeout":     m.cfg.AIRules.LLM.Timeout,
+			"ai_rules_retries":     m.cfg.AIRules.LLM.Retries,
+		})
+	}
+
 	if section, ok := m.sections["cache"]; ok {
 		section.SetValues(map[string]any{
 			"cache_enabled":  m.cfg.Analyzer.LLM.Cache.Enabled,
@@ -449,6 +475,56 @@ func (m *DashboardModel) applyValuesToConfig(values map[string]any) {
 	}
 	if v, ok := values["retries"].(int); ok {
 		m.cfg.Analyzer.LLM.Retries = v
+	}
+
+	if v, ok := values["documenter_provider"].(string); ok && v != "" {
+		m.cfg.Documenter.LLM.Provider = v
+	}
+	if v, ok := values["documenter_model"].(string); ok && v != "" {
+		m.cfg.Documenter.LLM.Model = v
+	}
+	if v, ok := values["documenter_api_key"].(string); ok && v != "" {
+		m.cfg.Documenter.LLM.APIKey = v
+	}
+	if v, ok := values["documenter_base_url"].(string); ok {
+		m.cfg.Documenter.LLM.BaseURL = v
+	}
+	if v, ok := values["documenter_temperature"].(float64); ok {
+		m.cfg.Documenter.LLM.Temperature = v
+	}
+	if v, ok := values["documenter_max_tokens"].(int); ok && v > 0 {
+		m.cfg.Documenter.LLM.MaxTokens = v
+	}
+	if v, ok := values["documenter_timeout"].(int); ok && v > 0 {
+		m.cfg.Documenter.LLM.Timeout = v
+	}
+	if v, ok := values["documenter_retries"].(int); ok {
+		m.cfg.Documenter.LLM.Retries = v
+	}
+
+	if v, ok := values["ai_rules_provider"].(string); ok && v != "" {
+		m.cfg.AIRules.LLM.Provider = v
+	}
+	if v, ok := values["ai_rules_model"].(string); ok && v != "" {
+		m.cfg.AIRules.LLM.Model = v
+	}
+	if v, ok := values["ai_rules_api_key"].(string); ok && v != "" {
+		m.cfg.AIRules.LLM.APIKey = v
+	}
+	if v, ok := values["ai_rules_base_url"].(string); ok {
+		m.cfg.AIRules.LLM.BaseURL = v
+	}
+	if v, ok := values["ai_rules_temperature"].(float64); ok {
+		m.cfg.AIRules.LLM.Temperature = v
+	}
+	if v, ok := values["ai_rules_max_tokens"].(int); ok && v > 0 {
+		m.cfg.AIRules.LLM.MaxTokens = v
+	}
+	if v, ok := values["ai_rules_timeout"].(int); ok && v > 0 {
+		m.cfg.AIRules.LLM.Timeout = v
+	}
+	if v, ok := values["ai_rules_retries"].(int); ok {
+		m.cfg.AIRules.LLM.Retries = v
 	}
 
 	if v, ok := values["cache_enabled"].(bool); ok {

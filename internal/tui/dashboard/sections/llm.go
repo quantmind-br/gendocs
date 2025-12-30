@@ -16,7 +16,53 @@ import (
 	"github.com/user/gendocs/internal/tui/dashboard/validation"
 )
 
+// LLMTarget identifies which LLM configuration this section manages
+type LLMTarget int
+
+const (
+	LLMTargetAnalyzer LLMTarget = iota
+	LLMTargetDocumenter
+	LLMTargetAIRules
+)
+
+// LLMSectionDescriptor holds metadata for an LLM section
+type LLMSectionDescriptor struct {
+	ID          string
+	Title       string
+	Icon        string
+	Description string
+	KeyPrefix   string // Prefix for GetValues/SetValues keys
+}
+
+// LLMTargetDescriptors maps targets to their descriptors
+var LLMTargetDescriptors = map[LLMTarget]LLMSectionDescriptor{
+	LLMTargetAnalyzer: {
+		ID:          "llm",
+		Title:       "Analyzer LLM",
+		Icon:        "🤖",
+		Description: "LLM settings for codebase analysis (gendocs analyze)",
+		KeyPrefix:   "",
+	},
+	LLMTargetDocumenter: {
+		ID:          "documenter_llm",
+		Title:       "Documenter LLM",
+		Icon:        "📝",
+		Description: "LLM settings for README generation (gendocs generate readme)",
+		KeyPrefix:   "documenter_",
+	},
+	LLMTargetAIRules: {
+		ID:          "ai_rules_llm",
+		Title:       "AI Rules LLM",
+		Icon:        "📋",
+		Description: "LLM settings for AI rules generation (gendocs generate ai-rules)",
+		KeyPrefix:   "ai_rules_",
+	},
+}
+
 type LLMSectionModel struct {
+	target     LLMTarget
+	descriptor LLMSectionDescriptor
+
 	provider       components.DropdownModel
 	model          components.TextFieldModel
 	apiKey         components.MaskedInputModel
@@ -37,6 +83,12 @@ type TestConnectionResultMsg struct {
 }
 
 func NewLLMSection() *LLMSectionModel {
+	return NewLLMSectionWithTarget(LLMTargetAnalyzer)
+}
+
+func NewLLMSectionWithTarget(target LLMTarget) *LLMSectionModel {
+	descriptor := LLMTargetDescriptors[target]
+
 	providerOpts := []components.DropdownOption{
 		{Value: "openai", Label: "OpenAI (GPT-4o, GPT-4)"},
 		{Value: "anthropic", Label: "Anthropic (Claude)"},
@@ -44,7 +96,9 @@ func NewLLMSection() *LLMSectionModel {
 	}
 
 	m := &LLMSectionModel{
-		provider: components.NewDropdown("Provider", providerOpts, "Select your LLM provider"),
+		target:     target,
+		descriptor: descriptor,
+		provider:   components.NewDropdown("Provider", providerOpts, "Select your LLM provider"),
 		model: components.NewTextField("Model",
 			components.WithPlaceholder("e.g., gpt-4o, claude-3-5-sonnet"),
 			components.WithRequired(),
@@ -81,11 +135,11 @@ func NewLLMSection() *LLMSectionModel {
 	return m
 }
 
-func (m *LLMSectionModel) Title() string { return "LLM Provider Settings" }
-func (m *LLMSectionModel) Icon() string  { return "🤖" }
-func (m *LLMSectionModel) Description() string {
-	return "Configure your AI model provider and parameters"
-}
+func (m *LLMSectionModel) Title() string       { return m.descriptor.Title }
+func (m *LLMSectionModel) Icon() string        { return m.descriptor.Icon }
+func (m *LLMSectionModel) Description() string { return m.descriptor.Description }
+func (m *LLMSectionModel) ID() string          { return m.descriptor.ID }
+func (m *LLMSectionModel) Target() LLMTarget   { return m.target }
 
 func (m *LLMSectionModel) Init() tea.Cmd {
 	return nil
@@ -258,31 +312,32 @@ func (m *LLMSectionModel) IsDirty() bool {
 }
 
 func (m *LLMSectionModel) GetValues() map[string]any {
+	p := m.descriptor.KeyPrefix
 	values := map[string]any{
-		"provider": m.provider.Value(),
-		"model":    m.model.Value(),
-		"api_key":  m.apiKey.Value(),
-		"base_url": m.baseURL.Value(),
+		p + "provider": m.provider.Value(),
+		p + "model":    m.model.Value(),
+		p + "api_key":  m.apiKey.Value(),
+		p + "base_url": m.baseURL.Value(),
 	}
 
 	if v := m.temperature.Value(); v != "" {
 		if f, err := strconv.ParseFloat(v, 64); err == nil {
-			values["temperature"] = f
+			values[p+"temperature"] = f
 		}
 	}
 	if v := m.maxTokens.Value(); v != "" {
 		if i, err := strconv.Atoi(v); err == nil {
-			values["max_tokens"] = i
+			values[p+"max_tokens"] = i
 		}
 	}
 	if v := m.timeout.Value(); v != "" {
 		if i, err := strconv.Atoi(v); err == nil {
-			values["timeout"] = i
+			values[p+"timeout"] = i
 		}
 	}
 	if v := m.retries.Value(); v != "" {
 		if i, err := strconv.Atoi(v); err == nil {
-			values["retries"] = i
+			values[p+"retries"] = i
 		}
 	}
 
@@ -290,28 +345,29 @@ func (m *LLMSectionModel) GetValues() map[string]any {
 }
 
 func (m *LLMSectionModel) SetValues(values map[string]any) error {
-	if v, ok := values["provider"].(string); ok {
+	p := m.descriptor.KeyPrefix
+	if v, ok := values[p+"provider"].(string); ok {
 		m.provider.SetValue(v)
 	}
-	if v, ok := values["model"].(string); ok {
+	if v, ok := values[p+"model"].(string); ok {
 		m.model.SetValue(v)
 	}
-	if v, ok := values["api_key"].(string); ok {
+	if v, ok := values[p+"api_key"].(string); ok {
 		m.apiKey.SetValue(v)
 	}
-	if v, ok := values["base_url"].(string); ok {
+	if v, ok := values[p+"base_url"].(string); ok {
 		m.baseURL.SetValue(v)
 	}
-	if v, ok := values["temperature"].(float64); ok {
+	if v, ok := values[p+"temperature"].(float64); ok {
 		m.temperature.SetValue(fmt.Sprintf("%.1f", v))
 	}
-	if v, ok := values["max_tokens"].(int); ok {
+	if v, ok := values[p+"max_tokens"].(int); ok {
 		m.maxTokens.SetValue(strconv.Itoa(v))
 	}
-	if v, ok := values["timeout"].(int); ok {
+	if v, ok := values[p+"timeout"].(int); ok {
 		m.timeout.SetValue(strconv.Itoa(v))
 	}
-	if v, ok := values["retries"].(int); ok {
+	if v, ok := values[p+"retries"].(int); ok {
 		m.retries.SetValue(strconv.Itoa(v))
 	}
 	return nil

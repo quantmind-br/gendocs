@@ -41,6 +41,8 @@ func runConfig(cmd *cobra.Command, args []string) error {
 	model := dashboard.NewDashboard()
 
 	model.RegisterSection("llm", sections.NewLLMSection())
+	model.RegisterSection("documenter_llm", sections.NewDocumenterLLMSection())
+	model.RegisterSection("ai_rules_llm", sections.NewAIRulesLLMSection())
 	model.RegisterSection("cache", sections.NewCacheSection())
 	model.RegisterSection("analysis", sections.NewAnalysisSection())
 	model.RegisterSection("retry", sections.NewRetrySection())

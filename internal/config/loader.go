@@ -294,7 +294,7 @@ func getString(m map[string]interface{}, key, defaultValue string) string {
 		}
 	}
 
-	if str, ok := val.(string); ok {
+	if str, ok := val.(string); ok && str != "" { // empty string = not set, use default
 		return str
 	}
 	return defaultValue

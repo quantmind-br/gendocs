@@ -14,14 +14,16 @@ type NavItem struct {
 }
 
 var DefaultNavItems = []NavItem{
-	{ID: "llm", Title: "LLM Provider", Icon: "🤖", Description: "AI model settings"},
+	{ID: "llm", Title: "Analyzer LLM", Icon: "🤖", Description: "LLM for analysis"},
+	{ID: "documenter_llm", Title: "Documenter LLM", Icon: "📝", Description: "LLM for README"},
+	{ID: "ai_rules_llm", Title: "AI Rules LLM", Icon: "📋", Description: "LLM for AI rules"},
 	{ID: "cache", Title: "LLM Cache", Icon: "💾", Description: "Response caching"},
 	{ID: "analysis", Title: "Analysis", Icon: "🔍", Description: "Analyzer options"},
 	{ID: "retry", Title: "Retry Policy", Icon: "🔄", Description: "HTTP retry settings"},
 	{ID: "gemini", Title: "Gemini/Vertex", Icon: "☁️", Description: "Google Cloud options"},
 	{ID: "gitlab", Title: "GitLab", Icon: "🦊", Description: "GitLab integration"},
 	{ID: "cronjob", Title: "Cronjob", Icon: "⏰", Description: "Scheduled tasks"},
-	{ID: "logging", Title: "Logging", Icon: "📋", Description: "Log configuration"},
+	{ID: "logging", Title: "Logging", Icon: "📝", Description: "Log configuration"},
 }
 
 type SidebarModel struct {
