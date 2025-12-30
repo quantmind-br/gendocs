@@ -1,0 +1,216 @@
+time=2025-12-29T16:41:30.933-03:00 level=INFO msg="Daemon started (interval: %v, auto-commit: %v, auto-push: %v)" !BADKEY=5s !BADKEY=false !BADKEY=false
+time=2025-12-29T16:41:30.933-03:00 level=INFO msg="using database" path=/home/diogo/dev/gendocs/.beads/beads.db
+time=2025-12-29T16:41:30.936-03:00 level=INFO msg="database opened" path=/home/diogo/dev/gendocs/.beads/beads.db freshness_checking=true
+time=2025-12-29T16:41:30.936-03:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2025-12-29T16:41:30.936-03:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2025-12-29T16:41:30.937-03:00 level=INFO msg="Repository fingerprint validated: %s" !BADKEY=734176c1
+time=2025-12-29T16:41:30.937-03:00 level=INFO msg="starting RPC server" socket=/home/diogo/dev/gendocs/.beads/bd.sock
+time=2025-12-29T16:41:30.937-03:00 level=INFO msg="RPC server ready (socket listening)"
+time=2025-12-29T16:41:30.938-03:00 level=INFO msg="registered in global registry"
+time=2025-12-29T16:41:30.938-03:00 level=INFO msg="Starting %s..." !BADKEY="sync cycle"
+time=2025-12-29T16:41:30.938-03:00 level=INFO msg="Exported to JSONL"
+time=2025-12-29T16:41:31.278-03:00 level=INFO msg="Sync branch pull failed: %v" !BADKEY="git pull failed in worktree: exit status 1\nfatal: couldn't find remote ref beads-sync\n"
+time=2025-12-29T16:41:31.278-03:00 level=INFO msg="monitoring parent process" pid=0
+time=2025-12-29T16:41:31.278-03:00 level=INFO msg="using event-driven mode"
+time=2025-12-29T16:41:31.278-03:00 level=INFO msg="Auto-pull disabled: use 'git pull' manually to sync remote changes"
+time=2025-12-29T16:47:47.553-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-fn3
+time=2025-12-29T16:47:48.054-03:00 level=INFO msg="Export triggered by mutation events"
+time=2025-12-29T16:47:48.054-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2025-12-29T16:47:48.054-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:47:48.054-03:00 level=INFO msg="Exported to JSONL"
+time=2025-12-29T16:47:48.055-03:00 level=INFO msg="Export complete"
+time=2025-12-29T16:47:48.812-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-t4o
+time=2025-12-29T16:47:49.056-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T16:47:49.056-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T16:47:49.056-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T16:47:49.313-03:00 level=INFO msg="Export triggered by mutation events"
+time=2025-12-29T16:47:49.313-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2025-12-29T16:47:49.316-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:47:49.316-03:00 level=INFO msg="Exported to JSONL"
+time=2025-12-29T16:47:49.316-03:00 level=INFO msg="Export complete"
+time=2025-12-29T16:47:49.975-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-8ek
+time=2025-12-29T16:47:50.316-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T16:47:50.316-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T16:47:50.317-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T16:47:50.476-03:00 level=INFO msg="Export triggered by mutation events"
+time=2025-12-29T16:47:50.476-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2025-12-29T16:47:50.479-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:47:50.479-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:47:50.479-03:00 level=INFO msg="Exported to JSONL"
+time=2025-12-29T16:47:50.479-03:00 level=INFO msg="Export complete"
+time=2025-12-29T16:47:51.285-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-1pa
+time=2025-12-29T16:47:51.479-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T16:47:51.479-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T16:47:51.479-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T16:47:51.786-03:00 level=INFO msg="Export triggered by mutation events"
+time=2025-12-29T16:47:51.786-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2025-12-29T16:47:51.789-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:47:51.789-03:00 level=INFO msg="Exported to JSONL"
+time=2025-12-29T16:47:51.790-03:00 level=INFO msg="Export complete"
+time=2025-12-29T16:47:52.611-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-ggi
+time=2025-12-29T16:47:52.791-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T16:47:52.791-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T16:47:52.791-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T16:47:53.112-03:00 level=INFO msg="Export triggered by mutation events"
+time=2025-12-29T16:47:53.112-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2025-12-29T16:47:53.116-03:00 level=INFO msg="Exported to JSONL"
+time=2025-12-29T16:47:53.116-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:47:53.116-03:00 level=INFO msg="Export complete"
+time=2025-12-29T16:47:53.550-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-l5p
+time=2025-12-29T16:47:54.050-03:00 level=INFO msg="Export triggered by mutation events"
+time=2025-12-29T16:47:54.050-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2025-12-29T16:47:54.053-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:47:54.053-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:47:54.053-03:00 level=INFO msg="Exported to JSONL"
+time=2025-12-29T16:47:54.054-03:00 level=INFO msg="Export complete"
+time=2025-12-29T16:47:54.116-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T16:47:54.116-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T16:47:54.116-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T16:47:54.555-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-8fk
+time=2025-12-29T16:47:55.054-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T16:47:55.054-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T16:47:55.054-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T16:47:55.056-03:00 level=INFO msg="Export triggered by mutation events"
+time=2025-12-29T16:47:55.056-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2025-12-29T16:47:55.059-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:47:55.059-03:00 level=INFO msg="Exported to JSONL"
+time=2025-12-29T16:47:55.059-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:47:55.060-03:00 level=INFO msg="Export complete"
+time=2025-12-29T16:47:55.867-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-5sx
+time=2025-12-29T16:47:56.060-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T16:47:56.061-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T16:47:56.061-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T16:47:56.367-03:00 level=INFO msg="Export triggered by mutation events"
+time=2025-12-29T16:47:56.367-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2025-12-29T16:47:56.370-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:47:56.370-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:47:56.370-03:00 level=INFO msg="Exported to JSONL"
+time=2025-12-29T16:47:56.371-03:00 level=INFO msg="Export complete"
+time=2025-12-29T16:47:57.371-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T16:47:57.371-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T16:47:57.372-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T16:48:17.618-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-t4o
+time=2025-12-29T16:48:17.623-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-l5p
+time=2025-12-29T16:48:17.627-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-l5p
+time=2025-12-29T16:48:18.128-03:00 level=INFO msg="Export triggered by mutation events"
+time=2025-12-29T16:48:18.128-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2025-12-29T16:48:18.129-03:00 level=INFO msg="Exported to JSONL"
+time=2025-12-29T16:48:18.129-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:48:18.129-03:00 level=INFO msg="Export complete"
+time=2025-12-29T16:48:19.130-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T16:48:19.130-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T16:48:19.130-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T16:48:58.971-03:00 level=INFO msg="Mutation detected: %s %s" status=gendocs-fn3
+time=2025-12-29T16:48:59.471-03:00 level=INFO msg="Export triggered by mutation events"
+time=2025-12-29T16:48:59.471-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2025-12-29T16:48:59.472-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:48:59.472-03:00 level=INFO msg="Exported to JSONL"
+time=2025-12-29T16:48:59.473-03:00 level=INFO msg="Export complete"
+time=2025-12-29T16:49:00.474-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T16:49:00.474-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T16:49:00.474-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T16:49:32.864-03:00 level=INFO msg="Git ref change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.git/refs/heads/main.lock
+time=2025-12-29T16:49:33.865-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T16:49:33.865-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T16:49:33.865-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T16:49:42.768-03:00 level=INFO msg="Mutation detected: %s %s" status=gendocs-fn3
+time=2025-12-29T16:49:42.773-03:00 level=INFO msg="Mutation detected: %s %s" status=gendocs-t4o
+time=2025-12-29T16:49:43.273-03:00 level=INFO msg="Export triggered by mutation events"
+time=2025-12-29T16:49:43.273-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2025-12-29T16:49:43.274-03:00 level=INFO msg="Exported to JSONL"
+time=2025-12-29T16:49:43.274-03:00 level=INFO msg="Export complete"
+time=2025-12-29T16:49:43.274-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:49:43.274-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:49:44.276-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T16:49:44.276-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T16:49:44.276-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T16:50:49.608-03:00 level=INFO msg="Mutation detected: %s %s" status=gendocs-t4o
+time=2025-12-29T16:50:49.613-03:00 level=INFO msg="Mutation detected: %s %s" status=gendocs-1pa
+time=2025-12-29T16:50:50.114-03:00 level=INFO msg="Export triggered by mutation events"
+time=2025-12-29T16:50:50.114-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2025-12-29T16:50:50.115-03:00 level=INFO msg="Exported to JSONL"
+time=2025-12-29T16:50:50.115-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:50:50.115-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:50:50.115-03:00 level=INFO msg="Export complete"
+time=2025-12-29T16:50:51.116-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T16:50:51.116-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T16:50:51.116-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T16:52:19.071-03:00 level=INFO msg="Mutation detected: %s %s" status=gendocs-1pa
+time=2025-12-29T16:52:19.076-03:00 level=INFO msg="Mutation detected: %s %s" status=gendocs-8ek
+time=2025-12-29T16:52:19.577-03:00 level=INFO msg="Export triggered by mutation events"
+time=2025-12-29T16:52:19.577-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2025-12-29T16:52:19.578-03:00 level=INFO msg="Exported to JSONL"
+time=2025-12-29T16:52:19.578-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:52:19.578-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:52:19.578-03:00 level=INFO msg="Export complete"
+time=2025-12-29T16:52:20.579-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T16:52:20.579-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T16:52:20.579-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T16:53:30.758-03:00 level=INFO msg="Mutation detected: %s %s" status=gendocs-8ek
+time=2025-12-29T16:53:30.763-03:00 level=INFO msg="Mutation detected: %s %s" status=gendocs-ggi
+time=2025-12-29T16:53:31.264-03:00 level=INFO msg="Export triggered by mutation events"
+time=2025-12-29T16:53:31.264-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2025-12-29T16:53:31.265-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:53:31.265-03:00 level=INFO msg="Exported to JSONL"
+time=2025-12-29T16:53:31.265-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:53:31.265-03:00 level=INFO msg="Export complete"
+time=2025-12-29T16:53:32.266-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T16:53:32.266-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T16:53:32.266-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T16:56:35.956-03:00 level=INFO msg="Mutation detected: %s %s" status=gendocs-ggi
+time=2025-12-29T16:56:36.457-03:00 level=INFO msg="Export triggered by mutation events"
+time=2025-12-29T16:56:36.457-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2025-12-29T16:56:36.458-03:00 level=INFO msg="Exported to JSONL"
+time=2025-12-29T16:56:36.458-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:56:36.458-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:56:36.458-03:00 level=INFO msg="Export complete"
+time=2025-12-29T16:56:37.459-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T16:56:37.460-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T16:56:37.460-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T16:58:08.339-03:00 level=INFO msg="Mutation detected: %s %s" status=gendocs-l5p
+time=2025-12-29T16:58:08.839-03:00 level=INFO msg="Export triggered by mutation events"
+time=2025-12-29T16:58:08.839-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2025-12-29T16:58:08.840-03:00 level=INFO msg="Exported to JSONL"
+time=2025-12-29T16:58:08.840-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:58:08.840-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T16:58:08.840-03:00 level=INFO msg="Export complete"
+time=2025-12-29T16:58:09.840-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T16:58:09.840-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T16:58:09.841-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T16:59:03.917-03:00 level=INFO msg="Git ref change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.git/refs/heads/main.lock
+time=2025-12-29T16:59:04.918-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T16:59:04.918-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T16:59:04.918-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T17:07:01.876-03:00 level=INFO msg="Mutation detected: %s %s" status=gendocs-8fk
+time=2025-12-29T17:07:02.376-03:00 level=INFO msg="Export triggered by mutation events"
+time=2025-12-29T17:07:02.376-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2025-12-29T17:07:02.377-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T17:07:02.377-03:00 level=INFO msg="Exported to JSONL"
+time=2025-12-29T17:07:02.378-03:00 level=INFO msg="Export complete"
+time=2025-12-29T17:07:03.379-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T17:07:03.379-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T17:07:03.379-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T17:10:49.445-03:00 level=INFO msg="Mutation detected: %s %s" status=gendocs-5sx
+time=2025-12-29T17:10:49.946-03:00 level=INFO msg="Export triggered by mutation events"
+time=2025-12-29T17:10:49.946-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2025-12-29T17:10:49.947-03:00 level=INFO msg="Exported to JSONL"
+time=2025-12-29T17:10:49.947-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T17:10:49.947-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T17:10:49.947-03:00 level=INFO msg="Export complete"
+time=2025-12-29T17:10:50.948-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T17:10:50.948-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T17:10:50.948-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T17:11:07.793-03:00 level=INFO msg="Git ref change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.git/refs/heads/main.lock
+time=2025-12-29T17:11:08.795-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T17:11:08.795-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T17:11:08.795-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2025-12-29T18:23:37.878-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2025-12-29T18:23:37.878-03:00 level=INFO msg="JSONL removed/renamed, re-establishing watch"
+time=2025-12-29T18:23:37.928-03:00 level=INFO msg="JSONL still missing after %v, retrying..." !BADKEY=50ms
+time=2025-12-29T18:23:38.029-03:00 level=INFO msg="JSONL still missing after %v, retrying..." !BADKEY=100ms
+time=2025-12-29T18:23:38.229-03:00 level=INFO msg="JSONL still missing after %v, retrying..." !BADKEY=200ms
+time=2025-12-29T18:23:38.630-03:00 level=INFO msg="JSONL still missing after %v, retrying..." !BADKEY=400ms
+time=2025-12-29T18:23:38.630-03:00 level=INFO msg="Failed to re-establish JSONL watch after all retries"
+time=2025-12-29T18:23:38.880-03:00 level=INFO msg="Import triggered by file change"
+time=2025-12-29T18:23:38.880-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2025-12-29T18:23:38.880-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
