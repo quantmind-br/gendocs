@@ -23,6 +23,7 @@ func NewMaskedInput(label string, helpText string) MaskedInputModel {
 	input.EchoMode = textinput.EchoPassword
 	input.EchoCharacter = '•'
 	input.CharLimit = 256
+	input.SetValue("")
 
 	return MaskedInputModel{
 		input:    input,
@@ -101,6 +102,7 @@ func (m MaskedInputModel) View() string {
 
 func (m *MaskedInputModel) SetValue(v string) {
 	m.input.SetValue(v)
+	m.input.SetCursor(len(v))
 	m.originalVal = v
 	m.dirty = false
 }

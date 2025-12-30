@@ -53,6 +53,8 @@ func WithCharLimit(limit int) TextFieldOption {
 func NewTextField(label string, opts ...TextFieldOption) TextFieldModel {
 	input := textinput.New()
 	input.CharLimit = 256
+	// Explicitly initialize with empty value to prevent placeholder leakage
+	input.SetValue("")
 
 	m := TextFieldModel{
 		input: input,
@@ -121,6 +123,7 @@ func (m TextFieldModel) View() string {
 
 func (m *TextFieldModel) SetValue(v string) {
 	m.input.SetValue(v)
+	m.input.SetCursor(len(v))
 	m.originalVal = v
 	m.dirty = false
 }
