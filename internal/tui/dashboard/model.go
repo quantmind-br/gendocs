@@ -390,7 +390,7 @@ func (m *DashboardModel) populateSections() {
 	}
 
 	if section, ok := m.sections["cache"]; ok {
-		section.SetValues(map[string]any{
+		_ = section.SetValues(map[string]any{
 			"cache_enabled":  m.cfg.Analyzer.LLM.Cache.Enabled,
 			"cache_max_size": m.cfg.Analyzer.LLM.Cache.MaxSize,
 			"cache_ttl":      m.cfg.Analyzer.LLM.Cache.TTL,
@@ -399,7 +399,7 @@ func (m *DashboardModel) populateSections() {
 	}
 
 	if section, ok := m.sections["analysis"]; ok {
-		section.SetValues(map[string]any{
+		_ = section.SetValues(map[string]any{
 			"exclude_code_structure": m.cfg.Analyzer.ExcludeStructure,
 			"exclude_data_flow":      m.cfg.Analyzer.ExcludeDataFlow,
 			"exclude_dependencies":   m.cfg.Analyzer.ExcludeDeps,
@@ -413,7 +413,7 @@ func (m *DashboardModel) populateSections() {
 	}
 
 	if section, ok := m.sections["retry"]; ok {
-		section.SetValues(map[string]any{
+		_ = section.SetValues(map[string]any{
 			"max_attempts":         m.cfg.Analyzer.RetryConfig.MaxAttempts,
 			"multiplier":           m.cfg.Analyzer.RetryConfig.Multiplier,
 			"max_wait_per_attempt": m.cfg.Analyzer.RetryConfig.MaxWaitPerAttempt,
@@ -422,7 +422,7 @@ func (m *DashboardModel) populateSections() {
 	}
 
 	if section, ok := m.sections["gemini"]; ok {
-		section.SetValues(map[string]any{
+		_ = section.SetValues(map[string]any{
 			"use_vertex_ai": m.cfg.Gemini.UseVertexAI,
 			"project_id":    m.cfg.Gemini.ProjectID,
 			"location":      m.cfg.Gemini.Location,
@@ -430,7 +430,7 @@ func (m *DashboardModel) populateSections() {
 	}
 
 	if section, ok := m.sections["gitlab"]; ok {
-		section.SetValues(map[string]any{
+		_ = section.SetValues(map[string]any{
 			"gitlab_api_url":       m.cfg.GitLab.APIURL,
 			"gitlab_user_name":     m.cfg.GitLab.UserName,
 			"gitlab_user_username": m.cfg.GitLab.UserUsername,
@@ -440,7 +440,7 @@ func (m *DashboardModel) populateSections() {
 	}
 
 	if section, ok := m.sections["cronjob"]; ok {
-		section.SetValues(map[string]any{
+		_ = section.SetValues(map[string]any{
 			"max_days_since_last_commit": m.cfg.Cronjob.MaxDaysSinceLastCommit,
 			"working_path":               m.cfg.Cronjob.WorkingPath,
 			"group_project_id":           m.cfg.Cronjob.GroupProjectID,
@@ -448,7 +448,7 @@ func (m *DashboardModel) populateSections() {
 	}
 
 	if section, ok := m.sections["logging"]; ok {
-		section.SetValues(map[string]any{
+		_ = section.SetValues(map[string]any{
 			"log_dir":       m.cfg.Logging.LogDir,
 			"file_level":    m.cfg.Logging.FileLevel,
 			"console_level": m.cfg.Logging.ConsoleLevel,
