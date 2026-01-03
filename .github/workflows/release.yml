@@ -8,9 +8,13 @@ on:
 permissions:
   contents: write
 
+env:
+  APP_NAME: gendocs
+  APP_DESC: "AI-powered documentation generator for codebases"
+
 jobs:
-  build:
-    name: Build binaries
+  build-binaries:
+    name: Build ${{ matrix.goos }}-${{ matrix.goarch }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -27,49 +31,146 @@ jobs:
             goarch: amd64
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: actions/setup-go@v5
         with:
           go-version: '1.23'
 
-      - name: Build binary
+      - name: Build
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
         run: |
           VERSION=${GITHUB_REF_NAME}
-          BINARY_NAME=gendocs-${{ matrix.goos }}-${{ matrix.goarch }}
-          if [ "${{ matrix.goos }}" = "windows" ]; then
-            BINARY_NAME="${BINARY_NAME}.exe"
-          fi
-          go build -ldflags="-s -w -X main.version=${VERSION}" -o ${BINARY_NAME} .
-          chmod +x ${BINARY_NAME}
+          BINARY=${{ env.APP_NAME }}-${{ matrix.goos }}-${{ matrix.goarch }}
+          [[ "${{ matrix.goos }}" == "windows" ]] && BINARY="${BINARY}.exe"
+          go build -ldflags="-s -w -X main.version=${VERSION}" -o ${BINARY} .
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: gendocs-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: gendocs-*
+          name: binary-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: ${{ env.APP_NAME }}-*
+
+  build-deb:
+    name: Build .deb (${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    needs: build-binaries
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            goarch: amd64
+          - arch: arm64
+            goarch: arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: binary-linux-${{ matrix.goarch }}
+
+      - name: Build .deb
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          PKG_NAME=${{ env.APP_NAME }}_${VERSION}_${{ matrix.arch }}
+          
+          mkdir -p ${PKG_NAME}/DEBIAN
+          mkdir -p ${PKG_NAME}/usr/bin
+          
+          cp ${{ env.APP_NAME }}-linux-${{ matrix.goarch }} ${PKG_NAME}/usr/bin/${{ env.APP_NAME }}
+          chmod 755 ${PKG_NAME}/usr/bin/${{ env.APP_NAME }}
+          
+          cat > ${PKG_NAME}/DEBIAN/control << EOF
+          Package: ${{ env.APP_NAME }}
+          Version: ${VERSION}
+          Section: devel
+          Priority: optional
+          Architecture: ${{ matrix.arch }}
+          Maintainer: Gendocs Team
+          Description: ${{ env.APP_DESC }}
+          EOF
+          
+          dpkg-deb --build ${PKG_NAME}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deb-${{ matrix.arch }}
+          path: "*.deb"
+
+  build-appimage:
+    name: Build AppImage
+    runs-on: ubuntu-latest
+    needs: build-binaries
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: binary-linux-amd64
+
+      - name: Build AppImage
+        run: |
+          VERSION=${GITHUB_REF_NAME}
+          
+          mkdir -p AppDir/usr/bin
+          cp ${{ env.APP_NAME }}-linux-amd64 AppDir/usr/bin/${{ env.APP_NAME }}
+          chmod +x AppDir/usr/bin/${{ env.APP_NAME }}
+          
+          cat > AppDir/${{ env.APP_NAME }}.desktop << EOF
+          [Desktop Entry]
+          Type=Application
+          Name=Gendocs
+          Exec=${{ env.APP_NAME }}
+          Icon=${{ env.APP_NAME }}
+          Categories=Development;
+          Terminal=true
+          EOF
+          
+          cat > AppDir/usr/bin/${{ env.APP_NAME }}.png << EOF
+          EOF
+          touch AppDir/${{ env.APP_NAME }}.png
+          
+          cat > AppDir/AppRun << 'EOF'
+          #!/bin/bash
+          SELF=$(readlink -f "$0")
+          HERE=${SELF%/*}
+          exec "${HERE}/usr/bin/${{ env.APP_NAME }}" "$@"
+          EOF
+          chmod +x AppDir/AppRun
+          
+          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+          
+          ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run AppDir ${{ env.APP_NAME }}-${VERSION}-x86_64.AppImage
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: appimage
+          path: "*.AppImage"
 
   release:
     name: Create Release
-    needs: build
+    needs: [build-binaries, build-deb, build-appimage]
     runs-on: ubuntu-latest
+    
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-          merge-multiple: true
 
-      - name: List artifacts
-        run: ls -la artifacts/
+      - name: Prepare release files
+        run: |
+          mkdir -p release
+          find artifacts -type f \( -name "*.deb" -o -name "*.AppImage" -o -name "${{ env.APP_NAME }}-*" \) -exec cp {} release/ \;
+          ls -la release/
 
-      - name: Upload binaries to release
+      - name: Upload to release
         uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/*
-          fail_on_unmatched_files: true
+          files: release/*
+          generate_release_notes: true
