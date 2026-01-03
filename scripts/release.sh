@@ -33,8 +33,8 @@ check_prerequisites() {
         error "Not in a git repository"
     fi
     
-    # Check for uncommitted changes
-    if ! git diff-index --quiet HEAD --; then
+    # Check for uncommitted changes (ignoring .beads/ local state)
+    if git diff-index HEAD -- | grep -v "^.beads/" | grep -q .; then
         error "You have uncommitted changes. Please commit or stash them first."
     fi
     
