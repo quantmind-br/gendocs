@@ -257,3 +257,24 @@ time=2026-01-03T13:51:19.700-03:00 level=INFO msg="JSONL file created: %s" !BADK
 time=2026-01-03T13:51:20.702-03:00 level=INFO msg="Import triggered by file change"
 time=2026-01-03T13:51:20.702-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
 time=2026-01-03T13:51:20.703-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-03T13:54:10.127-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-03T13:54:10.127-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-03T13:54:10.131-03:00 level=INFO msg="Git ref change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.git/refs/heads/main.lock
+time=2026-01-03T13:54:10.558-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-03T13:54:11.559-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-03T13:54:11.559-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-03T13:54:11.560-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-03T13:57:16.285-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-03T13:57:16.285-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-03T13:57:16.290-03:00 level=INFO msg="Git ref change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.git/refs/heads/main.lock
+time=2026-01-03T13:57:16.705-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-03T13:57:17.706-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-03T13:57:17.706-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-03T13:57:17.707-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-03T13:58:56.554-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-03T13:58:56.554-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-03T13:58:56.558-03:00 level=INFO msg="Git ref change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.git/refs/heads/main.lock
+time=2026-01-03T13:58:56.970-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-03T13:58:57.972-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-03T13:58:57.972-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-03T13:58:57.973-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
