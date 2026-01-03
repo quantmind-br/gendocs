@@ -1,7 +1,7 @@
 {
-  "pid": 3311974,
-  "parent_pid": 3311955,
+  "pid": 1543966,
+  "parent_pid": 1543950,
   "database": "/home/diogo/dev/gendocs/.beads/beads.db",
-  "version": "0.40.0",
-  "started_at": "2025-12-29T19:41:30.932536309Z"
+  "version": "0.43.0",
+  "started_at": "2026-01-03T16:48:55.663551337Z"
 }

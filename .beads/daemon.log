@@ -214,3 +214,32 @@ time=2025-12-29T18:23:38.630-03:00 level=INFO msg="Failed to re-establish JSONL 
 time=2025-12-29T18:23:38.880-03:00 level=INFO msg="Import triggered by file change"
 time=2025-12-29T18:23:38.880-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
 time=2025-12-29T18:23:38.880-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-03T13:48:55.664-03:00 level=INFO msg="Daemon started (interval: %v, auto-commit: %v, auto-push: %v)" !BADKEY=5s !BADKEY=false !BADKEY=false
+time=2026-01-03T13:48:55.664-03:00 level=INFO msg="using database" path=/home/diogo/dev/gendocs/.beads/beads.db
+time=2026-01-03T13:48:55.668-03:00 level=INFO msg="database opened" path=/home/diogo/dev/gendocs/.beads/beads.db freshness_checking=true
+time=2026-01-03T13:48:55.668-03:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-01-03T13:48:55.668-03:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-01-03T13:48:55.669-03:00 level=INFO msg="Repository fingerprint validated: %s" !BADKEY=734176c1
+time=2026-01-03T13:48:55.669-03:00 level=WARN msg="database schema version mismatch" db_version=0.40.0 daemon_version=0.43.0
+time=2026-01-03T13:48:55.669-03:00 level=INFO msg="auto-upgrading database to daemon version"
+time=2026-01-03T13:48:55.669-03:00 level=INFO msg="database version updated" version=0.43.0
+time=2026-01-03T13:48:55.669-03:00 level=INFO msg="starting RPC server" socket=/home/diogo/dev/gendocs/.beads/bd.sock
+time=2026-01-03T13:48:55.669-03:00 level=INFO msg="RPC server ready (socket listening)"
+time=2026-01-03T13:48:55.670-03:00 level=INFO msg="registered in global registry"
+time=2026-01-03T13:48:55.670-03:00 level=INFO msg="Starting %s..." !BADKEY="sync cycle"
+time=2026-01-03T13:48:55.671-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-03T13:48:55.676-03:00 level=INFO msg="Sync branch pull failed: %v" !BADKEY="git pull failed in worktree: exit status 128\nfatal: .git/index: index file open failed: Não é um diretório\n"
+time=2026-01-03T13:48:55.676-03:00 level=INFO msg="monitoring parent process" pid=0
+time=2026-01-03T13:48:55.676-03:00 level=INFO msg="using event-driven mode"
+time=2026-01-03T13:48:55.676-03:00 level=INFO msg="Auto-pull disabled: use 'git pull' manually to sync remote changes"
+time=2026-01-03T13:48:55.709-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-03T13:48:55.709-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-03T13:48:55.714-03:00 level=INFO msg="Git ref change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.git/refs/heads/main.lock
+time=2026-01-03T13:48:56.715-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-03T13:48:56.715-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-03T13:48:56.716-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-03T13:49:23.725-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-03T13:49:23.725-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-03T13:49:24.727-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-03T13:49:24.727-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-03T13:49:24.727-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
