@@ -1,4 +1,4 @@
-.PHONY: all build install uninstall clean test help
+.PHONY: all build install uninstall clean test help release
 
 # Variables
 BINARY_NAME=gendocs
@@ -35,6 +35,7 @@ help:
 	@echo "  make test-coverage  - Executa testes com relatório de coverage"
 	@echo "  make test-short     - Executa apenas testes curtos"
 	@echo "  make lint           - Executa linters"
+	@echo "  make release        - Cria uma nova release no GitHub"
 	@echo "  make help           - Mostra esta mensagem"
 
 build:
@@ -103,4 +104,7 @@ lint:
 
 # Development helpers
 run: build
-	@echo "Executando $(BUILD_DIR)/$(BINARY) analyze --repo-path ../.."
+	@echo "Executando $(BUILD_DIR)/$(BINARY) analyze --repo-path ..."
+
+release:
+	@./scripts/release.sh

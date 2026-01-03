@@ -54,3 +54,6 @@ Thumbs.db
 
 # Auto Claude data directory
 .auto-claude/
+
+# Git worktrees (local development only)
+.worktrees/
