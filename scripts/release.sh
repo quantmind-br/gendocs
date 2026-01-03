@@ -169,20 +169,20 @@ main() {
     info "Pushing tag to origin..."
     git push origin "$NEW_VERSION"
     
-    # Generate release notes
-    RELEASE_NOTES=""
+    # Generate release notes with commits
+    RELEASE_NOTES="## What's Changed"$'\n\n'
     if [[ -n "$LAST_VERSION" ]]; then
-        RELEASE_NOTES=$(git log --pretty=format:"- %s" "$LAST_VERSION"..HEAD)
+        RELEASE_NOTES+=$(git log --pretty=format:"- %s (%h)" "$LAST_VERSION"..HEAD)
+        RELEASE_NOTES+=$'\n\n'"**Full Changelog**: https://github.com/$(gh repo view --json nameWithOwner -q .nameWithOwner)/compare/${LAST_VERSION}...${NEW_VERSION}"
     else
-        RELEASE_NOTES=$(git log --pretty=format:"- %s" HEAD~10..HEAD 2>/dev/null || git log --pretty=format:"- %s")
+        RELEASE_NOTES+=$(git log --pretty=format:"- %s (%h)" HEAD~10..HEAD 2>/dev/null || git log --pretty=format:"- %s (%h)")
     fi
     
     # Create GitHub release
     info "Creating GitHub release..."
     gh release create "$NEW_VERSION" \
         --title "$NEW_VERSION" \
-        --notes "$RELEASE_NOTES" \
-        --generate-notes
+        --notes "$RELEASE_NOTES"
     
     echo ""
     success "Release $NEW_VERSION created successfully!"
