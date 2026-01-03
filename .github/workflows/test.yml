@@ -41,7 +41,7 @@ jobs:
         run: go mod verify
 
       - name: Run tests
-        run: make test-coverage
+        run: make coverage
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
