@@ -235,8 +235,8 @@ func TestSaver_VersionHandling_SetsDefaultVersion(t *testing.T) {
 func TestSaver_SaveProjectConfig_DefaultRepoPath(t *testing.T) {
 	tmpDir := t.TempDir()
 	originalWd, _ := os.Getwd()
-	t.Cleanup(func() { os.Chdir(originalWd) })
-	os.Chdir(tmpDir)
+	t.Cleanup(func() { _ = os.Chdir(originalWd) })
+	_ = os.Chdir(tmpDir)
 
 	saver := NewSaver()
 	cfg := &GlobalConfig{Version: CurrentConfigVersion}
@@ -286,7 +286,7 @@ func TestProjectConfigPath_ReturnsCorrectPath(t *testing.T) {
 func TestConfigExists_ReturnsTrueForExistingFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	testFile := filepath.Join(tmpDir, "test.yaml")
-	os.WriteFile(testFile, []byte("test"), 0644)
+	_ = os.WriteFile(testFile, []byte("test"), 0644)
 
 	if !ConfigExists(testFile) {
 		t.Error("Expected ConfigExists to return true for existing file")
@@ -311,7 +311,7 @@ func TestGlobalConfigExists_Integration(t *testing.T) {
 
 	saver := NewSaver()
 	cfg := &GlobalConfig{Version: CurrentConfigVersion}
-	saver.SaveGlobalConfig(cfg)
+	_ = saver.SaveGlobalConfig(cfg)
 
 	if !GlobalConfigExists() {
 		t.Error("Expected GlobalConfigExists to return true after saving")
@@ -327,7 +327,7 @@ func TestProjectConfigExists_Integration(t *testing.T) {
 
 	saver := NewSaver()
 	cfg := &GlobalConfig{Version: CurrentConfigVersion}
-	saver.SaveProjectConfig(tmpDir, cfg)
+	_ = saver.SaveProjectConfig(tmpDir, cfg)
 
 	if !ProjectConfigExists(tmpDir) {
 		t.Error("Expected ProjectConfigExists to return true after saving")

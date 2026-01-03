@@ -1,8 +1,6 @@
 package dashboard
 
 import (
-	"fmt"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/user/gendocs/internal/config"
@@ -353,7 +351,7 @@ func (m *DashboardModel) populateSections() {
 	}
 
 	if section, ok := m.sections["llm"]; ok {
-		section.SetValues(map[string]any{
+		_ = section.SetValues(map[string]any{
 			"provider":    m.cfg.Analyzer.LLM.Provider,
 			"model":       m.cfg.Analyzer.LLM.Model,
 			"api_key":     m.cfg.Analyzer.LLM.APIKey,
@@ -366,7 +364,7 @@ func (m *DashboardModel) populateSections() {
 	}
 
 	if section, ok := m.sections["documenter_llm"]; ok {
-		section.SetValues(map[string]any{
+		_ = section.SetValues(map[string]any{
 			"documenter_provider":    m.cfg.Documenter.LLM.Provider,
 			"documenter_model":       m.cfg.Documenter.LLM.Model,
 			"documenter_api_key":     m.cfg.Documenter.LLM.APIKey,
@@ -379,7 +377,7 @@ func (m *DashboardModel) populateSections() {
 	}
 
 	if section, ok := m.sections["ai_rules_llm"]; ok {
-		section.SetValues(map[string]any{
+		_ = section.SetValues(map[string]any{
 			"ai_rules_provider":    m.cfg.AIRules.LLM.Provider,
 			"ai_rules_model":       m.cfg.AIRules.LLM.Model,
 			"ai_rules_api_key":     m.cfg.AIRules.LLM.APIKey,
@@ -678,6 +676,6 @@ func ShowSuccess(text string) tea.Cmd {
 
 func ShowInfo(text string) tea.Cmd {
 	return func() tea.Msg {
-		return ShowMessageMsg{Text: fmt.Sprintf("%s", text), Type: MessageInfo}
+		return ShowMessageMsg{Text: text, Type: MessageInfo}
 	}
 }

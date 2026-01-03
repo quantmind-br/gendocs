@@ -11,7 +11,7 @@ import (
 func TestDashboard_NewDashboard_InitializesCorrectly(t *testing.T) {
 	d := NewDashboard()
 
-	if d.sidebar.items == nil || len(d.sidebar.items) == 0 {
+	if len(d.sidebar.items) == 0 {
 		t.Error("Expected sidebar items to be initialized")
 	}
 	if d.sections == nil {
