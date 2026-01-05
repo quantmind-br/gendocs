@@ -301,10 +301,12 @@ func TestProgress_Start(t *testing.T) {
 func TestProgress_StartIdempotent(t *testing.T) {
 	progress := NewProgress("Test")
 
-	output := captureOutput(func() {
+	output := captureOutputWithWriter(func(buf *bytes.Buffer) {
+		progress.SetWriter(buf)
 		progress.Start()
 		progress.Start()
 		progress.Start()
+		progress.Stop()
 	})
 
 	// Title should only appear once
@@ -375,11 +377,10 @@ func TestProgress_AddTask(t *testing.T) {
 // TestProgress_StartTask tests starting a task
 func TestProgress_StartTask(t *testing.T) {
 	progress := NewProgress("Test")
+	progress.SetWriter(io.Discard)
 	progress.AddTask("task-1", "First Task", "Description")
 
-	_ = captureOutput(func() {
-		progress.StartTask("task-1")
-	})
+	progress.StartTask("task-1")
 
 	task := progress.taskMap["task-1"]
 	if task.Status != TaskRunning {
@@ -428,13 +429,12 @@ func TestProgress_CompleteTask_NonExistent(t *testing.T) {
 // TestProgress_FailTask tests failing a task with error
 func TestProgress_FailTask(t *testing.T) {
 	progress := NewProgress("Test")
+	progress.SetWriter(io.Discard)
 	progress.AddTask("task-1", "First Task", "Description")
 	testErr := errors.New("task failed")
 
-	_ = captureOutput(func() {
-		progress.StartTask("task-1")
-		progress.FailTask("task-1", testErr)
-	})
+	progress.StartTask("task-1")
+	progress.FailTask("task-1", testErr)
 
 	task := progress.taskMap["task-1"]
 	if task.Status != TaskError {
@@ -448,12 +448,11 @@ func TestProgress_FailTask(t *testing.T) {
 // TestProgress_FailTask_NilError tests failing a task with nil error
 func TestProgress_FailTask_NilError(t *testing.T) {
 	progress := NewProgress("Test")
+	progress.SetWriter(io.Discard)
 	progress.AddTask("task-1", "First Task", "Description")
 
-	_ = captureOutput(func() {
-		progress.StartTask("task-1")
-		progress.FailTask("task-1", nil)
-	})
+	progress.StartTask("task-1")
+	progress.FailTask("task-1", nil)
 
 	task := progress.taskMap["task-1"]
 	if task.Status != TaskError {
@@ -475,11 +474,10 @@ func TestProgress_FailTask_NonExistent(t *testing.T) {
 // TestProgress_SkipTask tests skipping a task
 func TestProgress_SkipTask(t *testing.T) {
 	progress := NewProgress("Test")
+	progress.SetWriter(io.Discard)
 	progress.AddTask("task-1", "First Task", "Description")
 
-	_ = captureOutput(func() {
-		progress.SkipTask("task-1")
-	})
+	progress.SkipTask("task-1")
 
 	task := progress.taskMap["task-1"]
 	if task.Status != TaskSkipped {

@@ -15,23 +15,23 @@ import (
 var (
 	progressTitleStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color("#FAFAFA")).
-				Background(lipgloss.Color("#7D56F4")).
+				Background(ColorPrimary).
 				Padding(0, 1)
 
 	progressStepStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#7D56F4"))
+				Foreground(ColorPrimary)
 
 	progressInfoStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#A0A0A0"))
+				Foreground(ColorMuted)
 
 	progressSuccessStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#50FA7B"))
+				Foreground(ColorSuccess)
 
 	progressErrorStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#FF5F87"))
+				Foreground(ColorError)
 
 	progressWarningStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#FFB86C"))
+				Foreground(ColorWarning)
 )
 
 type ProgressReporter interface {
@@ -71,20 +71,23 @@ type Task struct {
 }
 
 type Progress struct {
-	mu           sync.Mutex
-	writer       io.Writer
-	title        string
-	tasks        []*Task
-	taskMap      map[string]*Task
-	spinnerFrame int
-	ticker       *time.Ticker
-	done         chan struct{}
-	started      bool
-	startTime    time.Time
+	mu            sync.Mutex
+	writer        io.Writer
+	title         string
+	subtitle      string
+	tasks         []*Task
+	taskMap       map[string]*Task
+	spinnerFrame  int
+	ticker        *time.Ticker
+	done          chan struct{}
+	started       bool
+	startTime     time.Time
+	lastLineCount int
 }
 
 func NewProgress(title string) *Progress {
 	return &Progress{
+		writer:    os.Stdout,
 		title:     title,
 		tasks:     make([]*Task, 0),
 		taskMap:   make(map[string]*Task),
@@ -93,14 +96,19 @@ func NewProgress(title string) *Progress {
 	}
 }
 
+func (p *Progress) SetSubtitle(subtitle string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.subtitle = subtitle
+}
+
 func (p *Progress) SetWriter(w io.Writer) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	p.writer = w
 }
 
 func (p *Progress) getWriter() io.Writer {
-	if p.writer == nil {
-		return os.Stdout
-	}
 	return p.writer
 }
 
@@ -182,10 +190,22 @@ func (p *Progress) Start() {
 	_, _ = fmt.Fprintln(p.getWriter(), progressTitleStyle.Render(" "+p.title+" "))
 	_, _ = fmt.Fprintln(p.getWriter())
 
-	// Initial render to create task lines
-	for _, task := range p.tasks {
-		line := p.formatTaskLine(task)
-		_, _ = fmt.Fprintln(p.getWriter(), line)
+	if p.subtitle != "" {
+		_, _ = fmt.Fprintln(p.getWriter(), progressInfoStyle.Render("  "+p.subtitle))
+		_, _ = fmt.Fprintln(p.getWriter())
+	}
+
+	if len(p.tasks) == 0 {
+		_, _ = fmt.Fprintf(p.getWriter(), "  %s %s\n",
+			progressStepStyle.Render(SpinnerFrames[0]),
+			progressInfoStyle.Render("Preparing..."))
+		p.lastLineCount = 1
+	} else {
+		for _, task := range p.tasks {
+			line := p.formatTaskLine(task)
+			_, _ = fmt.Fprintln(p.getWriter(), line)
+		}
+		p.lastLineCount = len(p.tasks)
 	}
 
 	p.mu.Unlock()
@@ -209,16 +229,21 @@ func (p *Progress) animate() {
 }
 
 func (p *Progress) render() {
-	lineCount := len(p.tasks)
-	if lineCount == 0 {
-		return
+	if p.lastLineCount > 0 {
+		_, _ = fmt.Fprint(p.getWriter(), strings.Repeat("\033[A\033[2K", p.lastLineCount))
 	}
 
-	_, _ = fmt.Fprint(p.getWriter(), strings.Repeat("\033[A\033[2K", lineCount))
-
-	for _, task := range p.tasks {
-		line := p.formatTaskLine(task)
-		_, _ = fmt.Fprintln(p.getWriter(), line)
+	if len(p.tasks) == 0 {
+		_, _ = fmt.Fprintf(p.getWriter(), "  %s %s\n",
+			progressStepStyle.Render(SpinnerFrames[p.spinnerFrame]),
+			progressInfoStyle.Render("Preparing..."))
+		p.lastLineCount = 1
+	} else {
+		for _, task := range p.tasks {
+			line := p.formatTaskLine(task)
+			_, _ = fmt.Fprintln(p.getWriter(), line)
+		}
+		p.lastLineCount = len(p.tasks)
 	}
 }
 
