@@ -42,6 +42,7 @@ func NewSubAgent(cfg SubAgentConfig, llmFactory *llm.Factory, promptManager *pro
 	toolList := []tools.Tool{
 		tools.NewFileReadTool(2),
 		tools.NewListFilesTool(2),
+		tools.NewSearchFilesTool(cfg.RepoPath, 2),
 	}
 
 	// Load system prompt

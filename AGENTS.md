@@ -46,7 +46,7 @@ internal/
   llmcache/             # LLM response caching
   prompts/              # YAML prompt management
   testing/              # Test helpers and fixtures
-  tools/                # Agent tools (file_read, list_files)
+  tools/                # Agent tools (file_read, list_files, search_files)
   tui/                  # Terminal UI (Bubbletea)
 prompts/                # YAML prompt templates
 ```
