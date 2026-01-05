@@ -376,3 +376,17 @@ time=2026-01-04T22:54:04.444-03:00 level=INFO msg="File change detected: %s" !BA
 time=2026-01-04T22:54:05.445-03:00 level=INFO msg="Import triggered by file change"
 time=2026-01-04T22:54:05.445-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
 time=2026-01-04T22:54:05.446-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:08:10.622-03:00 level=INFO msg="Daemon started (interval: %v, auto-commit: %v, auto-push: %v)" !BADKEY=5s !BADKEY=false !BADKEY=false
+time=2026-01-05T16:08:10.622-03:00 level=INFO msg="using database" path=/home/diogo/dev/gendocs/.beads/beads.db
+time=2026-01-05T16:08:10.627-03:00 level=INFO msg="database opened" path=/home/diogo/dev/gendocs/.beads/beads.db freshness_checking=true
+time=2026-01-05T16:08:10.627-03:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-01-05T16:08:10.627-03:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-01-05T16:08:10.627-03:00 level=INFO msg="Repository fingerprint validated: %s" !BADKEY=734176c1
+time=2026-01-05T16:08:10.627-03:00 level=WARN msg="database schema version mismatch" db_version=0.43.0 daemon_version=0.44.0
+time=2026-01-05T16:08:10.627-03:00 level=INFO msg="auto-upgrading database to daemon version"
+time=2026-01-05T16:08:10.627-03:00 level=INFO msg="database version updated" version=0.44.0
+time=2026-01-05T16:08:10.627-03:00 level=INFO msg="starting RPC server" socket=/home/diogo/dev/gendocs/.beads/bd.sock
+time=2026-01-05T16:08:10.627-03:00 level=INFO msg="RPC server ready (socket listening)"
+time=2026-01-05T16:08:10.629-03:00 level=INFO msg="registered in global registry"
+time=2026-01-05T16:08:10.629-03:00 level=INFO msg="Starting %s..." !BADKEY="sync cycle"
+time=2026-01-05T16:08:10.630-03:00 level=INFO msg="Exported to JSONL"
