@@ -206,31 +206,80 @@ func applyAnalyzerDefaults(cfg *AnalyzerConfig) {
 	}
 }
 
+func applyLLMEnvOverrides(llm *LLMConfig, prefix string, fallbackPrefix string, defaults LLMDefaults) {
+	if llm.Provider == defaults.Provider {
+		if fallbackPrefix != "" {
+			if env := getEnvWithFallback(prefix+"_LLM_PROVIDER", fallbackPrefix+"_LLM_PROVIDER", ""); env != "" {
+				llm.Provider = env
+			}
+		} else if env := os.Getenv(prefix + "_LLM_PROVIDER"); env != "" {
+			llm.Provider = env
+		}
+	}
+	if llm.Model == defaults.Model {
+		if fallbackPrefix != "" {
+			if env := getEnvWithFallback(prefix+"_LLM_MODEL", fallbackPrefix+"_LLM_MODEL", ""); env != "" {
+				llm.Model = env
+			}
+		} else if env := os.Getenv(prefix + "_LLM_MODEL"); env != "" {
+			llm.Model = env
+		}
+	}
+	if llm.APIKey == "" {
+		if fallbackPrefix != "" {
+			llm.APIKey = getEnvWithFallback(prefix+"_LLM_API_KEY", fallbackPrefix+"_LLM_API_KEY", "")
+		} else if env := os.Getenv(prefix + "_LLM_API_KEY"); env != "" {
+			llm.APIKey = env
+		}
+	}
+	if llm.BaseURL == "" {
+		if env := os.Getenv(prefix + "_LLM_BASE_URL"); env != "" {
+			llm.BaseURL = env
+		}
+	}
+	if llm.Retries == defaults.Retries {
+		llm.Retries = getEnvIntOrDefault(prefix+"_AGENT_RETRIES", defaults.Retries)
+	}
+	if llm.Timeout == defaults.Timeout {
+		llm.Timeout = getEnvIntOrDefault(prefix+"_LLM_TIMEOUT", defaults.Timeout)
+	}
+	if llm.MaxTokens == defaults.MaxTokens {
+		llm.MaxTokens = getEnvIntOrDefault(prefix+"_LLM_MAX_TOKENS", defaults.MaxTokens)
+	}
+	if llm.Temperature == defaults.Temperature {
+		llm.Temperature = getEnvFloatOrDefault(prefix+"_LLM_TEMPERATURE", defaults.Temperature)
+	}
+}
+
+type LLMDefaults struct {
+	Provider    string
+	Model       string
+	Retries     int
+	Timeout     int
+	MaxTokens   int
+	Temperature float64
+}
+
+var defaultLLMConfig = LLMDefaults{
+	Provider:    "openai",
+	Model:       "gpt-4o",
+	Retries:     2,
+	Timeout:     180,
+	MaxTokens:   8192,
+	Temperature: 0.0,
+}
+
+var aiRulesLLMDefaults = LLMDefaults{
+	Provider:    "openai",
+	Model:       "gpt-4o",
+	Retries:     2,
+	Timeout:     240, // AIRules uses longer timeout
+	MaxTokens:   8192,
+	Temperature: 0.0,
+}
+
 func applyAnalyzerEnvOverrides(cfg *AnalyzerConfig) {
-	if env := os.Getenv("ANALYZER_LLM_PROVIDER"); env != "" && cfg.LLM.Provider == "openai" {
-		cfg.LLM.Provider = env
-	}
-	if env := os.Getenv("ANALYZER_LLM_MODEL"); env != "" && cfg.LLM.Model == "gpt-4o" {
-		cfg.LLM.Model = env
-	}
-	if env := os.Getenv("ANALYZER_LLM_API_KEY"); env != "" && cfg.LLM.APIKey == "" {
-		cfg.LLM.APIKey = env
-	}
-	if env := os.Getenv("ANALYZER_LLM_BASE_URL"); env != "" && cfg.LLM.BaseURL == "" {
-		cfg.LLM.BaseURL = env
-	}
-	if cfg.LLM.Retries == 2 {
-		cfg.LLM.Retries = getEnvIntOrDefault("ANALYZER_AGENT_RETRIES", 2)
-	}
-	if cfg.LLM.Timeout == 180 {
-		cfg.LLM.Timeout = getEnvIntOrDefault("ANALYZER_LLM_TIMEOUT", 180)
-	}
-	if cfg.LLM.MaxTokens == 8192 {
-		cfg.LLM.MaxTokens = getEnvIntOrDefault("ANALYZER_LLM_MAX_TOKENS", 8192)
-	}
-	if cfg.LLM.Temperature == 0.0 {
-		cfg.LLM.Temperature = getEnvFloatOrDefault("ANALYZER_LLM_TEMPERATURE", 0.0)
-	}
+	applyLLMEnvOverrides(&cfg.LLM, "ANALYZER", "", defaultLLMConfig)
 }
 
 func LoadDocumenterConfig(repoPath string, cliOverrides map[string]interface{}) (*DocumenterConfig, error) {
@@ -288,34 +337,7 @@ func applyDocumenterDefaults(cfg *DocumenterConfig) {
 }
 
 func applyDocumenterEnvOverrides(cfg *DocumenterConfig) {
-	if cfg.LLM.Provider == "openai" {
-		if env := getEnvWithFallback("DOCUMENTER_LLM_PROVIDER", "ANALYZER_LLM_PROVIDER", ""); env != "" {
-			cfg.LLM.Provider = env
-		}
-	}
-	if cfg.LLM.Model == "gpt-4o" {
-		if env := getEnvWithFallback("DOCUMENTER_LLM_MODEL", "ANALYZER_LLM_MODEL", ""); env != "" {
-			cfg.LLM.Model = env
-		}
-	}
-	if cfg.LLM.APIKey == "" {
-		cfg.LLM.APIKey = getEnvWithFallback("DOCUMENTER_LLM_API_KEY", "ANALYZER_LLM_API_KEY", "")
-	}
-	if cfg.LLM.BaseURL == "" {
-		cfg.LLM.BaseURL = getEnvOrDefault("DOCUMENTER_LLM_BASE_URL", "")
-	}
-	if cfg.LLM.Retries == 2 {
-		cfg.LLM.Retries = getEnvIntOrDefault("DOCUMENTER_AGENT_RETRIES", 2)
-	}
-	if cfg.LLM.Timeout == 180 {
-		cfg.LLM.Timeout = getEnvIntOrDefault("DOCUMENTER_LLM_TIMEOUT", 180)
-	}
-	if cfg.LLM.MaxTokens == 8192 {
-		cfg.LLM.MaxTokens = getEnvIntOrDefault("DOCUMENTER_LLM_MAX_TOKENS", 8192)
-	}
-	if cfg.LLM.Temperature == 0.0 {
-		cfg.LLM.Temperature = getEnvFloatOrDefault("DOCUMENTER_LLM_TEMPERATURE", 0.0)
-	}
+	applyLLMEnvOverrides(&cfg.LLM, "DOCUMENTER", "ANALYZER", defaultLLMConfig)
 }
 
 func LoadAIRulesConfig(repoPath string, cliOverrides map[string]interface{}) (*AIRulesConfig, error) {
@@ -373,34 +395,7 @@ func applyAIRulesDefaults(cfg *AIRulesConfig) {
 }
 
 func applyAIRulesEnvOverrides(cfg *AIRulesConfig) {
-	if cfg.LLM.Provider == "openai" {
-		if env := getEnvWithFallback("AI_RULES_LLM_PROVIDER", "ANALYZER_LLM_PROVIDER", ""); env != "" {
-			cfg.LLM.Provider = env
-		}
-	}
-	if cfg.LLM.Model == "gpt-4o" {
-		if env := getEnvWithFallback("AI_RULES_LLM_MODEL", "ANALYZER_LLM_MODEL", ""); env != "" {
-			cfg.LLM.Model = env
-		}
-	}
-	if cfg.LLM.APIKey == "" {
-		cfg.LLM.APIKey = getEnvWithFallback("AI_RULES_LLM_API_KEY", "ANALYZER_LLM_API_KEY", "")
-	}
-	if cfg.LLM.BaseURL == "" {
-		cfg.LLM.BaseURL = getEnvOrDefault("AI_RULES_LLM_BASE_URL", "")
-	}
-	if cfg.LLM.Retries == 2 {
-		cfg.LLM.Retries = getEnvIntOrDefault("AI_RULES_AGENT_RETRIES", 2)
-	}
-	if cfg.LLM.Timeout == 240 {
-		cfg.LLM.Timeout = getEnvIntOrDefault("AI_RULES_LLM_TIMEOUT", 240)
-	}
-	if cfg.LLM.MaxTokens == 8192 {
-		cfg.LLM.MaxTokens = getEnvIntOrDefault("AI_RULES_LLM_MAX_TOKENS", 8192)
-	}
-	if cfg.LLM.Temperature == 0.0 {
-		cfg.LLM.Temperature = getEnvFloatOrDefault("AI_RULES_LLM_TEMPERATURE", 0.0)
-	}
+	applyLLMEnvOverrides(&cfg.LLM, "AI_RULES", "ANALYZER", aiRulesLLMDefaults)
 }
 
 func setNested(m map[string]interface{}, dottedKey string, value interface{}) {
@@ -422,13 +417,6 @@ func setNested(m map[string]interface{}, dottedKey string, value interface{}) {
 		}
 	}
 	current[parts[len(parts)-1]] = value
-}
-
-func getEnvOrDefault(key, defaultValue string) string {
-	if val := os.Getenv(key); val != "" {
-		return val
-	}
-	return defaultValue
 }
 
 func getEnvWithFallback(primaryKey, fallbackKey, defaultValue string) string {

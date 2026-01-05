@@ -9,7 +9,7 @@ Gendocs is a modular, AI-powered CLI application built in Go that automates the 
 - **Documentation Drift Detection**: Detect when your code has diverged from the last analysis and get recommendations for keeping documentation fresh.
 - **Support for Multiple LLM Providers**: Built-in support for Anthropic, OpenAI, and Google Gemini.
 - **Automated Documentation**: Generates high-quality `README.md` files, AI assistant rules (`CLAUDE.md`, `.cursor/rules`), and technical documentation.
-- **Interactive TUI Dashboard**: A component-based Terminal User Interface for managing configurations and tracking analysis progress in real-time.
+- **Interactive TUI Dashboard**: A component-based Terminal User Interface for managing configurations, running analysis, and tracking progress in real-time with cancellation support.
 - **Enterprise Integration**: Features a GitLab cronjob mode to batch-process entire groups, automatically creating Merge Requests with updated documentation.
 - **Flexible Export Formats**: Export generated documentation to Markdown, standalone HTML, or structured JSON.
 
@@ -39,6 +39,21 @@ go build -o gendocs main.go
    ```
 
 2. **Analyze Your Project**:
+   You can run analysis directly from the TUI or via CLI:
+   
+   **Option A - TUI (Recommended)**:
+   ```bash
+   gendocs config
+   ```
+   In the TUI:
+   - Navigate to "Analysis Settings" section using ↑/↓
+   - Press Tab to enter the content area
+   - Configure exclusions and worker settings as needed
+   - Tab to the "Run Analysis" button and press Enter
+   - Monitor real-time progress with task status updates
+   - Press Esc to cancel if needed, or Enter to close after completion
+
+   **Option B - CLI**:
    Run a deep analysis of the current directory. This scans the codebase and generates intermediate analysis files in `.ai/docs/`.
    ```bash
    gendocs analyze
@@ -89,6 +104,30 @@ Gendocs uses a hierarchical configuration system (loaded via Viper) with the fol
 | `OPENAI_API_KEY` | API key for OpenAI GPT models. |
 | `GEMINI_API_KEY` | API key for Google Gemini/Vertex AI. |
 | `GITLAB_OAUTH_TOKEN` | Required for automated GitLab group analysis. |
+
+### Using Local LLMs (Ollama, LM Studio)
+
+Gendocs supports local LLM providers for users who prefer to run models locally:
+
+#### Ollama
+1. Install [Ollama](https://ollama.ai/) and pull a model:
+   ```bash
+   ollama pull llama3
+   ```
+2. In the TUI (`gendocs config`), select "Ollama (Local)" as the provider
+3. The Base URL will auto-populate to `http://localhost:11434/v1`
+4. Enter your model name (e.g., `llama3`, `codellama`, `mistral`)
+5. No API key is required
+
+#### LM Studio
+1. Install [LM Studio](https://lmstudio.ai/) and download a model
+2. Start the local server in LM Studio
+3. In the TUI, select "LM Studio (Local)" as the provider
+4. The Base URL will auto-populate to `http://localhost:1234/v1`
+5. Enter your model name as shown in LM Studio
+6. No API key is required
+
+**Note**: Model availability varies based on your local installation. Ensure your chosen model is downloaded and available before running analysis.
 
 ## Development
 

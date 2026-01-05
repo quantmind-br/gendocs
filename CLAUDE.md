@@ -27,6 +27,27 @@ Gendocs follows a clean architecture with these key patterns:
 *   **Strategy Pattern:**  Different LLM providers implement the same `LLMClient` interface.
 *   **Worker Pool:** Employs parallel agent execution.
 
+## Local LLM Support
+
+The application supports local LLM providers:
+
+| Provider | Default BaseURL | API Key Required |
+|----------|-----------------|------------------|
+| Ollama | http://localhost:11434/v1 | No |
+| LM Studio | http://localhost:1234/v1 | No |
+
+Both providers use OpenAI-compatible API format. The LLM factory routes these to the OpenAI client internally.
+
+### Relevant Files
+- `internal/tui/dashboard/sections/llm.go` - TUI provider selection and BaseURL auto-population
+- `internal/llm/factory.go` - Factory routing for local providers
+
+### Testing Local Providers
+```bash
+go test -v -run ".*Ollama.*" ./internal/tui/dashboard/sections/
+go test -v -run ".*Ollama.*" ./internal/llm/
+```
+
 ## Code Conventions
 
 *   **Configuration:** Defined in `internal/config/models.go` and loaded using `internal/config/loader.go`.
@@ -44,6 +65,34 @@ Gendocs follows a clean architecture with these key patterns:
 *   **`internal/handlers/analyze.go`:** Orchestrates the codebase analysis process.
 *   **`internal/handlers/readme.go`:** Handles the generation of the README file.
 *   **`go.mod`:**  Lists project dependencies.
+
+## TUI Analysis Runner
+
+The TUI Dashboard (`gendocs config`) supports running analysis directly with real-time progress:
+
+### Key Files
+- `internal/tui/dashboard/progress_reporter.go` - Bridges `agents.ProgressReporter` to Bubble Tea messages
+- `internal/tui/dashboard/progress_view.go` - Visual progress component with spinner, task states
+- `internal/tui/dashboard/analysis_messages.go` - Bubble Tea message types for analysis flow
+
+### Message Flow
+1. `RunAnalysisMsg` - Triggers analysis from button press
+2. `AnalysisProgressMsg` - Task status updates (added/started/completed/failed/skipped)
+3. `AnalysisCompleteMsg` - Final summary with success/failure counts
+4. `CancelAnalysisMsg` - User-initiated cancellation via Esc key
+5. `AnalysisCancelledMsg` - Confirms cancellation completed
+
+### Key Patterns
+- Analysis runs in a goroutine, communicates via `tea.Program.Send()`
+- `TUIProgressReporter` implements `agents.ProgressReporter` interface
+- Context cancellation enables graceful shutdown
+- Progress view overlay replaces main content during analysis
+- Spinner animation at 100ms intervals via `TickMsg`
+
+### Testing
+- Unit tests: `progress_reporter_test.go`, `progress_view_test.go`
+- Integration tests: `analysis_runner_test.go` (build tag: `integration`)
+- Run integration tests: `go test -tags integration ./internal/tui/dashboard/...`
 
 ## Testing
 

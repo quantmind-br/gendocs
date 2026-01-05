@@ -15,7 +15,7 @@ import (
 	"github.com/user/gendocs/internal/tui"
 )
 
-var (
+type analyzeOptions struct {
 	repoPath         string
 	excludeStructure bool
 	excludeDataFlow  bool
@@ -25,13 +25,15 @@ var (
 	maxWorkers       int
 	forceAnalysis    bool
 	showCacheStats   bool
-)
+}
 
-// analyzeCmd represents the analyze command
-var analyzeCmd = &cobra.Command{
-	Use:   "analyze",
-	Short: "Analyze codebase structure and dependencies",
-	Long: `Analyze the codebase to generate detailed documentation about:
+func newAnalyzeCmd() *cobra.Command {
+	opts := &analyzeOptions{}
+
+	cmd := &cobra.Command{
+		Use:   "analyze",
+		Short: "Analyze codebase structure and dependencies",
+		Long: `Analyze the codebase to generate detailed documentation about:
   - Code structure and architecture
   - Dependencies and imports
   - Data flow through the system
@@ -43,52 +45,57 @@ Results are written to .ai/docs/ directory.
 By default, incremental analysis is used which only re-analyzes files
 that have changed since the last run. Use --force to perform a full
 re-analysis ignoring the cache.`,
-	RunE: runAnalyze,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runAnalyze(cmd, opts)
+		},
+	}
+
+	cmd.Flags().StringVar(&opts.repoPath, "repo-path", ".", "Path to repository")
+	cmd.Flags().BoolVar(&opts.excludeStructure, "exclude-code-structure", false, "Exclude structure analysis")
+	cmd.Flags().BoolVar(&opts.excludeDataFlow, "exclude-data-flow", false, "Exclude data flow analysis")
+	cmd.Flags().BoolVar(&opts.excludeDeps, "exclude-dependencies", false, "Exclude dependency analysis")
+	cmd.Flags().BoolVar(&opts.excludeReqFlow, "exclude-request-flow", false, "Exclude request flow analysis")
+	cmd.Flags().BoolVar(&opts.excludeAPI, "exclude-api-analysis", false, "Exclude API analysis")
+	cmd.Flags().IntVar(&opts.maxWorkers, "max-workers", 0, "Maximum concurrent workers (0=auto)")
+	cmd.Flags().BoolVarP(&opts.forceAnalysis, "force", "f", false, "Force full re-analysis, ignoring cache")
+	cmd.Flags().BoolVar(&opts.showCacheStats, "show-cache-stats", false, "Show LLM cache statistics after analysis")
+
+	return cmd
 }
 
 func init() {
-	rootCmd.AddCommand(analyzeCmd)
-
-	analyzeCmd.Flags().StringVar(&repoPath, "repo-path", ".", "Path to repository")
-	analyzeCmd.Flags().BoolVar(&excludeStructure, "exclude-code-structure", false, "Exclude structure analysis")
-	analyzeCmd.Flags().BoolVar(&excludeDataFlow, "exclude-data-flow", false, "Exclude data flow analysis")
-	analyzeCmd.Flags().BoolVar(&excludeDeps, "exclude-dependencies", false, "Exclude dependency analysis")
-	analyzeCmd.Flags().BoolVar(&excludeReqFlow, "exclude-request-flow", false, "Exclude request flow analysis")
-	analyzeCmd.Flags().BoolVar(&excludeAPI, "exclude-api-analysis", false, "Exclude API analysis")
-	analyzeCmd.Flags().IntVar(&maxWorkers, "max-workers", 0, "Maximum concurrent workers (0=auto)")
-	analyzeCmd.Flags().BoolVarP(&forceAnalysis, "force", "f", false, "Force full re-analysis, ignoring cache")
-	analyzeCmd.Flags().BoolVar(&showCacheStats, "show-cache-stats", false, "Show LLM cache statistics after analysis")
+	rootCmd.AddCommand(newAnalyzeCmd())
 }
 
-func runAnalyze(cmd *cobra.Command, args []string) error {
+func runAnalyze(cmd *cobra.Command, opts *analyzeOptions) error {
 	cliOverrides := map[string]interface{}{
-		"repo_path": repoPath,
+		"repo_path": opts.repoPath,
 		"debug":     debugFlag,
 	}
 
 	if cmd.Flags().Changed("exclude-code-structure") {
-		cliOverrides["exclude_code_structure"] = excludeStructure
+		cliOverrides["exclude_code_structure"] = opts.excludeStructure
 	}
 	if cmd.Flags().Changed("exclude-data-flow") {
-		cliOverrides["exclude_data_flow"] = excludeDataFlow
+		cliOverrides["exclude_data_flow"] = opts.excludeDataFlow
 	}
 	if cmd.Flags().Changed("exclude-dependencies") {
-		cliOverrides["exclude_dependencies"] = excludeDeps
+		cliOverrides["exclude_dependencies"] = opts.excludeDeps
 	}
 	if cmd.Flags().Changed("exclude-request-flow") {
-		cliOverrides["exclude_request_flow"] = excludeReqFlow
+		cliOverrides["exclude_request_flow"] = opts.excludeReqFlow
 	}
 	if cmd.Flags().Changed("exclude-api-analysis") {
-		cliOverrides["exclude_api_analysis"] = excludeAPI
+		cliOverrides["exclude_api_analysis"] = opts.excludeAPI
 	}
 	if cmd.Flags().Changed("max-workers") {
-		cliOverrides["max_workers"] = maxWorkers
+		cliOverrides["max_workers"] = opts.maxWorkers
 	}
 	if cmd.Flags().Changed("force") {
-		cliOverrides["force"] = forceAnalysis
+		cliOverrides["force"] = opts.forceAnalysis
 	}
 
-	cfg, err := config.LoadAnalyzerConfig(repoPath, cliOverrides)
+	cfg, err := config.LoadAnalyzerConfig(opts.repoPath, cliOverrides)
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
@@ -139,8 +146,8 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 	}
 
 	// Show cache statistics if requested
-	if showCacheStats {
-		displayCacheStats(repoPath)
+	if opts.showCacheStats {
+		displayCacheStats(opts.repoPath)
 	}
 
 	return nil

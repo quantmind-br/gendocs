@@ -41,8 +41,10 @@ func (f *Factory) CreateClient(cfg config.LLMConfig) (LLMClient, error) {
 		baseClient = NewAnthropicClient(cfg, f.retryClient)
 	case "gemini":
 		baseClient = NewGeminiClient(cfg, f.retryClient)
+	case "ollama", "lmstudio":
+		baseClient = NewOpenAIClient(cfg, f.retryClient)
 	default:
-		return nil, fmt.Errorf("unsupported LLM provider: %s (supported: openai, anthropic, gemini)", cfg.Provider)
+		return nil, fmt.Errorf("unsupported LLM provider: %s (supported: openai, anthropic, gemini, ollama, lmstudio)", cfg.Provider)
 	}
 
 	// Wrap with caching if enabled and cache instances are available

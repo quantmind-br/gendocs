@@ -16,6 +16,7 @@ type MaskedInputModel struct {
 	revealed    bool
 	dirty       bool
 	originalVal string
+	required    bool
 }
 
 func NewMaskedInput(label string, helpText string) MaskedInputModel {
@@ -30,6 +31,7 @@ func NewMaskedInput(label string, helpText string) MaskedInputModel {
 		input:    input,
 		label:    label,
 		helpText: helpText,
+		required: true,
 	}
 }
 
@@ -66,7 +68,12 @@ func (m MaskedInputModel) Update(msg tea.Msg) (MaskedInputModel, tea.Cmd) {
 }
 
 func (m MaskedInputModel) View() string {
-	label := tui.StyleFormLabel.Render(m.label) + tui.StyleError.Render(" *")
+	label := tui.StyleFormLabel.Render(m.label)
+	if m.required {
+		label += tui.StyleError.Render(" *")
+	} else {
+		label += tui.StyleMuted.Render(" (optional)")
+	}
 
 	var style lipgloss.Style
 	if m.input.Focused() {
@@ -126,4 +133,8 @@ func (m *MaskedInputModel) Blur() {
 
 func (m MaskedInputModel) Focused() bool {
 	return m.input.Focused()
+}
+
+func (m *MaskedInputModel) SetRequired(required bool) {
+	m.required = required
 }

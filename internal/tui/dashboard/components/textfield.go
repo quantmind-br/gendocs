@@ -131,6 +131,10 @@ func (m *TextFieldModel) SetValue(v string) {
 	m.dirty = false
 }
 
+func (m *TextFieldModel) SetPlaceholder(p string) {
+	m.input.Placeholder = p
+}
+
 func (m TextFieldModel) Value() string {
 	return m.input.Value()
 }

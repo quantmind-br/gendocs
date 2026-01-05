@@ -11,6 +11,8 @@ import (
 	"github.com/user/gendocs/internal/tui/dashboard/validation"
 )
 
+type RunAnalysisMsg struct{}
+
 type AnalysisSectionModel struct {
 	excludeStructure components.ToggleModel
 	excludeDataFlow  components.ToggleModel
@@ -21,12 +23,14 @@ type AnalysisSectionModel struct {
 	maxHashWorkers   components.TextFieldModel
 	force            components.ToggleModel
 	incremental      components.ToggleModel
+	runButton        components.ButtonModel
 
-	focusIndex int
+	inputs          *components.FocusableSlice
+	analysisRunning bool
 }
 
 func NewAnalysisSection() *AnalysisSectionModel {
-	return &AnalysisSectionModel{
+	m := &AnalysisSectionModel{
 		excludeStructure: components.NewToggle("Exclude Code Structure", "Skip code structure analysis"),
 		excludeDataFlow:  components.NewToggle("Exclude Data Flow", "Skip data flow analysis"),
 		excludeDeps:      components.NewToggle("Exclude Dependencies", "Skip dependency analysis"),
@@ -42,7 +46,27 @@ func NewAnalysisSection() *AnalysisSectionModel {
 			components.WithHelp("Parallel file hashing workers")),
 		force:       components.NewToggle("Force Re-analysis", "Ignore cache and re-analyze all"),
 		incremental: components.NewToggle("Incremental Analysis", "Only analyze changed files"),
+		runButton: components.NewButton(
+			"▶ Run Analysis",
+			func() tea.Msg { return RunAnalysisMsg{} },
+			components.WithButtonHelp("Start codebase analysis with current settings"),
+		),
 	}
+
+	m.inputs = components.NewFocusableSlice(
+		components.WrapToggle(&m.excludeStructure),
+		components.WrapToggle(&m.excludeDataFlow),
+		components.WrapToggle(&m.excludeDeps),
+		components.WrapToggle(&m.excludeReqFlow),
+		components.WrapToggle(&m.excludeAPI),
+		components.WrapTextField(&m.maxWorkers),
+		components.WrapTextField(&m.maxHashWorkers),
+		components.WrapToggle(&m.force),
+		components.WrapToggle(&m.incremental),
+		components.WrapButton(&m.runButton),
+	)
+
+	return m
 }
 
 func (m *AnalysisSectionModel) Title() string       { return "Analysis Settings" }
@@ -52,98 +76,29 @@ func (m *AnalysisSectionModel) Description() string { return "Configure codebase
 func (m *AnalysisSectionModel) Init() tea.Cmd { return nil }
 
 func (m *AnalysisSectionModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmds []tea.Cmd
-
 	switch msg := msg.(type) {
+	case AnalysisStartedMsg:
+		m.analysisRunning = true
+		m.runButton.SetLoading(true)
+		return m, nil
+	case AnalysisStoppedMsg:
+		m.analysisRunning = false
+		m.runButton.SetLoading(false)
+		return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "tab":
-			m.blurCurrent()
-			m.focusIndex = (m.focusIndex + 1) % 9
-			cmds = append(cmds, m.focusCurrent())
-			return m, tea.Batch(cmds...)
-
+			return m, m.inputs.FocusNext()
 		case "shift+tab":
-			m.blurCurrent()
-			m.focusIndex--
-			if m.focusIndex < 0 {
-				m.focusIndex = 8
-			}
-			cmds = append(cmds, m.focusCurrent())
-			return m, tea.Batch(cmds...)
+			return m, m.inputs.FocusPrev()
 		}
 	}
 
-	switch m.focusIndex {
-	case 0:
-		m.excludeStructure, _ = m.excludeStructure.Update(msg)
-	case 1:
-		m.excludeDataFlow, _ = m.excludeDataFlow.Update(msg)
-	case 2:
-		m.excludeDeps, _ = m.excludeDeps.Update(msg)
-	case 3:
-		m.excludeReqFlow, _ = m.excludeReqFlow.Update(msg)
-	case 4:
-		m.excludeAPI, _ = m.excludeAPI.Update(msg)
-	case 5:
-		m.maxWorkers, _ = m.maxWorkers.Update(msg)
-	case 6:
-		m.maxHashWorkers, _ = m.maxHashWorkers.Update(msg)
-	case 7:
-		m.force, _ = m.force.Update(msg)
-	case 8:
-		m.incremental, _ = m.incremental.Update(msg)
-	}
-
-	return m, tea.Batch(cmds...)
+	return m, m.inputs.UpdateCurrent(msg)
 }
 
-func (m *AnalysisSectionModel) blurCurrent() {
-	switch m.focusIndex {
-	case 0:
-		m.excludeStructure.Blur()
-	case 1:
-		m.excludeDataFlow.Blur()
-	case 2:
-		m.excludeDeps.Blur()
-	case 3:
-		m.excludeReqFlow.Blur()
-	case 4:
-		m.excludeAPI.Blur()
-	case 5:
-		m.maxWorkers.Blur()
-	case 6:
-		m.maxHashWorkers.Blur()
-	case 7:
-		m.force.Blur()
-	case 8:
-		m.incremental.Blur()
-	}
-}
-
-func (m *AnalysisSectionModel) focusCurrent() tea.Cmd {
-	switch m.focusIndex {
-	case 0:
-		return m.excludeStructure.Focus()
-	case 1:
-		return m.excludeDataFlow.Focus()
-	case 2:
-		return m.excludeDeps.Focus()
-	case 3:
-		return m.excludeReqFlow.Focus()
-	case 4:
-		return m.excludeAPI.Focus()
-	case 5:
-		return m.maxWorkers.Focus()
-	case 6:
-		return m.maxHashWorkers.Focus()
-	case 7:
-		return m.force.Focus()
-	case 8:
-		return m.incremental.Focus()
-	}
-	return nil
-}
+type AnalysisStartedMsg struct{}
+type AnalysisStoppedMsg struct{}
 
 func (m *AnalysisSectionModel) View() string {
 	header := tui.StyleSectionHeader.Render(m.Icon() + " " + m.Title())
@@ -168,6 +123,8 @@ func (m *AnalysisSectionModel) View() string {
 		"",
 		m.force.View(),
 		m.incremental.View(),
+		"",
+		m.runButton.View(),
 	)
 
 	return lipgloss.JoinVertical(lipgloss.Left, header, desc, "", fields)
@@ -178,10 +135,7 @@ func (m *AnalysisSectionModel) Validate() []types.ValidationError {
 }
 
 func (m *AnalysisSectionModel) IsDirty() bool {
-	return m.excludeStructure.IsDirty() || m.excludeDataFlow.IsDirty() ||
-		m.excludeDeps.IsDirty() || m.excludeReqFlow.IsDirty() || m.excludeAPI.IsDirty() ||
-		m.maxWorkers.IsDirty() || m.maxHashWorkers.IsDirty() ||
-		m.force.IsDirty() || m.incremental.IsDirty()
+	return m.inputs.IsDirty()
 }
 
 func (m *AnalysisSectionModel) GetValues() map[string]any {
@@ -239,25 +193,9 @@ func (m *AnalysisSectionModel) SetValues(values map[string]any) error {
 }
 
 func (m *AnalysisSectionModel) FocusFirst() tea.Cmd {
-	m.blurAll()
-	m.focusIndex = 0
-	return m.excludeStructure.Focus()
+	return m.inputs.FocusFirst()
 }
 
 func (m *AnalysisSectionModel) FocusLast() tea.Cmd {
-	m.blurAll()
-	m.focusIndex = 8
-	return m.incremental.Focus()
-}
-
-func (m *AnalysisSectionModel) blurAll() {
-	m.excludeStructure.Blur()
-	m.excludeDataFlow.Blur()
-	m.excludeDeps.Blur()
-	m.excludeReqFlow.Blur()
-	m.excludeAPI.Blur()
-	m.maxWorkers.Blur()
-	m.maxHashWorkers.Blur()
-	m.force.Blur()
-	m.incremental.Blur()
+	return m.inputs.FocusLast()
 }

@@ -15,8 +15,12 @@ func TestLLMSection_NewLLMSection_InitializesCorrectly(t *testing.T) {
 		t.Fatal("NewLLMSection should not return nil")
 	}
 
-	if s.focusIndex != 0 {
-		t.Errorf("Expected initial focus index 0, got %d", s.focusIndex)
+	if s.inputs == nil {
+		t.Error("inputs slice should be initialized")
+	}
+
+	if s.inputs.Len() != 9 {
+		t.Errorf("Expected 9 focusable inputs, got %d", s.inputs.Len())
 	}
 }
 
@@ -226,81 +230,84 @@ func TestLLMSection_Validate_PassesWithRequiredFields(t *testing.T) {
 
 func TestLLMSection_Update_TabNavigatesForward(t *testing.T) {
 	s := NewLLMSection()
+	s.FocusFirst()
 
-	if s.focusIndex != 0 {
-		t.Fatalf("Expected initial focus index 0, got %d", s.focusIndex)
+	if s.inputs.Index() != 0 {
+		t.Fatalf("Expected initial focus index 0, got %d", s.inputs.Index())
 	}
 
 	model, _ := s.Update(tea.KeyMsg{Type: tea.KeyTab})
 	s = model.(*LLMSectionModel)
 
-	if s.focusIndex != 1 {
-		t.Errorf("Expected focus index 1 after Tab, got %d", s.focusIndex)
+	if s.inputs.Index() != 1 {
+		t.Errorf("Expected focus index 1 after Tab, got %d", s.inputs.Index())
 	}
 
 	model, _ = s.Update(tea.KeyMsg{Type: tea.KeyTab})
 	s = model.(*LLMSectionModel)
 
-	if s.focusIndex != 2 {
-		t.Errorf("Expected focus index 2 after second Tab, got %d", s.focusIndex)
+	if s.inputs.Index() != 2 {
+		t.Errorf("Expected focus index 2 after second Tab, got %d", s.inputs.Index())
 	}
 }
 
 func TestLLMSection_Update_TabWrapsAround(t *testing.T) {
 	s := NewLLMSection()
-	s.focusIndex = 8
+	s.FocusLast()
 
 	model, _ := s.Update(tea.KeyMsg{Type: tea.KeyTab})
 	s = model.(*LLMSectionModel)
 
-	if s.focusIndex != 0 {
-		t.Errorf("Expected focus to wrap to 0, got %d", s.focusIndex)
+	if s.inputs.Index() != 0 {
+		t.Errorf("Expected focus to wrap to 0, got %d", s.inputs.Index())
 	}
 }
 
 func TestLLMSection_Update_ShiftTabNavigatesBackward(t *testing.T) {
 	s := NewLLMSection()
-	s.focusIndex = 2
+	s.FocusFirst()
+	s.Update(tea.KeyMsg{Type: tea.KeyTab})
+	s.Update(tea.KeyMsg{Type: tea.KeyTab})
 
 	model, _ := s.Update(tea.KeyMsg{Type: tea.KeyShiftTab})
 	s = model.(*LLMSectionModel)
 
-	if s.focusIndex != 1 {
-		t.Errorf("Expected focus index 1 after Shift+Tab, got %d", s.focusIndex)
+	if s.inputs.Index() != 1 {
+		t.Errorf("Expected focus index 1 after Shift+Tab, got %d", s.inputs.Index())
 	}
 }
 
 func TestLLMSection_Update_ShiftTabWrapsAround(t *testing.T) {
 	s := NewLLMSection()
-	s.focusIndex = 0
+	s.FocusFirst()
 
 	model, _ := s.Update(tea.KeyMsg{Type: tea.KeyShiftTab})
 	s = model.(*LLMSectionModel)
 
-	if s.focusIndex != 8 {
-		t.Errorf("Expected focus to wrap to 8, got %d", s.focusIndex)
+	if s.inputs.Index() != 8 {
+		t.Errorf("Expected focus to wrap to 8, got %d", s.inputs.Index())
 	}
 }
 
 func TestLLMSection_FocusFirst_SetsFocusToZero(t *testing.T) {
 	s := NewLLMSection()
-	s.focusIndex = 5
+	s.FocusLast()
 
 	s.FocusFirst()
 
-	if s.focusIndex != 0 {
-		t.Errorf("Expected focus index 0 after FocusFirst, got %d", s.focusIndex)
+	if s.inputs.Index() != 0 {
+		t.Errorf("Expected focus index 0 after FocusFirst, got %d", s.inputs.Index())
 	}
 }
 
 func TestLLMSection_FocusLast_SetsFocusToLast(t *testing.T) {
 	s := NewLLMSection()
-	s.focusIndex = 0
+	s.FocusFirst()
 
 	s.FocusLast()
 
-	if s.focusIndex != 8 {
-		t.Errorf("Expected focus index 8 after FocusLast, got %d", s.focusIndex)
+	if s.inputs.Index() != 8 {
+		t.Errorf("Expected focus index 8 after FocusLast, got %d", s.inputs.Index())
 	}
 }
 
@@ -503,7 +510,7 @@ func TestLLMSection_Update_HandlesTestConnectionResult(t *testing.T) {
 
 func TestLLMSection_Update_ButtonPress(t *testing.T) {
 	s := NewLLMSection()
-	s.focusIndex = 8
+	s.FocusLast()
 
 	_ = s.SetValues(map[string]any{
 		"api_key": "sk-test",
@@ -511,4 +518,295 @@ func TestLLMSection_Update_ButtonPress(t *testing.T) {
 	})
 
 	s.testConnButton.Focus()
+}
+
+func TestLLMSection_FocusableSlice_Integration(t *testing.T) {
+	s := NewLLMSection()
+
+	s.FocusFirst()
+	if !s.provider.Focused() {
+		t.Error("Provider should be focused after FocusFirst")
+	}
+
+	s.Update(tea.KeyMsg{Type: tea.KeyTab})
+	if !s.model.Focused() {
+		t.Error("Model should be focused after Tab")
+	}
+	if s.provider.Focused() {
+		t.Error("Provider should be blurred after Tab")
+	}
+
+	s.FocusLast()
+	if !s.testConnButton.Focused() {
+		t.Error("TestConnButton should be focused after FocusLast")
+	}
+}
+
+func TestIsLocalProvider(t *testing.T) {
+	tests := []struct {
+		provider string
+		expected bool
+	}{
+		{"ollama", true},
+		{"lmstudio", true},
+		{"openai", false},
+		{"anthropic", false},
+		{"gemini", false},
+		{"", false},
+		{"unknown", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.provider, func(t *testing.T) {
+			if got := isLocalProvider(tt.provider); got != tt.expected {
+				t.Errorf("isLocalProvider(%q) = %v, want %v", tt.provider, got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestGetDefaultBaseURL(t *testing.T) {
+	tests := []struct {
+		provider string
+		expected string
+	}{
+		{"ollama", OllamaDefaultBaseURL},
+		{"lmstudio", LMStudioDefaultBaseURL},
+		{"openai", ""},
+		{"anthropic", ""},
+		{"gemini", ""},
+		{"", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.provider, func(t *testing.T) {
+			if got := getDefaultBaseURL(tt.provider); got != tt.expected {
+				t.Errorf("getDefaultBaseURL(%q) = %q, want %q", tt.provider, got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestGetModelPlaceholder(t *testing.T) {
+	tests := []struct {
+		provider    string
+		containsStr string
+	}{
+		{"openai", "gpt-4o"},
+		{"anthropic", "claude"},
+		{"gemini", "gemini"},
+		{"ollama", "llama3"},
+		{"lmstudio", "llama3"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.provider, func(t *testing.T) {
+			got := getModelPlaceholder(tt.provider)
+			if !strings.Contains(got, tt.containsStr) {
+				t.Errorf("getModelPlaceholder(%q) = %q, should contain %q", tt.provider, got, tt.containsStr)
+			}
+		})
+	}
+}
+
+func TestLLMSection_ProviderOptions_IncludesLocalProviders(t *testing.T) {
+	s := NewLLMSection()
+	providers := []string{"openai", "anthropic", "gemini", "ollama", "lmstudio"}
+
+	for _, provider := range providers {
+		_ = s.SetValues(map[string]any{"provider": provider})
+		got := s.GetValues()
+		if got["provider"] != provider {
+			t.Errorf("Expected provider %q to be settable, got %v", provider, got["provider"])
+		}
+	}
+}
+
+func TestLLMSection_Validate_PassesWithoutAPIKeyForOllama(t *testing.T) {
+	s := NewLLMSection()
+	_ = s.SetValues(map[string]any{
+		"provider": "ollama",
+		"model":    "llama3",
+		"base_url": "http://localhost:11434/v1",
+	})
+
+	errs := s.Validate()
+	for _, e := range errs {
+		if e.Field == "API Key" {
+			t.Error("Should not require API Key for Ollama")
+		}
+	}
+}
+
+func TestLLMSection_Validate_PassesWithoutAPIKeyForLMStudio(t *testing.T) {
+	s := NewLLMSection()
+	_ = s.SetValues(map[string]any{
+		"provider": "lmstudio",
+		"model":    "llama3",
+		"base_url": "http://localhost:1234/v1",
+	})
+
+	errs := s.Validate()
+	for _, e := range errs {
+		if e.Field == "API Key" {
+			t.Error("Should not require API Key for LM Studio")
+		}
+	}
+}
+
+func TestLLMSection_Validate_RequiresBaseURLForLocalProvider(t *testing.T) {
+	localProviders := []string{"ollama", "lmstudio"}
+
+	for _, provider := range localProviders {
+		t.Run(provider, func(t *testing.T) {
+			s := NewLLMSection()
+			_ = s.SetValues(map[string]any{
+				"provider": provider,
+				"model":    "llama3",
+			})
+
+			errs := s.Validate()
+			hasBaseURLError := false
+			for _, e := range errs {
+				if e.Field == "Base URL" {
+					hasBaseURLError = true
+					break
+				}
+			}
+			if !hasBaseURLError {
+				t.Errorf("Should require Base URL for %s", provider)
+			}
+		})
+	}
+}
+
+func TestLLMSection_Validate_StillRequiresAPIKeyForCloud(t *testing.T) {
+	cloudProviders := []string{"openai", "anthropic", "gemini"}
+
+	for _, provider := range cloudProviders {
+		t.Run(provider, func(t *testing.T) {
+			s := NewLLMSection()
+			_ = s.SetValues(map[string]any{
+				"provider": provider,
+				"model":    "test-model",
+			})
+
+			errs := s.Validate()
+			hasAPIKeyError := false
+			for _, e := range errs {
+				if e.Field == "API Key" {
+					hasAPIKeyError = true
+					break
+				}
+			}
+			if !hasAPIKeyError {
+				t.Errorf("Should require API Key for %s", provider)
+			}
+		})
+	}
+}
+
+func TestLLMSection_TestConnection_AcceptsEmptyAPIKeyForLocal(t *testing.T) {
+	localProviders := []string{"ollama", "lmstudio"}
+
+	for _, provider := range localProviders {
+		t.Run(provider, func(t *testing.T) {
+			s := NewLLMSection()
+			_ = s.SetValues(map[string]any{
+				"provider": provider,
+				"model":    "llama3",
+				"base_url": getDefaultBaseURL(provider),
+			})
+
+			result := s.testConnection()
+			msg, ok := result.(TestConnectionResultMsg)
+			if !ok {
+				t.Fatal("Expected TestConnectionResultMsg")
+			}
+
+			if !msg.Success && strings.Contains(msg.Message, "API Key") {
+				t.Errorf("Should not require API Key for %s", provider)
+			}
+		})
+	}
+}
+
+func TestLLMSection_TestConnection_RequiresBaseURLForLocal(t *testing.T) {
+	s := NewLLMSection()
+	_ = s.SetValues(map[string]any{
+		"provider": "ollama",
+		"model":    "llama3",
+	})
+
+	result := s.testConnection()
+	msg, ok := result.(TestConnectionResultMsg)
+	if !ok {
+		t.Fatal("Expected TestConnectionResultMsg")
+	}
+
+	if msg.Success {
+		t.Error("Should fail without Base URL for local provider")
+	}
+	if !strings.Contains(msg.Message, "Base URL") {
+		t.Errorf("Expected message to mention Base URL, got %q", msg.Message)
+	}
+}
+
+func TestLLMSection_OnProviderChange_SetsBaseURLForOllama(t *testing.T) {
+	s := NewLLMSection()
+	s.onProviderChange("ollama", "openai")
+
+	if s.baseURL.Value() != OllamaDefaultBaseURL {
+		t.Errorf("Expected BaseURL %q, got %q", OllamaDefaultBaseURL, s.baseURL.Value())
+	}
+}
+
+func TestLLMSection_OnProviderChange_SetsBaseURLForLMStudio(t *testing.T) {
+	s := NewLLMSection()
+	s.onProviderChange("lmstudio", "openai")
+
+	if s.baseURL.Value() != LMStudioDefaultBaseURL {
+		t.Errorf("Expected BaseURL %q, got %q", LMStudioDefaultBaseURL, s.baseURL.Value())
+	}
+}
+
+func TestLLMSection_OnProviderChange_ClearsDefaultBaseURLWhenSwitchingToCloud(t *testing.T) {
+	s := NewLLMSection()
+	s.baseURL.SetValue(OllamaDefaultBaseURL)
+	s.onProviderChange("openai", "ollama")
+
+	if s.baseURL.Value() != "" {
+		t.Errorf("Expected BaseURL to be cleared, got %q", s.baseURL.Value())
+	}
+}
+
+func TestLLMSection_OnProviderChange_PreservesCustomBaseURL(t *testing.T) {
+	s := NewLLMSection()
+	customURL := "http://192.168.1.100:11434/v1"
+	s.baseURL.SetValue(customURL)
+	s.onProviderChange("openai", "ollama")
+
+	if s.baseURL.Value() != customURL {
+		t.Errorf("Expected custom BaseURL to be preserved, got %q", s.baseURL.Value())
+	}
+}
+
+func TestLLMSection_OnProviderChange_UpdatesBaseURLBetweenLocalProviders(t *testing.T) {
+	s := NewLLMSection()
+	s.baseURL.SetValue(OllamaDefaultBaseURL)
+	s.onProviderChange("lmstudio", "ollama")
+
+	if s.baseURL.Value() != LMStudioDefaultBaseURL {
+		t.Errorf("Expected BaseURL %q, got %q", LMStudioDefaultBaseURL, s.baseURL.Value())
+	}
+}
+
+func TestLLMSection_View_ShowsAPIKeyOptionalForLocal(t *testing.T) {
+	s := NewLLMSection()
+	s.onProviderChange("ollama", "openai")
+
+	view := s.View()
+	if !strings.Contains(view, "optional") {
+		t.Error("View should show API Key as optional for local provider")
+	}
 }

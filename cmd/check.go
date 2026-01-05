@@ -11,17 +11,20 @@ import (
 	"github.com/user/gendocs/internal/tui"
 )
 
-var (
-	checkRepoPath     string
-	checkOutputFormat string
-	checkVerbose      bool
-	checkExitCode     bool
-)
+type checkOptions struct {
+	repoPath     string
+	outputFormat string
+	verbose      bool
+	exitCode     bool
+}
 
-var checkCmd = &cobra.Command{
-	Use:   "check",
-	Short: "Check for documentation drift",
-	Long: `Compare the current codebase against the latest analysis in .ai/docs/
+func newCheckCmd() *cobra.Command {
+	opts := &checkOptions{}
+
+	cmd := &cobra.Command{
+		Use:   "check",
+		Short: "Check for documentation drift",
+		Long: `Compare the current codebase against the latest analysis in .ai/docs/
 and report inconsistencies.
 
 This command detects when your code has changed since the last documentation
@@ -38,27 +41,32 @@ Exit codes (when --exit-code is used):
   1: Minor drift detected
   2: Moderate drift detected  
   3: Major drift or no previous analysis`,
-	RunE: runCheck,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runCheck(cmd, opts)
+		},
+	}
+
+	cmd.Flags().StringVar(&opts.repoPath, "repo-path", ".", "Path to repository")
+	cmd.Flags().StringVarP(&opts.outputFormat, "output", "o", "text", "Output format (text, json)")
+	cmd.Flags().BoolVarP(&opts.verbose, "verbose", "V", false, "Show detailed file lists")
+	cmd.Flags().BoolVar(&opts.exitCode, "exit-code", false, "Use exit code to indicate drift severity")
+
+	return cmd
 }
 
 func init() {
-	rootCmd.AddCommand(checkCmd)
-
-	checkCmd.Flags().StringVar(&checkRepoPath, "repo-path", ".", "Path to repository")
-	checkCmd.Flags().StringVarP(&checkOutputFormat, "output", "o", "text", "Output format (text, json)")
-	checkCmd.Flags().BoolVarP(&checkVerbose, "verbose", "V", false, "Show detailed file lists")
-	checkCmd.Flags().BoolVar(&checkExitCode, "exit-code", false, "Use exit code to indicate drift severity")
+	rootCmd.AddCommand(newCheckCmd())
 }
 
-func runCheck(cmd *cobra.Command, args []string) error {
+func runCheck(cmd *cobra.Command, opts *checkOptions) error {
 	cliOverrides := map[string]interface{}{
-		"repo_path":     checkRepoPath,
+		"repo_path":     opts.repoPath,
 		"debug":         debugFlag,
-		"output_format": checkOutputFormat,
-		"verbose":       checkVerbose,
+		"output_format": opts.outputFormat,
+		"verbose":       opts.verbose,
 	}
 
-	cfg, err := config.LoadCheckConfig(checkRepoPath, cliOverrides)
+	cfg, err := config.LoadCheckConfig(opts.repoPath, cliOverrides)
 	if err != nil {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
@@ -71,7 +79,7 @@ func runCheck(cmd *cobra.Command, args []string) error {
 
 	handler := handlers.NewCheckHandler(*cfg, logger)
 
-	showProgress := checkOutputFormat != "json" && !verboseFlag
+	showProgress := opts.outputFormat != "json" && !verboseFlag
 	var progress *tui.SimpleProgress
 	if showProgress {
 		progress = tui.NewSimpleProgress("Gendocs Check")
@@ -98,7 +106,7 @@ func runCheck(cmd *cobra.Command, args []string) error {
 		progress.Done()
 	}
 
-	switch checkOutputFormat {
+	switch opts.outputFormat {
 	case "json":
 		output, err := handler.FormatJSONReport(report)
 		if err != nil {
@@ -110,7 +118,7 @@ func runCheck(cmd *cobra.Command, args []string) error {
 		fmt.Print(output)
 	}
 
-	if checkExitCode && report.HasDrift {
+	if opts.exitCode && report.HasDrift {
 		switch report.Severity {
 		case handlers.DriftSeverityMinor:
 			os.Exit(1)

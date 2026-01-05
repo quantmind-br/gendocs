@@ -58,6 +58,8 @@ Clean Architecture with Handler-Agent separation:
 - OpenAI (GPT-4, etc.)
 - Anthropic (Claude)
 - Google Gemini (including Vertex AI)
+- Ollama (Local)
+- LM Studio (Local)
 
 ## Configuration Precedence
 1. CLI flags

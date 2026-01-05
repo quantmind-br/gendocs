@@ -17,11 +17,11 @@ type CacheSectionModel struct {
 	ttl       components.TextFieldModel
 	cachePath components.TextFieldModel
 
-	focusIndex int
+	inputs *components.FocusableSlice
 }
 
 func NewCacheSection() *CacheSectionModel {
-	return &CacheSectionModel{
+	m := &CacheSectionModel{
 		enabled: components.NewToggle("Enabled", "Enable LLM response caching"),
 		maxSize: components.NewTextField("Max Size",
 			components.WithPlaceholder("1000"),
@@ -36,6 +36,15 @@ func NewCacheSection() *CacheSectionModel {
 			components.WithValidator(validation.ValidatePath()),
 			components.WithHelp("Path to cache file")),
 	}
+
+	m.inputs = components.NewFocusableSlice(
+		components.WrapToggle(&m.enabled),
+		components.WrapTextField(&m.maxSize),
+		components.WrapTextField(&m.ttl),
+		components.WrapTextField(&m.cachePath),
+	)
+
+	return m
 }
 
 func (m *CacheSectionModel) Title() string { return "LLM Cache Settings" }
@@ -47,67 +56,17 @@ func (m *CacheSectionModel) Description() string {
 func (m *CacheSectionModel) Init() tea.Cmd { return nil }
 
 func (m *CacheSectionModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmds []tea.Cmd
-
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "tab":
-			m.blurCurrent()
-			m.focusIndex = (m.focusIndex + 1) % 4
-			cmds = append(cmds, m.focusCurrent())
-			return m, tea.Batch(cmds...)
-
+			return m, m.inputs.FocusNext()
 		case "shift+tab":
-			m.blurCurrent()
-			m.focusIndex--
-			if m.focusIndex < 0 {
-				m.focusIndex = 3
-			}
-			cmds = append(cmds, m.focusCurrent())
-			return m, tea.Batch(cmds...)
+			return m, m.inputs.FocusPrev()
 		}
 	}
 
-	switch m.focusIndex {
-	case 0:
-		m.enabled, _ = m.enabled.Update(msg)
-	case 1:
-		m.maxSize, _ = m.maxSize.Update(msg)
-	case 2:
-		m.ttl, _ = m.ttl.Update(msg)
-	case 3:
-		m.cachePath, _ = m.cachePath.Update(msg)
-	}
-
-	return m, tea.Batch(cmds...)
-}
-
-func (m *CacheSectionModel) blurCurrent() {
-	switch m.focusIndex {
-	case 0:
-		m.enabled.Blur()
-	case 1:
-		m.maxSize.Blur()
-	case 2:
-		m.ttl.Blur()
-	case 3:
-		m.cachePath.Blur()
-	}
-}
-
-func (m *CacheSectionModel) focusCurrent() tea.Cmd {
-	switch m.focusIndex {
-	case 0:
-		return m.enabled.Focus()
-	case 1:
-		return m.maxSize.Focus()
-	case 2:
-		return m.ttl.Focus()
-	case 3:
-		return m.cachePath.Focus()
-	}
-	return nil
+	return m, m.inputs.UpdateCurrent(msg)
 }
 
 func (m *CacheSectionModel) View() string {
@@ -132,7 +91,7 @@ func (m *CacheSectionModel) Validate() []types.ValidationError {
 }
 
 func (m *CacheSectionModel) IsDirty() bool {
-	return m.enabled.IsDirty() || m.maxSize.IsDirty() || m.ttl.IsDirty() || m.cachePath.IsDirty()
+	return m.inputs.IsDirty()
 }
 
 func (m *CacheSectionModel) GetValues() map[string]any {
@@ -170,20 +129,9 @@ func (m *CacheSectionModel) SetValues(values map[string]any) error {
 }
 
 func (m *CacheSectionModel) FocusFirst() tea.Cmd {
-	m.blurAll()
-	m.focusIndex = 0
-	return m.enabled.Focus()
+	return m.inputs.FocusFirst()
 }
 
 func (m *CacheSectionModel) FocusLast() tea.Cmd {
-	m.blurAll()
-	m.focusIndex = 3
-	return m.cachePath.Focus()
-}
-
-func (m *CacheSectionModel) blurAll() {
-	m.enabled.Blur()
-	m.maxSize.Blur()
-	m.ttl.Blur()
-	m.cachePath.Blur()
+	return m.inputs.FocusLast()
 }

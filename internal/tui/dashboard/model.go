@@ -1,9 +1,15 @@
 package dashboard
 
 import (
+	"context"
+	"fmt"
+	"time"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/user/gendocs/internal/config"
+	"github.com/user/gendocs/internal/handlers"
+	"github.com/user/gendocs/internal/logging"
 	"github.com/user/gendocs/internal/tui"
 	"github.com/user/gendocs/internal/tui/dashboard/components"
 	"github.com/user/gendocs/internal/tui/dashboard/sections"
@@ -32,6 +38,11 @@ type DashboardModel struct {
 	quitting    bool
 	helpVisible bool
 	err         error
+
+	progressView   *ProgressViewModel
+	analysisCtx    context.Context
+	analysisCancel context.CancelFunc
+	program        *tea.Program
 }
 
 func NewDashboard() DashboardModel {
@@ -43,14 +54,19 @@ func NewDashboard() DashboardModel {
 	)
 
 	return DashboardModel{
-		sidebar:   sidebar,
-		statusbar: statusbar,
-		sections:  make(map[string]SectionModel),
-		modal:     modal,
-		loader:    config.NewLoader(),
-		saver:     config.NewSaver(),
-		focusPane: FocusSidebar,
+		sidebar:      sidebar,
+		statusbar:    statusbar,
+		sections:     make(map[string]SectionModel),
+		modal:        modal,
+		loader:       config.NewLoader(),
+		saver:        config.NewSaver(),
+		focusPane:    FocusSidebar,
+		progressView: NewProgressView(),
 	}
+}
+
+func (m *DashboardModel) SetProgram(p *tea.Program) {
+	m.program = p
 }
 
 func (m DashboardModel) Init() tea.Cmd {
@@ -95,6 +111,22 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				cmds = append(cmds, modalCmd)
 			}
 			return m, tea.Batch(cmds...)
+		}
+
+		if m.progressView.Visible() {
+			switch msg.String() {
+			case "esc":
+				if !m.progressView.IsComplete() && m.analysisCancel != nil {
+					m.analysisCancel()
+				}
+				return m, nil
+			case "enter":
+				if m.progressView.IsComplete() {
+					m.progressView.Hide()
+				}
+				return m, nil
+			}
+			return m, nil
 		}
 
 		if m.helpVisible {
@@ -209,6 +241,69 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return ShowMessageMsg{Text: msg.Message, Type: MessageError}
 			})
 		}
+
+	case sections.RunAnalysisMsg:
+		if m.progressView.Visible() {
+			return m, nil
+		}
+		m.progressView.Show()
+		m.analysisCtx, m.analysisCancel = context.WithCancel(context.Background())
+		if section, ok := m.sections["analysis"]; ok {
+			section.Update(sections.AnalysisStartedMsg{})
+		}
+		return m, tea.Batch(TickCmd(), m.runAnalysis())
+
+	case AnalysisProgressMsg:
+		switch msg.Event {
+		case ProgressEventTaskAdded:
+			m.progressView.AddTask(msg.TaskID, msg.TaskName, msg.Description)
+		case ProgressEventTaskStarted:
+			m.progressView.StartTask(msg.TaskID)
+		case ProgressEventTaskCompleted:
+			m.progressView.CompleteTask(msg.TaskID)
+		case ProgressEventTaskFailed:
+			m.progressView.FailTask(msg.TaskID, msg.Error)
+		case ProgressEventTaskSkipped:
+			m.progressView.SkipTask(msg.TaskID)
+		}
+		return m, nil
+
+	case AnalysisCompleteMsg:
+		m.progressView.SetCompleted(AnalysisSummary{
+			Successful: len(msg.Successful),
+			Failed:     len(msg.Failed),
+			Duration:   msg.Duration,
+		})
+		if section, ok := m.sections["analysis"]; ok {
+			section.Update(sections.AnalysisStoppedMsg{})
+		}
+		if len(msg.Failed) > 0 {
+			cmds = append(cmds, ShowError(fmt.Sprintf("%d analysis tasks failed", len(msg.Failed))))
+		} else {
+			cmds = append(cmds, ShowSuccess("Analysis completed successfully"))
+		}
+		return m, tea.Batch(cmds...)
+
+	case AnalysisErrorMsg:
+		m.progressView.SetError(msg.Error)
+		if section, ok := m.sections["analysis"]; ok {
+			section.Update(sections.AnalysisStoppedMsg{})
+		}
+		return m, ShowError(fmt.Sprintf("Analysis failed: %s", msg.Error.Error()))
+
+	case AnalysisCancelledMsg:
+		m.progressView.SetCancelled()
+		if section, ok := m.sections["analysis"]; ok {
+			section.Update(sections.AnalysisStoppedMsg{})
+		}
+		return m, ShowInfo("Analysis cancelled")
+
+	case TickMsg:
+		if m.progressView.Visible() && !m.progressView.IsComplete() {
+			m.progressView.Update(msg)
+			return m, TickCmd()
+		}
+		return m, nil
 	}
 
 	var sidebarCmd tea.Cmd
@@ -244,6 +339,10 @@ func (m DashboardModel) View() string {
 
 	if m.modal.Visible() {
 		return m.modal.View()
+	}
+
+	if m.progressView.Visible() {
+		return m.progressView.View()
 	}
 
 	if m.helpVisible {
@@ -306,6 +405,12 @@ func (m DashboardModel) renderHelp() string {
 │  ?                  Toggle this help                         │
 │  q                  Quit (prompts if unsaved changes)        │
 │                                                              │
+│  Analysis                                                    │
+│  ────────                                                    │
+│  Tab to Run Analysis button, Enter to start                  │
+│  Esc (during analysis)   Cancel running analysis             │
+│  Enter (after complete)  Close progress view                 │
+│                                                              │
 ╰──────────────────────────────────────────────────────────────╯
 
                      Press ? or Esc to close help
@@ -349,6 +454,119 @@ func (m DashboardModel) saveConfig() tea.Cmd {
 		}
 		return ConfigSavedMsg{}
 	}
+}
+
+func (m *DashboardModel) runAnalysis() tea.Cmd {
+	return func() tea.Msg {
+		defer func() {
+			if r := recover(); r != nil {
+				if m.program != nil {
+					m.program.Send(AnalysisErrorMsg{Error: fmt.Errorf("internal error: %v", r)})
+				}
+			}
+		}()
+
+		cfg := m.buildAnalyzerConfig()
+		if err := m.validateAnalyzerConfig(cfg); err != nil {
+			return AnalysisErrorMsg{Error: err}
+		}
+
+		logCfg := logging.DefaultConfig()
+		logCfg.ConsoleEnabled = false
+		logger, logErr := logging.NewLogger(logCfg)
+		if logErr != nil {
+			return AnalysisErrorMsg{Error: fmt.Errorf("failed to create logger: %w", logErr)}
+		}
+
+		handler := handlers.NewAnalyzeHandler(cfg, logger)
+		reporter := NewTUIProgressReporter(m.program)
+		handler.SetProgressReporter(reporter)
+
+		startTime := time.Now()
+		err := handler.Handle(m.analysisCtx)
+		duration := time.Since(startTime)
+
+		if m.analysisCtx.Err() == context.Canceled {
+			return AnalysisCancelledMsg{}
+		}
+
+		if err != nil {
+			return AnalysisErrorMsg{Error: err}
+		}
+
+		return AnalysisCompleteMsg{
+			Duration: duration,
+		}
+	}
+}
+
+func (m *DashboardModel) buildAnalyzerConfig() config.AnalyzerConfig {
+	cfg := config.AnalyzerConfig{
+		BaseConfig: config.BaseConfig{
+			RepoPath: ".",
+		},
+	}
+
+	if m.cfg != nil {
+		cfg.LLM = m.cfg.Analyzer.LLM
+		cfg.ExcludeStructure = m.cfg.Analyzer.ExcludeStructure
+		cfg.ExcludeDataFlow = m.cfg.Analyzer.ExcludeDataFlow
+		cfg.ExcludeDeps = m.cfg.Analyzer.ExcludeDeps
+		cfg.ExcludeReqFlow = m.cfg.Analyzer.ExcludeReqFlow
+		cfg.ExcludeAPI = m.cfg.Analyzer.ExcludeAPI
+		cfg.MaxWorkers = m.cfg.Analyzer.MaxWorkers
+		cfg.MaxHashWorkers = m.cfg.Analyzer.MaxHashWorkers
+		cfg.Force = m.cfg.Analyzer.Force
+		cfg.Incremental = m.cfg.Analyzer.Incremental
+		cfg.RetryConfig = m.cfg.Analyzer.RetryConfig
+	}
+
+	if section, ok := m.sections["analysis"]; ok {
+		values := section.GetValues()
+		m.applyAnalysisValues(&cfg, values)
+	}
+
+	return cfg
+}
+
+func (m *DashboardModel) applyAnalysisValues(cfg *config.AnalyzerConfig, values map[string]any) {
+	if v, ok := values["exclude_code_structure"].(bool); ok {
+		cfg.ExcludeStructure = v
+	}
+	if v, ok := values["exclude_data_flow"].(bool); ok {
+		cfg.ExcludeDataFlow = v
+	}
+	if v, ok := values["exclude_dependencies"].(bool); ok {
+		cfg.ExcludeDeps = v
+	}
+	if v, ok := values["exclude_request_flow"].(bool); ok {
+		cfg.ExcludeReqFlow = v
+	}
+	if v, ok := values["exclude_api_analysis"].(bool); ok {
+		cfg.ExcludeAPI = v
+	}
+	if v, ok := values["max_workers"].(int); ok {
+		cfg.MaxWorkers = v
+	}
+	if v, ok := values["max_hash_workers"].(int); ok {
+		cfg.MaxHashWorkers = v
+	}
+	if v, ok := values["force"].(bool); ok {
+		cfg.Force = v
+	}
+	if v, ok := values["incremental"].(bool); ok {
+		cfg.Incremental = v
+	}
+}
+
+func (m *DashboardModel) validateAnalyzerConfig(cfg config.AnalyzerConfig) error {
+	if cfg.LLM.Provider == "" {
+		return fmt.Errorf("LLM provider not configured")
+	}
+	if cfg.LLM.APIKey == "" && cfg.LLM.Provider != "ollama" && cfg.LLM.Provider != "lmstudio" {
+		return fmt.Errorf("API key required for %s provider", cfg.LLM.Provider)
+	}
+	return nil
 }
 
 func (m *DashboardModel) populateSections() {

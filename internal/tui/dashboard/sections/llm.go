@@ -16,7 +16,6 @@ import (
 	"github.com/user/gendocs/internal/tui/dashboard/validation"
 )
 
-// LLMTarget identifies which LLM configuration this section manages
 type LLMTarget int
 
 const (
@@ -25,16 +24,55 @@ const (
 	LLMTargetAIRules
 )
 
-// LLMSectionDescriptor holds metadata for an LLM section
+// Default BaseURLs for local LLM providers
+const (
+	OllamaDefaultBaseURL   = "http://localhost:11434/v1"
+	LMStudioDefaultBaseURL = "http://localhost:1234/v1"
+)
+
+// isLocalProvider returns true if the provider is a local LLM (Ollama, LM Studio)
+func isLocalProvider(provider string) bool {
+	return provider == "ollama" || provider == "lmstudio"
+}
+
+// getDefaultBaseURL returns the default BaseURL for a provider
+func getDefaultBaseURL(provider string) string {
+	switch provider {
+	case "ollama":
+		return OllamaDefaultBaseURL
+	case "lmstudio":
+		return LMStudioDefaultBaseURL
+	default:
+		return ""
+	}
+}
+
+// getModelPlaceholder returns an appropriate placeholder for the model field
+func getModelPlaceholder(provider string) string {
+	switch provider {
+	case "openai":
+		return "e.g., gpt-4o, gpt-4-turbo, gpt-3.5-turbo"
+	case "anthropic":
+		return "e.g., claude-3-5-sonnet-20241022, claude-3-opus"
+	case "gemini":
+		return "e.g., gemini-1.5-pro, gemini-1.5-flash"
+	case "ollama":
+		return "e.g., llama3, codellama, mistral, deepseek-coder"
+	case "lmstudio":
+		return "e.g., llama3, codellama, mistral (check LM Studio)"
+	default:
+		return "e.g., gpt-4o, claude-3-5-sonnet"
+	}
+}
+
 type LLMSectionDescriptor struct {
 	ID          string
 	Title       string
 	Icon        string
 	Description string
-	KeyPrefix   string // Prefix for GetValues/SetValues keys
+	KeyPrefix   string
 }
 
-// LLMTargetDescriptors maps targets to their descriptors
 var LLMTargetDescriptors = map[LLMTarget]LLMSectionDescriptor{
 	LLMTargetAnalyzer: {
 		ID:          "llm",
@@ -73,8 +111,9 @@ type LLMSectionModel struct {
 	retries        components.TextFieldModel
 	testConnButton components.ButtonModel
 
-	focusIndex int
-	testing    bool
+	inputs       *components.FocusableSlice
+	testing      bool
+	prevProvider string
 }
 
 type TestConnectionResultMsg struct {
@@ -93,14 +132,19 @@ func NewLLMSectionWithTarget(target LLMTarget) *LLMSectionModel {
 		{Value: "openai", Label: "OpenAI (GPT-4o, GPT-4)"},
 		{Value: "anthropic", Label: "Anthropic (Claude)"},
 		{Value: "gemini", Label: "Google (Gemini)"},
+		{Value: "ollama", Label: "Ollama (Local)"},
+		{Value: "lmstudio", Label: "LM Studio (Local)"},
 	}
 
+	defaultProvider := "openai"
+
 	m := &LLMSectionModel{
-		target:     target,
-		descriptor: descriptor,
-		provider:   components.NewDropdown("Provider", providerOpts, "Select your LLM provider"),
+		target:       target,
+		descriptor:   descriptor,
+		prevProvider: defaultProvider,
+		provider:     components.NewDropdown("Provider", providerOpts, "Select your LLM provider"),
 		model: components.NewTextField("Model",
-			components.WithPlaceholder("e.g., gpt-4o, claude-3-5-sonnet"),
+			components.WithPlaceholder(getModelPlaceholder(defaultProvider)),
 			components.WithRequired(),
 			components.WithHelp("Model name for the selected provider")),
 		apiKey: components.NewMaskedInput("API Key", "Your provider API key"),
@@ -132,6 +176,18 @@ func NewLLMSectionWithTarget(target LLMTarget) *LLMSectionModel {
 		components.WithButtonHelp("Press Enter to test LLM connection"),
 	)
 
+	m.inputs = components.NewFocusableSlice(
+		components.WrapDropdown(&m.provider),
+		components.WrapTextField(&m.model),
+		components.WrapMaskedInput(&m.apiKey),
+		components.WrapTextField(&m.baseURL),
+		components.WrapTextField(&m.temperature),
+		components.WrapTextField(&m.maxTokens),
+		components.WrapTextField(&m.timeout),
+		components.WrapTextField(&m.retries),
+		components.WrapButton(&m.testConnButton),
+	)
+
 	return m
 }
 
@@ -146,8 +202,6 @@ func (m *LLMSectionModel) Init() tea.Cmd {
 }
 
 func (m *LLMSectionModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var cmds []tea.Cmd
-
 	switch msg := msg.(type) {
 	case TestConnectionResultMsg:
 		m.testing = false
@@ -157,96 +211,39 @@ func (m *LLMSectionModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "tab":
-			m.blurCurrent()
-			m.focusIndex = (m.focusIndex + 1) % 9
-			cmds = append(cmds, m.focusCurrent())
-			return m, tea.Batch(cmds...)
-
+			return m, m.inputs.FocusNext()
 		case "shift+tab":
-			m.blurCurrent()
-			m.focusIndex--
-			if m.focusIndex < 0 {
-				m.focusIndex = 8
-			}
-			cmds = append(cmds, m.focusCurrent())
-			return m, tea.Batch(cmds...)
+			return m, m.inputs.FocusPrev()
 		}
 	}
 
-	switch m.focusIndex {
-	case 0:
-		m.provider, _ = m.provider.Update(msg)
-	case 1:
-		m.model, _ = m.model.Update(msg)
-	case 2:
-		m.apiKey, _ = m.apiKey.Update(msg)
-	case 3:
-		m.baseURL, _ = m.baseURL.Update(msg)
-	case 4:
-		m.temperature, _ = m.temperature.Update(msg)
-	case 5:
-		m.maxTokens, _ = m.maxTokens.Update(msg)
-	case 6:
-		m.timeout, _ = m.timeout.Update(msg)
-	case 7:
-		m.retries, _ = m.retries.Update(msg)
-	case 8:
-		var cmd tea.Cmd
-		m.testConnButton, cmd = m.testConnButton.Update(msg)
-		if cmd != nil {
-			m.testing = true
-			cmds = append(cmds, cmd)
+	cmd := m.inputs.UpdateCurrent(msg)
+
+	currentProvider := m.provider.Value()
+	if currentProvider != m.prevProvider {
+		m.onProviderChange(currentProvider, m.prevProvider)
+		m.prevProvider = currentProvider
+	}
+
+	if cmd != nil && m.inputs.Index() == m.inputs.Len()-1 {
+		m.testing = true
+	}
+
+	return m, cmd
+}
+
+func (m *LLMSectionModel) onProviderChange(newProvider, oldProvider string) {
+	if isLocalProvider(newProvider) {
+		m.baseURL.SetValue(getDefaultBaseURL(newProvider))
+	} else if isLocalProvider(oldProvider) {
+		oldDefault := getDefaultBaseURL(oldProvider)
+		if m.baseURL.Value() == oldDefault {
+			m.baseURL.SetValue("")
 		}
 	}
 
-	return m, tea.Batch(cmds...)
-}
-
-func (m *LLMSectionModel) blurCurrent() {
-	switch m.focusIndex {
-	case 0:
-		m.provider.Blur()
-	case 1:
-		m.model.Blur()
-	case 2:
-		m.apiKey.Blur()
-	case 3:
-		m.baseURL.Blur()
-	case 4:
-		m.temperature.Blur()
-	case 5:
-		m.maxTokens.Blur()
-	case 6:
-		m.timeout.Blur()
-	case 7:
-		m.retries.Blur()
-	case 8:
-		m.testConnButton.Blur()
-	}
-}
-
-func (m *LLMSectionModel) focusCurrent() tea.Cmd {
-	switch m.focusIndex {
-	case 0:
-		return m.provider.Focus()
-	case 1:
-		return m.model.Focus()
-	case 2:
-		return m.apiKey.Focus()
-	case 3:
-		return m.baseURL.Focus()
-	case 4:
-		return m.temperature.Focus()
-	case 5:
-		return m.maxTokens.Focus()
-	case 6:
-		return m.timeout.Focus()
-	case 7:
-		return m.retries.Focus()
-	case 8:
-		return m.testConnButton.Focus()
-	}
-	return nil
+	m.apiKey.SetRequired(!isLocalProvider(newProvider))
+	m.model.SetPlaceholder(getModelPlaceholder(newProvider))
 }
 
 func (m *LLMSectionModel) View() string {
@@ -286,7 +283,7 @@ func (m *LLMSectionModel) View() string {
 func (m *LLMSectionModel) Validate() []types.ValidationError {
 	var errors []types.ValidationError
 
-	if m.apiKey.Value() == "" {
+	if !isLocalProvider(m.provider.Value()) && m.apiKey.Value() == "" {
 		errors = append(errors, types.ValidationError{
 			Field:    "API Key",
 			Message:  "API Key is required",
@@ -302,13 +299,19 @@ func (m *LLMSectionModel) Validate() []types.ValidationError {
 		})
 	}
 
+	if isLocalProvider(m.provider.Value()) && m.baseURL.Value() == "" {
+		errors = append(errors, types.ValidationError{
+			Field:    "Base URL",
+			Message:  "Base URL is required for local providers",
+			Severity: types.SeverityError,
+		})
+	}
+
 	return errors
 }
 
 func (m *LLMSectionModel) IsDirty() bool {
-	return m.provider.IsDirty() || m.model.IsDirty() || m.apiKey.IsDirty() ||
-		m.baseURL.IsDirty() || m.temperature.IsDirty() || m.maxTokens.IsDirty() ||
-		m.timeout.IsDirty() || m.retries.IsDirty()
+	return m.inputs.IsDirty()
 }
 
 func (m *LLMSectionModel) GetValues() map[string]any {
@@ -374,27 +377,11 @@ func (m *LLMSectionModel) SetValues(values map[string]any) error {
 }
 
 func (m *LLMSectionModel) FocusFirst() tea.Cmd {
-	m.blurAll()
-	m.focusIndex = 0
-	return m.provider.Focus()
+	return m.inputs.FocusFirst()
 }
 
 func (m *LLMSectionModel) FocusLast() tea.Cmd {
-	m.blurAll()
-	m.focusIndex = 8
-	return m.testConnButton.Focus()
-}
-
-func (m *LLMSectionModel) blurAll() {
-	m.provider.Blur()
-	m.model.Blur()
-	m.apiKey.Blur()
-	m.baseURL.Blur()
-	m.temperature.Blur()
-	m.maxTokens.Blur()
-	m.timeout.Blur()
-	m.retries.Blur()
-	m.testConnButton.Blur()
+	return m.inputs.FocusLast()
 }
 
 func (m *LLMSectionModel) testConnection() tea.Msg {
@@ -403,7 +390,7 @@ func (m *LLMSectionModel) testConnection() tea.Msg {
 	apiKey := m.apiKey.Value()
 	baseURL := m.baseURL.Value()
 
-	if apiKey == "" {
+	if !isLocalProvider(provider) && apiKey == "" {
 		return TestConnectionResultMsg{
 			Success: false,
 			Message: "API Key is required to test connection",
@@ -414,6 +401,13 @@ func (m *LLMSectionModel) testConnection() tea.Msg {
 		return TestConnectionResultMsg{
 			Success: false,
 			Message: "Model name is required to test connection",
+		}
+	}
+
+	if isLocalProvider(provider) && baseURL == "" {
+		return TestConnectionResultMsg{
+			Success: false,
+			Message: "Base URL is required for local providers",
 		}
 	}
 

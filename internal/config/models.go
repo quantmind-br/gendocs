@@ -12,7 +12,7 @@ type BaseConfig struct {
 
 // LLMConfig holds LLM provider configuration
 type LLMConfig struct {
-	Provider    string         `mapstructure:"provider" yaml:"provider"` // openai, anthropic, gemini
+	Provider    string         `mapstructure:"provider" yaml:"provider"` // openai, anthropic, gemini, ollama, lmstudio
 	Model       string         `mapstructure:"model" yaml:"model"`
 	APIKey      string         `mapstructure:"api_key" yaml:"api_key"`
 	BaseURL     string         `mapstructure:"base_url" yaml:"base_url"` // Optional, for OpenAI-compatible APIs

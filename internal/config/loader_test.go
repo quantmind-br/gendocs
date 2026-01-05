@@ -645,58 +645,6 @@ func findSubstring(s, substr string) bool {
 	return false
 }
 
-func TestGetEnvOrDefault_Behavior(t *testing.T) {
-	tests := []struct {
-		name         string
-		envKey       string
-		envValue     string
-		setEnv       bool
-		defaultValue string
-		want         string
-	}{
-		{
-			name:         "env set returns env value",
-			envKey:       "TEST_ENV_VAR",
-			envValue:     "env-value",
-			setEnv:       true,
-			defaultValue: "default",
-			want:         "env-value",
-		},
-		{
-			name:         "env not set returns default",
-			envKey:       "TEST_ENV_VAR_MISSING",
-			envValue:     "",
-			setEnv:       false,
-			defaultValue: "default",
-			want:         "default",
-		},
-		{
-			name:         "empty env returns default",
-			envKey:       "TEST_ENV_VAR_EMPTY",
-			envValue:     "",
-			setEnv:       true,
-			defaultValue: "default",
-			want:         "default",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.setEnv {
-				_ = os.Setenv(tt.envKey, tt.envValue)
-				defer func() { _ = os.Unsetenv(tt.envKey) }()
-			} else {
-				_ = os.Unsetenv(tt.envKey)
-			}
-
-			got := getEnvOrDefault(tt.envKey, tt.defaultValue)
-			if got != tt.want {
-				t.Errorf("getEnvOrDefault() = %q, want %q", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestGetEnvWithFallback_Behavior(t *testing.T) {
 	tests := []struct {
 		name          string
