@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
+	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 	"github.com/user/gendocs/internal/errors"
 )
@@ -157,41 +158,79 @@ func LoadAnalyzerConfig(repoPath string, cliOverrides map[string]interface{}) (*
 		return nil, err
 	}
 
-	// Create config from map
-	cfg := &AnalyzerConfig{
-		BaseConfig: BaseConfig{
-			RepoPath: getString(configMap, "repo_path", "."),
-			Debug:    getBool(configMap, "debug", false),
-		},
-		MaxWorkers: getInt(configMap, "max_workers", 0),
+	cfg := &AnalyzerConfig{}
+	decoderConfig := &mapstructure.DecoderConfig{
+		WeaklyTypedInput: true,
+		Result:           cfg,
+		TagName:          "mapstructure",
+		Squash:           true,
 	}
 
-	// Load LLM config from environment or config
-	cfg.LLM = LLMConfig{
-		Provider:    getString(configMap, "llm.provider", getEnvOrDefault("ANALYZER_LLM_PROVIDER", "openai")),
-		Model:       getString(configMap, "llm.model", getEnvOrDefault("ANALYZER_LLM_MODEL", "gpt-4o")),
-		APIKey:      getString(configMap, "llm.api_key", getEnvOrDefault("ANALYZER_LLM_API_KEY", "")),
-		BaseURL:     getString(configMap, "llm.base_url", getEnvOrDefault("ANALYZER_LLM_BASE_URL", "")),
-		Retries:     getInt(configMap, "llm.retries", getEnvIntOrDefault("ANALYZER_AGENT_RETRIES", 2)),
-		Timeout:     getInt(configMap, "llm.timeout", getEnvIntOrDefault("ANALYZER_LLM_TIMEOUT", 180)),
-		MaxTokens:   getInt(configMap, "llm.max_tokens", getEnvIntOrDefault("ANALYZER_LLM_MAX_TOKENS", 8192)),
-		Temperature: getFloat64(configMap, "llm.temperature", getEnvFloatOrDefault("ANALYZER_LLM_TEMPERATURE", 0.0)),
+	decoder, err := mapstructure.NewDecoder(decoderConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create config decoder: %w", err)
 	}
 
-	cfg.ExcludeStructure = getBool(configMap, "exclude_code_structure", false)
-	cfg.ExcludeDataFlow = getBool(configMap, "exclude_data_flow", false)
-	cfg.ExcludeDeps = getBool(configMap, "exclude_dependencies", false)
-	cfg.ExcludeReqFlow = getBool(configMap, "exclude_request_flow", false)
-	cfg.ExcludeAPI = getBool(configMap, "exclude_api_analysis", false)
-	cfg.MaxHashWorkers = getInt(configMap, "max_hash_workers", 0)
-	cfg.Force = getBool(configMap, "force", false)
+	if err := decoder.Decode(configMap); err != nil {
+		return nil, fmt.Errorf("failed to decode analyzer config: %w", err)
+	}
 
-	// Validate required fields
+	applyAnalyzerDefaults(cfg)
+	applyAnalyzerEnvOverrides(cfg)
+
 	if err := validateLLMConfig(&cfg.LLM, "ANALYZER"); err != nil {
 		return nil, err
 	}
 
 	return cfg, nil
+}
+
+func applyAnalyzerDefaults(cfg *AnalyzerConfig) {
+	if cfg.RepoPath == "" {
+		cfg.RepoPath = "."
+	}
+	if cfg.LLM.Provider == "" {
+		cfg.LLM.Provider = "openai"
+	}
+	if cfg.LLM.Model == "" {
+		cfg.LLM.Model = "gpt-4o"
+	}
+	if cfg.LLM.Retries == 0 {
+		cfg.LLM.Retries = 2
+	}
+	if cfg.LLM.Timeout == 0 {
+		cfg.LLM.Timeout = 180
+	}
+	if cfg.LLM.MaxTokens == 0 {
+		cfg.LLM.MaxTokens = 8192
+	}
+}
+
+func applyAnalyzerEnvOverrides(cfg *AnalyzerConfig) {
+	if env := os.Getenv("ANALYZER_LLM_PROVIDER"); env != "" && cfg.LLM.Provider == "openai" {
+		cfg.LLM.Provider = env
+	}
+	if env := os.Getenv("ANALYZER_LLM_MODEL"); env != "" && cfg.LLM.Model == "gpt-4o" {
+		cfg.LLM.Model = env
+	}
+	if env := os.Getenv("ANALYZER_LLM_API_KEY"); env != "" && cfg.LLM.APIKey == "" {
+		cfg.LLM.APIKey = env
+	}
+	if env := os.Getenv("ANALYZER_LLM_BASE_URL"); env != "" && cfg.LLM.BaseURL == "" {
+		cfg.LLM.BaseURL = env
+	}
+	if cfg.LLM.Retries == 2 {
+		cfg.LLM.Retries = getEnvIntOrDefault("ANALYZER_AGENT_RETRIES", 2)
+	}
+	if cfg.LLM.Timeout == 180 {
+		cfg.LLM.Timeout = getEnvIntOrDefault("ANALYZER_LLM_TIMEOUT", 180)
+	}
+	if cfg.LLM.MaxTokens == 8192 {
+		cfg.LLM.MaxTokens = getEnvIntOrDefault("ANALYZER_LLM_MAX_TOKENS", 8192)
+	}
+	if cfg.LLM.Temperature == 0.0 {
+		cfg.LLM.Temperature = getEnvFloatOrDefault("ANALYZER_LLM_TEMPERATURE", 0.0)
+	}
 }
 
 func LoadDocumenterConfig(repoPath string, cliOverrides map[string]interface{}) (*DocumenterConfig, error) {
@@ -200,23 +239,25 @@ func LoadDocumenterConfig(repoPath string, cliOverrides map[string]interface{}) 
 		return nil, err
 	}
 
-	cfg := &DocumenterConfig{
-		BaseConfig: BaseConfig{
-			RepoPath: getString(configMap, "repo_path", "."),
-			Debug:    getBool(configMap, "debug", false),
-		},
+	cfg := &DocumenterConfig{}
+	decoderConfig := &mapstructure.DecoderConfig{
+		WeaklyTypedInput: true,
+		Result:           cfg,
+		TagName:          "mapstructure",
+		Squash:           true,
 	}
 
-	cfg.LLM = LLMConfig{
-		Provider:    getString(configMap, "llm.provider", getEnvWithFallback("DOCUMENTER_LLM_PROVIDER", "ANALYZER_LLM_PROVIDER", "openai")),
-		Model:       getString(configMap, "llm.model", getEnvWithFallback("DOCUMENTER_LLM_MODEL", "ANALYZER_LLM_MODEL", "gpt-4o")),
-		APIKey:      getString(configMap, "llm.api_key", getEnvWithFallback("DOCUMENTER_LLM_API_KEY", "ANALYZER_LLM_API_KEY", "")),
-		BaseURL:     getString(configMap, "llm.base_url", getEnvOrDefault("DOCUMENTER_LLM_BASE_URL", "")),
-		Retries:     getInt(configMap, "llm.retries", getEnvIntOrDefault("DOCUMENTER_AGENT_RETRIES", 2)),
-		Timeout:     getInt(configMap, "llm.timeout", getEnvIntOrDefault("DOCUMENTER_LLM_TIMEOUT", 180)),
-		MaxTokens:   getInt(configMap, "llm.max_tokens", getEnvIntOrDefault("DOCUMENTER_LLM_MAX_TOKENS", 8192)),
-		Temperature: getFloat64(configMap, "llm.temperature", getEnvFloatOrDefault("DOCUMENTER_LLM_TEMPERATURE", 0.0)),
+	decoder, err := mapstructure.NewDecoder(decoderConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create config decoder: %w", err)
 	}
+
+	if err := decoder.Decode(configMap); err != nil {
+		return nil, fmt.Errorf("failed to decode documenter config: %w", err)
+	}
+
+	applyDocumenterDefaults(cfg)
+	applyDocumenterEnvOverrides(cfg)
 
 	if err := validateLLMConfig(&cfg.LLM, "DOCUMENTER"); err != nil {
 		return nil, err
@@ -225,38 +266,141 @@ func LoadDocumenterConfig(repoPath string, cliOverrides map[string]interface{}) 
 	return cfg, nil
 }
 
+func applyDocumenterDefaults(cfg *DocumenterConfig) {
+	if cfg.RepoPath == "" {
+		cfg.RepoPath = "."
+	}
+	if cfg.LLM.Provider == "" {
+		cfg.LLM.Provider = "openai"
+	}
+	if cfg.LLM.Model == "" {
+		cfg.LLM.Model = "gpt-4o"
+	}
+	if cfg.LLM.Retries == 0 {
+		cfg.LLM.Retries = 2
+	}
+	if cfg.LLM.Timeout == 0 {
+		cfg.LLM.Timeout = 180
+	}
+	if cfg.LLM.MaxTokens == 0 {
+		cfg.LLM.MaxTokens = 8192
+	}
+}
+
+func applyDocumenterEnvOverrides(cfg *DocumenterConfig) {
+	if cfg.LLM.Provider == "openai" {
+		if env := getEnvWithFallback("DOCUMENTER_LLM_PROVIDER", "ANALYZER_LLM_PROVIDER", ""); env != "" {
+			cfg.LLM.Provider = env
+		}
+	}
+	if cfg.LLM.Model == "gpt-4o" {
+		if env := getEnvWithFallback("DOCUMENTER_LLM_MODEL", "ANALYZER_LLM_MODEL", ""); env != "" {
+			cfg.LLM.Model = env
+		}
+	}
+	if cfg.LLM.APIKey == "" {
+		cfg.LLM.APIKey = getEnvWithFallback("DOCUMENTER_LLM_API_KEY", "ANALYZER_LLM_API_KEY", "")
+	}
+	if cfg.LLM.BaseURL == "" {
+		cfg.LLM.BaseURL = getEnvOrDefault("DOCUMENTER_LLM_BASE_URL", "")
+	}
+	if cfg.LLM.Retries == 2 {
+		cfg.LLM.Retries = getEnvIntOrDefault("DOCUMENTER_AGENT_RETRIES", 2)
+	}
+	if cfg.LLM.Timeout == 180 {
+		cfg.LLM.Timeout = getEnvIntOrDefault("DOCUMENTER_LLM_TIMEOUT", 180)
+	}
+	if cfg.LLM.MaxTokens == 8192 {
+		cfg.LLM.MaxTokens = getEnvIntOrDefault("DOCUMENTER_LLM_MAX_TOKENS", 8192)
+	}
+	if cfg.LLM.Temperature == 0.0 {
+		cfg.LLM.Temperature = getEnvFloatOrDefault("DOCUMENTER_LLM_TEMPERATURE", 0.0)
+	}
+}
+
 func LoadAIRulesConfig(repoPath string, cliOverrides map[string]interface{}) (*AIRulesConfig, error) {
 	configMap, err := MergeConfigs(repoPath, "ai_rules", &AIRulesConfig{}, cliOverrides)
 	if err != nil {
 		return nil, err
 	}
 
-	cfg := &AIRulesConfig{
-		BaseConfig: BaseConfig{
-			RepoPath: getString(configMap, "repo_path", "."),
-			Debug:    getBool(configMap, "debug", false),
-		},
+	cfg := &AIRulesConfig{}
+	decoderConfig := &mapstructure.DecoderConfig{
+		WeaklyTypedInput: true,
+		Result:           cfg,
+		TagName:          "mapstructure",
+		Squash:           true,
 	}
 
-	cfg.LLM = LLMConfig{
-		Provider:    getString(configMap, "llm.provider", getEnvWithFallback("AI_RULES_LLM_PROVIDER", "ANALYZER_LLM_PROVIDER", "openai")),
-		Model:       getString(configMap, "llm.model", getEnvWithFallback("AI_RULES_LLM_MODEL", "ANALYZER_LLM_MODEL", "gpt-4o")),
-		APIKey:      getString(configMap, "llm.api_key", getEnvWithFallback("AI_RULES_LLM_API_KEY", "ANALYZER_LLM_API_KEY", "")),
-		BaseURL:     getString(configMap, "llm.base_url", getEnvOrDefault("AI_RULES_LLM_BASE_URL", "")),
-		Retries:     getInt(configMap, "llm.retries", getEnvIntOrDefault("AI_RULES_AGENT_RETRIES", 2)),
-		Timeout:     getInt(configMap, "llm.timeout", getEnvIntOrDefault("AI_RULES_LLM_TIMEOUT", 240)),
-		MaxTokens:   getInt(configMap, "llm.max_tokens", getEnvIntOrDefault("AI_RULES_LLM_MAX_TOKENS", 8192)),
-		Temperature: getFloat64(configMap, "llm.temperature", getEnvFloatOrDefault("AI_RULES_LLM_TEMPERATURE", 0.0)),
+	decoder, err := mapstructure.NewDecoder(decoderConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create config decoder: %w", err)
 	}
 
-	cfg.MaxTokensMarkdown = getInt(configMap, "max_tokens_markdown", 0)
-	cfg.MaxTokensCursor = getInt(configMap, "max_tokens_cursor", 0)
+	if err := decoder.Decode(configMap); err != nil {
+		return nil, fmt.Errorf("failed to decode ai_rules config: %w", err)
+	}
+
+	applyAIRulesDefaults(cfg)
+	applyAIRulesEnvOverrides(cfg)
 
 	if err := validateLLMConfig(&cfg.LLM, "AI_RULES"); err != nil {
 		return nil, err
 	}
 
 	return cfg, nil
+}
+
+func applyAIRulesDefaults(cfg *AIRulesConfig) {
+	if cfg.RepoPath == "" {
+		cfg.RepoPath = "."
+	}
+	if cfg.LLM.Provider == "" {
+		cfg.LLM.Provider = "openai"
+	}
+	if cfg.LLM.Model == "" {
+		cfg.LLM.Model = "gpt-4o"
+	}
+	if cfg.LLM.Retries == 0 {
+		cfg.LLM.Retries = 2
+	}
+	if cfg.LLM.Timeout == 0 {
+		cfg.LLM.Timeout = 240
+	}
+	if cfg.LLM.MaxTokens == 0 {
+		cfg.LLM.MaxTokens = 8192
+	}
+}
+
+func applyAIRulesEnvOverrides(cfg *AIRulesConfig) {
+	if cfg.LLM.Provider == "openai" {
+		if env := getEnvWithFallback("AI_RULES_LLM_PROVIDER", "ANALYZER_LLM_PROVIDER", ""); env != "" {
+			cfg.LLM.Provider = env
+		}
+	}
+	if cfg.LLM.Model == "gpt-4o" {
+		if env := getEnvWithFallback("AI_RULES_LLM_MODEL", "ANALYZER_LLM_MODEL", ""); env != "" {
+			cfg.LLM.Model = env
+		}
+	}
+	if cfg.LLM.APIKey == "" {
+		cfg.LLM.APIKey = getEnvWithFallback("AI_RULES_LLM_API_KEY", "ANALYZER_LLM_API_KEY", "")
+	}
+	if cfg.LLM.BaseURL == "" {
+		cfg.LLM.BaseURL = getEnvOrDefault("AI_RULES_LLM_BASE_URL", "")
+	}
+	if cfg.LLM.Retries == 2 {
+		cfg.LLM.Retries = getEnvIntOrDefault("AI_RULES_AGENT_RETRIES", 2)
+	}
+	if cfg.LLM.Timeout == 240 {
+		cfg.LLM.Timeout = getEnvIntOrDefault("AI_RULES_LLM_TIMEOUT", 240)
+	}
+	if cfg.LLM.MaxTokens == 8192 {
+		cfg.LLM.MaxTokens = getEnvIntOrDefault("AI_RULES_LLM_MAX_TOKENS", 8192)
+	}
+	if cfg.LLM.Temperature == 0.0 {
+		cfg.LLM.Temperature = getEnvFloatOrDefault("AI_RULES_LLM_TEMPERATURE", 0.0)
+	}
 }
 
 func setNested(m map[string]interface{}, dottedKey string, value interface{}) {
@@ -278,89 +422,6 @@ func setNested(m map[string]interface{}, dottedKey string, value interface{}) {
 		}
 	}
 	current[parts[len(parts)-1]] = value
-}
-
-// Helper functions for type-safe config access
-
-func getString(m map[string]interface{}, key, defaultValue string) string {
-	parts := strings.Split(key, ".")
-	var val interface{} = m
-
-	for _, part := range parts {
-		if subMap, ok := val.(map[string]interface{}); ok {
-			val = subMap[part]
-		} else {
-			return defaultValue
-		}
-	}
-
-	if str, ok := val.(string); ok && str != "" { // empty string = not set, use default
-		return str
-	}
-	return defaultValue
-}
-
-func getInt(m map[string]interface{}, key string, defaultValue int) int {
-	parts := strings.Split(key, ".")
-	var val interface{} = m
-
-	for _, part := range parts {
-		if subMap, ok := val.(map[string]interface{}); ok {
-			val = subMap[part]
-		} else {
-			return defaultValue
-		}
-	}
-
-	switch v := val.(type) {
-	case int:
-		return v
-	case float64:
-		return int(v)
-	case string:
-		// Try to parse string as int
-		var i int
-		if _, err := fmt.Sscanf(v, "%d", &i); err == nil {
-			return i
-		}
-	}
-	return defaultValue
-}
-
-func getBool(m map[string]interface{}, key string, defaultValue bool) bool {
-	parts := strings.Split(key, ".")
-	var val interface{} = m
-
-	for _, part := range parts {
-		if subMap, ok := val.(map[string]interface{}); ok {
-			val = subMap[part]
-		} else {
-			return defaultValue
-		}
-	}
-
-	if b, ok := val.(bool); ok {
-		return b
-	}
-	return defaultValue
-}
-
-func getFloat64(m map[string]interface{}, key string, defaultValue float64) float64 {
-	parts := strings.Split(key, ".")
-	var val interface{} = m
-
-	for _, part := range parts {
-		if subMap, ok := val.(map[string]interface{}); ok {
-			val = subMap[part]
-		} else {
-			return defaultValue
-		}
-	}
-
-	if f, ok := val.(float64); ok {
-		return f
-	}
-	return defaultValue
 }
 
 func getEnvOrDefault(key, defaultValue string) string {
@@ -471,15 +532,33 @@ func LoadCheckConfig(repoPath string, cliOverrides map[string]interface{}) (*Che
 		return nil, err
 	}
 
-	cfg := &CheckConfig{
-		BaseConfig: BaseConfig{
-			RepoPath: getString(configMap, "repo_path", "."),
-			Debug:    getBool(configMap, "debug", false),
-		},
-		MaxHashWorkers: getInt(configMap, "max_hash_workers", 0),
-		OutputFormat:   getString(configMap, "output_format", "text"),
-		Verbose:        getBool(configMap, "verbose", false),
+	cfg := &CheckConfig{}
+	decoderConfig := &mapstructure.DecoderConfig{
+		WeaklyTypedInput: true,
+		Result:           cfg,
+		TagName:          "mapstructure",
+		Squash:           true,
 	}
 
+	decoder, err := mapstructure.NewDecoder(decoderConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create config decoder: %w", err)
+	}
+
+	if err := decoder.Decode(configMap); err != nil {
+		return nil, fmt.Errorf("failed to decode check config: %w", err)
+	}
+
+	applyCheckDefaults(cfg)
+
 	return cfg, nil
+}
+
+func applyCheckDefaults(cfg *CheckConfig) {
+	if cfg.RepoPath == "" {
+		cfg.RepoPath = "."
+	}
+	if cfg.OutputFormat == "" {
+		cfg.OutputFormat = "text"
+	}
 }

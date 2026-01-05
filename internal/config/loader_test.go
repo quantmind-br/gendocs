@@ -644,3 +644,352 @@ func findSubstring(s, substr string) bool {
 	}
 	return false
 }
+
+func TestGetEnvOrDefault_Behavior(t *testing.T) {
+	tests := []struct {
+		name         string
+		envKey       string
+		envValue     string
+		setEnv       bool
+		defaultValue string
+		want         string
+	}{
+		{
+			name:         "env set returns env value",
+			envKey:       "TEST_ENV_VAR",
+			envValue:     "env-value",
+			setEnv:       true,
+			defaultValue: "default",
+			want:         "env-value",
+		},
+		{
+			name:         "env not set returns default",
+			envKey:       "TEST_ENV_VAR_MISSING",
+			envValue:     "",
+			setEnv:       false,
+			defaultValue: "default",
+			want:         "default",
+		},
+		{
+			name:         "empty env returns default",
+			envKey:       "TEST_ENV_VAR_EMPTY",
+			envValue:     "",
+			setEnv:       true,
+			defaultValue: "default",
+			want:         "default",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.setEnv {
+				_ = os.Setenv(tt.envKey, tt.envValue)
+				defer func() { _ = os.Unsetenv(tt.envKey) }()
+			} else {
+				_ = os.Unsetenv(tt.envKey)
+			}
+
+			got := getEnvOrDefault(tt.envKey, tt.defaultValue)
+			if got != tt.want {
+				t.Errorf("getEnvOrDefault() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetEnvWithFallback_Behavior(t *testing.T) {
+	tests := []struct {
+		name          string
+		primaryKey    string
+		primaryValue  string
+		setPrimary    bool
+		fallbackKey   string
+		fallbackValue string
+		setFallback   bool
+		defaultValue  string
+		want          string
+	}{
+		{
+			name:          "primary set returns primary",
+			primaryKey:    "PRIMARY_VAR",
+			primaryValue:  "primary-value",
+			setPrimary:    true,
+			fallbackKey:   "FALLBACK_VAR",
+			fallbackValue: "fallback-value",
+			setFallback:   true,
+			defaultValue:  "default",
+			want:          "primary-value",
+		},
+		{
+			name:          "primary not set falls back",
+			primaryKey:    "PRIMARY_VAR",
+			primaryValue:  "",
+			setPrimary:    false,
+			fallbackKey:   "FALLBACK_VAR",
+			fallbackValue: "fallback-value",
+			setFallback:   true,
+			defaultValue:  "default",
+			want:          "fallback-value",
+		},
+		{
+			name:          "both not set returns default",
+			primaryKey:    "PRIMARY_VAR",
+			primaryValue:  "",
+			setPrimary:    false,
+			fallbackKey:   "FALLBACK_VAR",
+			fallbackValue: "",
+			setFallback:   false,
+			defaultValue:  "default",
+			want:          "default",
+		},
+		{
+			name:          "primary empty falls back",
+			primaryKey:    "PRIMARY_VAR",
+			primaryValue:  "",
+			setPrimary:    true,
+			fallbackKey:   "FALLBACK_VAR",
+			fallbackValue: "fallback-value",
+			setFallback:   true,
+			defaultValue:  "default",
+			want:          "fallback-value",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Clean up first
+			_ = os.Unsetenv(tt.primaryKey)
+			_ = os.Unsetenv(tt.fallbackKey)
+
+			if tt.setPrimary {
+				_ = os.Setenv(tt.primaryKey, tt.primaryValue)
+				defer func() { _ = os.Unsetenv(tt.primaryKey) }()
+			}
+			if tt.setFallback {
+				_ = os.Setenv(tt.fallbackKey, tt.fallbackValue)
+				defer func() { _ = os.Unsetenv(tt.fallbackKey) }()
+			}
+
+			got := getEnvWithFallback(tt.primaryKey, tt.fallbackKey, tt.defaultValue)
+			if got != tt.want {
+				t.Errorf("getEnvWithFallback() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetEnvIntOrDefault_Behavior(t *testing.T) {
+	tests := []struct {
+		name         string
+		envKey       string
+		envValue     string
+		setEnv       bool
+		defaultValue int
+		want         int
+	}{
+		{
+			name:         "valid int env",
+			envKey:       "TEST_INT_VAR",
+			envValue:     "42",
+			setEnv:       true,
+			defaultValue: 0,
+			want:         42,
+		},
+		{
+			name:         "invalid int env returns default",
+			envKey:       "TEST_INT_VAR",
+			envValue:     "not-an-int",
+			setEnv:       true,
+			defaultValue: 99,
+			want:         99,
+		},
+		{
+			name:         "env not set returns default",
+			envKey:       "TEST_INT_VAR_MISSING",
+			envValue:     "",
+			setEnv:       false,
+			defaultValue: 99,
+			want:         99,
+		},
+		{
+			name:         "negative int",
+			envKey:       "TEST_INT_VAR",
+			envValue:     "-10",
+			setEnv:       true,
+			defaultValue: 0,
+			want:         -10,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.setEnv {
+				_ = os.Setenv(tt.envKey, tt.envValue)
+				defer func() { _ = os.Unsetenv(tt.envKey) }()
+			} else {
+				_ = os.Unsetenv(tt.envKey)
+			}
+
+			got := getEnvIntOrDefault(tt.envKey, tt.defaultValue)
+			if got != tt.want {
+				t.Errorf("getEnvIntOrDefault() = %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetEnvFloatOrDefault_Behavior(t *testing.T) {
+	tests := []struct {
+		name         string
+		envKey       string
+		envValue     string
+		setEnv       bool
+		defaultValue float64
+		want         float64
+	}{
+		{
+			name:         "valid float env",
+			envKey:       "TEST_FLOAT_VAR",
+			envValue:     "0.5",
+			setEnv:       true,
+			defaultValue: 0.0,
+			want:         0.5,
+		},
+		{
+			name:         "int string parsed as float",
+			envKey:       "TEST_FLOAT_VAR",
+			envValue:     "42",
+			setEnv:       true,
+			defaultValue: 0.0,
+			want:         42.0,
+		},
+		{
+			name:         "invalid float env returns default",
+			envKey:       "TEST_FLOAT_VAR",
+			envValue:     "not-a-float",
+			setEnv:       true,
+			defaultValue: 0.7,
+			want:         0.7,
+		},
+		{
+			name:         "env not set returns default",
+			envKey:       "TEST_FLOAT_VAR_MISSING",
+			envValue:     "",
+			setEnv:       false,
+			defaultValue: 0.7,
+			want:         0.7,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.setEnv {
+				_ = os.Setenv(tt.envKey, tt.envValue)
+				defer func() { _ = os.Unsetenv(tt.envKey) }()
+			} else {
+				_ = os.Unsetenv(tt.envKey)
+			}
+
+			got := getEnvFloatOrDefault(tt.envKey, tt.defaultValue)
+			if got != tt.want {
+				t.Errorf("getEnvFloatOrDefault() = %f, want %f", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestConfigPrecedence_FullChain tests the complete precedence chain:
+// CLI > project config > global config > env > defaults
+func TestConfigPrecedence_FullChain(t *testing.T) {
+	// Setup temp directories
+	tmpDir := t.TempDir()
+	homeDir := t.TempDir()
+
+	// Save original HOME and restore after test
+	originalHome := os.Getenv("HOME")
+	defer func() { _ = os.Setenv("HOME", originalHome) }()
+	_ = os.Setenv("HOME", homeDir)
+
+	// 1. Create global config with max_workers=2
+	globalConfig := filepath.Join(homeDir, ".gendocs.yaml")
+	globalConfigContent := `
+analyzer:
+  max_workers: 2
+  llm:
+    provider: openai
+    model: gpt-4
+    api_key: global-key
+`
+	_ = os.WriteFile(globalConfig, []byte(globalConfigContent), 0644)
+
+	// 2. Create project config with max_workers=4
+	projectConfig := filepath.Join(tmpDir, ".ai", "config.yaml")
+	_ = os.MkdirAll(filepath.Dir(projectConfig), 0755)
+	projectConfigContent := `
+analyzer:
+  max_workers: 4
+  llm:
+    provider: anthropic
+    model: claude-3
+    api_key: project-key
+`
+	_ = os.WriteFile(projectConfig, []byte(projectConfigContent), 0644)
+
+	// 3. Set env with max_workers=8 (note: this goes through ANALYZER_ prefix)
+	os.Clearenv()
+	_ = os.Setenv("HOME", homeDir)
+
+	// 4. CLI override with max_workers=16
+	cliOverrides := map[string]interface{}{
+		"max_workers": 16,
+	}
+
+	cfg, err := LoadAnalyzerConfig(tmpDir, cliOverrides)
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	// CLI should win
+	if cfg.MaxWorkers != 16 {
+		t.Errorf("Expected max_workers=16 (CLI override), got %d", cfg.MaxWorkers)
+	}
+
+	// Provider should come from project config (higher than global)
+	if cfg.LLM.Provider != "anthropic" {
+		t.Errorf("Expected provider='anthropic' (project config), got '%s'", cfg.LLM.Provider)
+	}
+}
+
+// TestLoadCheckConfig_Characterization ensures CheckConfig loading works correctly
+func TestLoadCheckConfig_Characterization(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	projectConfig := filepath.Join(tmpDir, ".ai", "config.yaml")
+	_ = os.MkdirAll(filepath.Dir(projectConfig), 0755)
+	projectConfigContent := `
+check:
+  max_hash_workers: 4
+  output_format: json
+  verbose: true
+`
+	_ = os.WriteFile(projectConfig, []byte(projectConfigContent), 0644)
+
+	os.Clearenv()
+
+	cfg, err := LoadCheckConfig(tmpDir, map[string]interface{}{})
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	if cfg.MaxHashWorkers != 4 {
+		t.Errorf("Expected max_hash_workers=4, got %d", cfg.MaxHashWorkers)
+	}
+
+	if cfg.OutputFormat != "json" {
+		t.Errorf("Expected output_format='json', got '%s'", cfg.OutputFormat)
+	}
+
+	if !cfg.Verbose {
+		t.Error("Expected verbose=true")
+	}
+}

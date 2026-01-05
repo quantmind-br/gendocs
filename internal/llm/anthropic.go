@@ -1,7 +1,6 @@
 package llm
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -98,25 +97,15 @@ func NewAnthropicClient(cfg config.LLMConfig, retryClient *RetryClient) *Anthrop
 func (c *AnthropicClient) GenerateCompletion(ctx context.Context, req CompletionRequest) (CompletionResponse, error) {
 	anReq := c.convertRequest(req)
 
-	jsonData, err := json.Marshal(anReq)
-	if err != nil {
-		return CompletionResponse{}, fmt.Errorf("failed to marshal request: %w", err)
-	}
-
 	url := c.baseURL + "/v1/messages"
-
-	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonData))
-	if err != nil {
-		return CompletionResponse{}, fmt.Errorf("failed to create request: %w", err)
+	headers := map[string]string{
+		"x-api-key":         c.apiKey,
+		"anthropic-version": "2023-06-01",
 	}
 
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("x-api-key", c.apiKey)
-	httpReq.Header.Set("anthropic-version", "2023-06-01")
-
-	resp, err := c.retryClient.Do(httpReq)
+	resp, err := c.doHTTPRequest(ctx, "POST", url, headers, anReq)
 	if err != nil {
-		return CompletionResponse{}, fmt.Errorf("request failed: %w", err)
+		return CompletionResponse{}, err
 	}
 	defer func() { _ = resp.Body.Close() }()
 

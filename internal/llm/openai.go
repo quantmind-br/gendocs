@@ -1,7 +1,6 @@
 package llm
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -249,38 +248,24 @@ func NewOpenAIClient(cfg config.LLMConfig, retryClient *RetryClient) *OpenAIClie
 
 // GenerateCompletion generates a completion from OpenAI
 func (c *OpenAIClient) GenerateCompletion(ctx context.Context, req CompletionRequest) (CompletionResponse, error) {
-	// Convert to OpenAI format
 	oaReq := c.convertRequest(req)
 
-	jsonData, err := json.Marshal(oaReq)
-	if err != nil {
-		return CompletionResponse{}, fmt.Errorf("failed to marshal request: %w", err)
-	}
-
-	// Create HTTP request
 	url := fmt.Sprintf("%s/chat/completions", c.baseURL)
-	httpReq, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonData))
-	if err != nil {
-		return CompletionResponse{}, fmt.Errorf("failed to create request: %w", err)
+	headers := map[string]string{
+		"Authorization": fmt.Sprintf("Bearer %s", c.apiKey),
 	}
 
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.apiKey))
-
-	// Execute with retry
-	resp, err := c.retryClient.Do(httpReq)
+	resp, err := c.doHTTPRequest(ctx, "POST", url, headers, oaReq)
 	if err != nil {
-		return CompletionResponse{}, fmt.Errorf("request failed: %w", err)
+		return CompletionResponse{}, err
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	// Check for error status
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		return CompletionResponse{}, fmt.Errorf("API error: status %d, body: %s", resp.StatusCode, string(body))
 	}
 
-	// Parse streaming response
 	return c.parseStreamingResponse(resp.Body)
 }
 
