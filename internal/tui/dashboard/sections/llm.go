@@ -314,30 +314,30 @@ func (m *LLMSectionModel) IsDirty() bool {
 func (m *LLMSectionModel) GetValues() map[string]any {
 	p := m.descriptor.KeyPrefix
 	values := map[string]any{
-		p + "provider": m.provider.Value(),
-		p + "model":    m.model.Value(),
-		p + "api_key":  m.apiKey.Value(),
-		p + "base_url": m.baseURL.Value(),
+		p + KeyProvider: m.provider.Value(),
+		p + KeyModel:    m.model.Value(),
+		p + KeyAPIKey:   m.apiKey.Value(),
+		p + KeyBaseURL:  m.baseURL.Value(),
 	}
 
 	if v := m.temperature.Value(); v != "" {
 		if f, err := strconv.ParseFloat(v, 64); err == nil {
-			values[p+"temperature"] = f
+			values[p+KeyTemperature] = f
 		}
 	}
 	if v := m.maxTokens.Value(); v != "" {
 		if i, err := strconv.Atoi(v); err == nil {
-			values[p+"max_tokens"] = i
+			values[p+KeyMaxTokens] = i
 		}
 	}
 	if v := m.timeout.Value(); v != "" {
 		if i, err := strconv.Atoi(v); err == nil {
-			values[p+"timeout"] = i
+			values[p+KeyTimeout] = i
 		}
 	}
 	if v := m.retries.Value(); v != "" {
 		if i, err := strconv.Atoi(v); err == nil {
-			values[p+"retries"] = i
+			values[p+KeyRetries] = i
 		}
 	}
 
@@ -346,28 +346,28 @@ func (m *LLMSectionModel) GetValues() map[string]any {
 
 func (m *LLMSectionModel) SetValues(values map[string]any) error {
 	p := m.descriptor.KeyPrefix
-	if v, ok := values[p+"provider"].(string); ok {
+	if v, ok := values[p+KeyProvider].(string); ok {
 		m.provider.SetValue(v)
 	}
-	if v, ok := values[p+"model"].(string); ok {
+	if v, ok := values[p+KeyModel].(string); ok {
 		m.model.SetValue(v)
 	}
-	if v, ok := values[p+"api_key"].(string); ok {
+	if v, ok := values[p+KeyAPIKey].(string); ok {
 		m.apiKey.SetValue(v)
 	}
-	if v, ok := values[p+"base_url"].(string); ok {
+	if v, ok := values[p+KeyBaseURL].(string); ok {
 		m.baseURL.SetValue(v)
 	}
-	if v, ok := values[p+"temperature"].(float64); ok {
+	if v, ok := values[p+KeyTemperature].(float64); ok {
 		m.temperature.SetValue(fmt.Sprintf("%.1f", v))
 	}
-	if v, ok := values[p+"max_tokens"].(int); ok {
+	if v, ok := values[p+KeyMaxTokens].(int); ok {
 		m.maxTokens.SetValue(strconv.Itoa(v))
 	}
-	if v, ok := values[p+"timeout"].(int); ok {
+	if v, ok := values[p+KeyTimeout].(int); ok {
 		m.timeout.SetValue(strconv.Itoa(v))
 	}
-	if v, ok := values[p+"retries"].(int); ok {
+	if v, ok := values[p+KeyRetries].(int); ok {
 		m.retries.SetValue(strconv.Itoa(v))
 	}
 	return nil

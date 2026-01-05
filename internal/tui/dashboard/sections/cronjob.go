@@ -127,29 +127,29 @@ func (m *CronjobSectionModel) IsDirty() bool {
 
 func (m *CronjobSectionModel) GetValues() map[string]any {
 	values := map[string]any{
-		"working_path": m.workingPath.Value(),
+		KeyWorkingPath: m.workingPath.Value(),
 	}
 	if v := m.maxDaysSinceLastCommit.Value(); v != "" {
 		if i, err := strconv.Atoi(v); err == nil {
-			values["max_days_since_last_commit"] = i
+			values[KeyMaxDaysSinceLastCommit] = i
 		}
 	}
 	if v := m.groupProjectID.Value(); v != "" {
 		if i, err := strconv.Atoi(v); err == nil {
-			values["group_project_id"] = i
+			values[KeyGroupProjectID] = i
 		}
 	}
 	return values
 }
 
 func (m *CronjobSectionModel) SetValues(values map[string]any) error {
-	if v, ok := values["max_days_since_last_commit"].(int); ok {
+	if v, ok := values[KeyMaxDaysSinceLastCommit].(int); ok {
 		m.maxDaysSinceLastCommit.SetValue(strconv.Itoa(v))
 	}
-	if v, ok := values["working_path"].(string); ok {
+	if v, ok := values[KeyWorkingPath].(string); ok {
 		m.workingPath.SetValue(v)
 	}
-	if v, ok := values["group_project_id"].(int); ok {
+	if v, ok := values[KeyGroupProjectID].(int); ok {
 		m.groupProjectID.SetValue(strconv.Itoa(v))
 	}
 	return nil

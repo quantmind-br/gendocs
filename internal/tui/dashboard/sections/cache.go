@@ -137,33 +137,33 @@ func (m *CacheSectionModel) IsDirty() bool {
 
 func (m *CacheSectionModel) GetValues() map[string]any {
 	values := map[string]any{
-		"cache_enabled": m.enabled.Value(),
-		"cache_path":    m.cachePath.Value(),
+		KeyCacheEnabled: m.enabled.Value(),
+		KeyCachePath:    m.cachePath.Value(),
 	}
 	if v := m.maxSize.Value(); v != "" {
 		if i, err := strconv.Atoi(v); err == nil {
-			values["cache_max_size"] = i
+			values[KeyCacheMaxSize] = i
 		}
 	}
 	if v := m.ttl.Value(); v != "" {
 		if i, err := strconv.Atoi(v); err == nil {
-			values["cache_ttl"] = i
+			values[KeyCacheTTL] = i
 		}
 	}
 	return values
 }
 
 func (m *CacheSectionModel) SetValues(values map[string]any) error {
-	if v, ok := values["cache_enabled"].(bool); ok {
+	if v, ok := values[KeyCacheEnabled].(bool); ok {
 		m.enabled.SetValue(v)
 	}
-	if v, ok := values["cache_max_size"].(int); ok {
+	if v, ok := values[KeyCacheMaxSize].(int); ok {
 		m.maxSize.SetValue(strconv.Itoa(v))
 	}
-	if v, ok := values["cache_ttl"].(int); ok {
+	if v, ok := values[KeyCacheTTL].(int); ok {
 		m.ttl.SetValue(strconv.Itoa(v))
 	}
-	if v, ok := values["cache_path"].(string); ok {
+	if v, ok := values[KeyCachePath].(string); ok {
 		m.cachePath.SetValue(v)
 	}
 	return nil

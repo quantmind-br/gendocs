@@ -143,38 +143,38 @@ func (m *RetrySectionModel) GetValues() map[string]any {
 	values := map[string]any{}
 	if v := m.maxAttempts.Value(); v != "" {
 		if i, err := strconv.Atoi(v); err == nil {
-			values["max_attempts"] = i
+			values[KeyMaxAttempts] = i
 		}
 	}
 	if v := m.multiplier.Value(); v != "" {
 		if i, err := strconv.Atoi(v); err == nil {
-			values["multiplier"] = i
+			values[KeyMultiplier] = i
 		}
 	}
 	if v := m.maxWaitPerAttempt.Value(); v != "" {
 		if i, err := strconv.Atoi(v); err == nil {
-			values["max_wait_per_attempt"] = i
+			values[KeyMaxWaitPerAttempt] = i
 		}
 	}
 	if v := m.maxTotalWait.Value(); v != "" {
 		if i, err := strconv.Atoi(v); err == nil {
-			values["max_total_wait"] = i
+			values[KeyMaxTotalWait] = i
 		}
 	}
 	return values
 }
 
 func (m *RetrySectionModel) SetValues(values map[string]any) error {
-	if v, ok := values["max_attempts"].(int); ok {
+	if v, ok := values[KeyMaxAttempts].(int); ok {
 		m.maxAttempts.SetValue(strconv.Itoa(v))
 	}
-	if v, ok := values["multiplier"].(int); ok {
+	if v, ok := values[KeyMultiplier].(int); ok {
 		m.multiplier.SetValue(strconv.Itoa(v))
 	}
-	if v, ok := values["max_wait_per_attempt"].(int); ok {
+	if v, ok := values[KeyMaxWaitPerAttempt].(int); ok {
 		m.maxWaitPerAttempt.SetValue(strconv.Itoa(v))
 	}
-	if v, ok := values["max_total_wait"].(int); ok {
+	if v, ok := values[KeyMaxTotalWait].(int); ok {
 		m.maxTotalWait.SetValue(strconv.Itoa(v))
 	}
 	return nil

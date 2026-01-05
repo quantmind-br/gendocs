@@ -145,28 +145,28 @@ func (m *GitLabSectionModel) IsDirty() bool {
 
 func (m *GitLabSectionModel) GetValues() map[string]any {
 	return map[string]any{
-		"gitlab_api_url":       m.apiURL.Value(),
-		"gitlab_user_name":     m.userName.Value(),
-		"gitlab_user_username": m.userUsername.Value(),
-		"gitlab_user_email":    m.userEmail.Value(),
-		"gitlab_oauth_token":   m.oauthToken.Value(),
+		KeyGitLabAPIURL:       m.apiURL.Value(),
+		KeyGitLabUserName:     m.userName.Value(),
+		KeyGitLabUserUsername: m.userUsername.Value(),
+		KeyGitLabUserEmail:    m.userEmail.Value(),
+		KeyGitLabOAuthToken:   m.oauthToken.Value(),
 	}
 }
 
 func (m *GitLabSectionModel) SetValues(values map[string]any) error {
-	if v, ok := values["gitlab_api_url"].(string); ok {
+	if v, ok := values[KeyGitLabAPIURL].(string); ok {
 		m.apiURL.SetValue(v)
 	}
-	if v, ok := values["gitlab_user_name"].(string); ok {
+	if v, ok := values[KeyGitLabUserName].(string); ok {
 		m.userName.SetValue(v)
 	}
-	if v, ok := values["gitlab_user_username"].(string); ok {
+	if v, ok := values[KeyGitLabUserUsername].(string); ok {
 		m.userUsername.SetValue(v)
 	}
-	if v, ok := values["gitlab_user_email"].(string); ok {
+	if v, ok := values[KeyGitLabUserEmail].(string); ok {
 		m.userEmail.SetValue(v)
 	}
-	if v, ok := values["gitlab_oauth_token"].(string); ok {
+	if v, ok := values[KeyGitLabOAuthToken].(string); ok {
 		m.oauthToken.SetValue(v)
 	}
 	return nil

@@ -142,20 +142,20 @@ func (m *GeminiSectionModel) IsDirty() bool {
 
 func (m *GeminiSectionModel) GetValues() map[string]any {
 	return map[string]any{
-		"use_vertex_ai": m.useVertexAI.Value(),
-		"project_id":    m.projectID.Value(),
-		"location":      m.location.Value(),
+		KeyUseVertexAI: m.useVertexAI.Value(),
+		KeyProjectID:   m.projectID.Value(),
+		KeyLocation:    m.location.Value(),
 	}
 }
 
 func (m *GeminiSectionModel) SetValues(values map[string]any) error {
-	if v, ok := values["use_vertex_ai"].(bool); ok {
+	if v, ok := values[KeyUseVertexAI].(bool); ok {
 		m.useVertexAI.SetValue(v)
 	}
-	if v, ok := values["project_id"].(string); ok {
+	if v, ok := values[KeyProjectID].(string); ok {
 		m.projectID.SetValue(v)
 	}
-	if v, ok := values["location"].(string); ok {
+	if v, ok := values[KeyLocation].(string); ok {
 		m.location.SetValue(v)
 	}
 	return nil

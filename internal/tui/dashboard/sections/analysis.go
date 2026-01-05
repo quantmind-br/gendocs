@@ -186,53 +186,53 @@ func (m *AnalysisSectionModel) IsDirty() bool {
 
 func (m *AnalysisSectionModel) GetValues() map[string]any {
 	values := map[string]any{
-		"exclude_code_structure": m.excludeStructure.Value(),
-		"exclude_data_flow":      m.excludeDataFlow.Value(),
-		"exclude_dependencies":   m.excludeDeps.Value(),
-		"exclude_request_flow":   m.excludeReqFlow.Value(),
-		"exclude_api_analysis":   m.excludeAPI.Value(),
-		"force":                  m.force.Value(),
-		"incremental":            m.incremental.Value(),
+		KeyExcludeCodeStructure: m.excludeStructure.Value(),
+		KeyExcludeDataFlow:      m.excludeDataFlow.Value(),
+		KeyExcludeDependencies:  m.excludeDeps.Value(),
+		KeyExcludeRequestFlow:   m.excludeReqFlow.Value(),
+		KeyExcludeAPIAnalysis:   m.excludeAPI.Value(),
+		KeyForce:                m.force.Value(),
+		KeyIncremental:          m.incremental.Value(),
 	}
 	if v := m.maxWorkers.Value(); v != "" {
 		if i, err := strconv.Atoi(v); err == nil {
-			values["max_workers"] = i
+			values[KeyMaxWorkers] = i
 		}
 	}
 	if v := m.maxHashWorkers.Value(); v != "" {
 		if i, err := strconv.Atoi(v); err == nil {
-			values["max_hash_workers"] = i
+			values[KeyMaxHashWorkers] = i
 		}
 	}
 	return values
 }
 
 func (m *AnalysisSectionModel) SetValues(values map[string]any) error {
-	if v, ok := values["exclude_code_structure"].(bool); ok {
+	if v, ok := values[KeyExcludeCodeStructure].(bool); ok {
 		m.excludeStructure.SetValue(v)
 	}
-	if v, ok := values["exclude_data_flow"].(bool); ok {
+	if v, ok := values[KeyExcludeDataFlow].(bool); ok {
 		m.excludeDataFlow.SetValue(v)
 	}
-	if v, ok := values["exclude_dependencies"].(bool); ok {
+	if v, ok := values[KeyExcludeDependencies].(bool); ok {
 		m.excludeDeps.SetValue(v)
 	}
-	if v, ok := values["exclude_request_flow"].(bool); ok {
+	if v, ok := values[KeyExcludeRequestFlow].(bool); ok {
 		m.excludeReqFlow.SetValue(v)
 	}
-	if v, ok := values["exclude_api_analysis"].(bool); ok {
+	if v, ok := values[KeyExcludeAPIAnalysis].(bool); ok {
 		m.excludeAPI.SetValue(v)
 	}
-	if v, ok := values["max_workers"].(int); ok {
+	if v, ok := values[KeyMaxWorkers].(int); ok {
 		m.maxWorkers.SetValue(strconv.Itoa(v))
 	}
-	if v, ok := values["max_hash_workers"].(int); ok {
+	if v, ok := values[KeyMaxHashWorkers].(int); ok {
 		m.maxHashWorkers.SetValue(strconv.Itoa(v))
 	}
-	if v, ok := values["force"].(bool); ok {
+	if v, ok := values[KeyForce].(bool); ok {
 		m.force.SetValue(v)
 	}
-	if v, ok := values["incremental"].(bool); ok {
+	if v, ok := values[KeyIncremental].(bool); ok {
 		m.incremental.SetValue(v)
 	}
 	return nil

@@ -124,20 +124,20 @@ func (m *LoggingSectionModel) IsDirty() bool {
 
 func (m *LoggingSectionModel) GetValues() map[string]any {
 	return map[string]any{
-		"log_dir":       m.logDir.Value(),
-		"file_level":    m.fileLevel.Value(),
-		"console_level": m.consoleLevel.Value(),
+		KeyLogDir:       m.logDir.Value(),
+		KeyFileLevel:    m.fileLevel.Value(),
+		KeyConsoleLevel: m.consoleLevel.Value(),
 	}
 }
 
 func (m *LoggingSectionModel) SetValues(values map[string]any) error {
-	if v, ok := values["log_dir"].(string); ok {
+	if v, ok := values[KeyLogDir].(string); ok {
 		m.logDir.SetValue(v)
 	}
-	if v, ok := values["file_level"].(string); ok {
+	if v, ok := values[KeyFileLevel].(string); ok {
 		m.fileLevel.SetValue(v)
 	}
-	if v, ok := values["console_level"].(string); ok {
+	if v, ok := values[KeyConsoleLevel].(string); ok {
 		m.consoleLevel.SetValue(v)
 	}
 	return nil
