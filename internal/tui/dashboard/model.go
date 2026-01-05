@@ -138,6 +138,12 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.sidebar.SetFocused(true)
 				return m, nil
 			}
+			if m.hasUnsavedChanges() {
+				m.modal.Show()
+				return m, nil
+			}
+			m.quitting = true
+			return m, tea.Quit
 
 		case "ctrl+s":
 			return m, m.saveConfig()

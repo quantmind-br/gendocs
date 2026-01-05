@@ -130,7 +130,8 @@ func LLMConfigFromEnv(prefix string, defaults LLMDefaults) config.LLMConfig {
 // It handles errors by:
 //  1. Checking if the error is an *errors.AIDocGenError for user-friendly messages
 //  2. Displaying the error via progress UI (if showProgress is true) or stderr
-//  3. Returning the original error for proper exit code handling
+//  3. Adding actionable suggestions based on error type
+//  4. Returning the original error for proper exit code handling
 //
 // Parameters:
 //   - err: the error to handle (if nil, returns nil immediately)
@@ -143,20 +144,43 @@ func HandleCommandError(err error, progress *tui.SimpleProgress, showProgress bo
 		return nil
 	}
 
-	// Check if it's an AIDocGenError for better user messaging
+	var message string
+
 	if docErr, ok := err.(*errors.AIDocGenError); ok {
-		if showProgress && progress != nil {
-			progress.Error(docErr.GetUserMessage())
-			progress.Failed(nil)
-		} else {
-			fmt.Fprintf(os.Stderr, "%s\n", docErr.GetUserMessage())
+		message = docErr.GetUserMessage()
+
+		if docErr.Context == nil || len(docErr.Context.Suggestions) == 0 {
+			message += "\n\n" + getSuggestionForExitCode(docErr.ExitCode)
 		}
-		return docErr
+	} else {
+		message = fmt.Sprintf("ERROR: %s\n\n%s", err.Error(), getSuggestionForExitCode(errors.ExitGeneralError))
 	}
 
-	// For other errors, show via progress or let it propagate
 	if showProgress && progress != nil {
-		progress.Failed(err)
+		progress.Error(message)
+		progress.Failed(nil)
+	} else {
+		fmt.Fprintf(os.Stderr, "%s\n", message)
 	}
+
 	return err
+}
+
+func getSuggestionForExitCode(code errors.ExitCode) string {
+	switch code {
+	case errors.ExitConfigError:
+		return "Suggestion: Run 'gendocs config' to verify your configuration or check ~/.gendocs.yaml"
+	case errors.ExitValidationError:
+		return "Suggestion: Check the command arguments and try again"
+	case errors.ExitLLMError:
+		return "Suggestion: Verify your API key is valid and you have sufficient quota. Run with --debug for details"
+	case errors.ExitAgentError:
+		return "Suggestion: Check your repository structure and try again. Run with --debug for details"
+	case errors.ExitIOError:
+		return "Suggestion: Check file permissions and disk space. Ensure the target directory exists"
+	case errors.ExitGitLabError:
+		return "Suggestion: Verify your GITLAB_OAUTH_TOKEN and GitLab API URL are correct"
+	default:
+		return "Suggestion: Run with --debug for more details or check logs in .ai/logs/"
+	}
 }

@@ -147,6 +147,15 @@ var (
 
 	StyleNavItemHover = StyleNavItem.
 				Background(ColorSubtle)
+
+	// StyleNavItemSelected is for the active item when sidebar is not focused
+	// Uses a left border accent to clearly indicate it's selected but not keyboard-focused
+	StyleNavItemSelected = lipgloss.NewStyle().
+				Padding(0, 2).
+				BorderLeft(true).
+				BorderStyle(lipgloss.ThickBorder()).
+				BorderForeground(ColorPrimary).
+				Background(ColorBgDim)
 )
 
 // Dashboard form component styles

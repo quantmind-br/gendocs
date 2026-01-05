@@ -58,10 +58,14 @@ func (m SidebarModel) Update(msg tea.Msg) (SidebarModel, tea.Cmd) {
 		case "up", "k":
 			if m.activeIndex > 0 {
 				m.activeIndex--
+			} else {
+				m.activeIndex = len(m.items) - 1
 			}
 		case "down", "j":
 			if m.activeIndex < len(m.items)-1 {
 				m.activeIndex++
+			} else {
+				m.activeIndex = 0
 			}
 		case "home", "g":
 			m.activeIndex = 0
@@ -87,7 +91,8 @@ func (m SidebarModel) View() string {
 				style = tui.StyleNavItemActive
 				prefix = tui.IconArrow + " "
 			} else {
-				style = tui.StyleNavItemHover
+				style = tui.StyleNavItemSelected
+				prefix = tui.IconBullet + " "
 			}
 		}
 

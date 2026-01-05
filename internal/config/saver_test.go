@@ -11,8 +11,8 @@ import (
 func TestSaver_SaveGlobalConfig_CreatesFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	originalHome := os.Getenv("HOME")
-	t.Cleanup(func() { os.Setenv("HOME", originalHome) })
-	os.Setenv("HOME", tmpDir)
+	t.Cleanup(func() { _ = os.Setenv("HOME", originalHome) })
+	_ = os.Setenv("HOME", tmpDir)
 
 	saver := NewSaver()
 	cfg := &GlobalConfig{
@@ -255,8 +255,8 @@ func TestSaver_SaveProjectConfig_DefaultRepoPath(t *testing.T) {
 func TestGlobalConfigPath_ReturnsCorrectPath(t *testing.T) {
 	tmpDir := t.TempDir()
 	originalHome := os.Getenv("HOME")
-	t.Cleanup(func() { os.Setenv("HOME", originalHome) })
-	os.Setenv("HOME", tmpDir)
+	t.Cleanup(func() { _ = os.Setenv("HOME", originalHome) })
+	_ = os.Setenv("HOME", tmpDir)
 
 	path, err := GlobalConfigPath()
 	if err != nil {
@@ -302,8 +302,8 @@ func TestConfigExists_ReturnsFalseForNonExistingFile(t *testing.T) {
 func TestGlobalConfigExists_Integration(t *testing.T) {
 	tmpDir := t.TempDir()
 	originalHome := os.Getenv("HOME")
-	t.Cleanup(func() { os.Setenv("HOME", originalHome) })
-	os.Setenv("HOME", tmpDir)
+	t.Cleanup(func() { _ = os.Setenv("HOME", originalHome) })
+	_ = os.Setenv("HOME", tmpDir)
 
 	if GlobalConfigExists() {
 		t.Error("Expected GlobalConfigExists to return false initially")

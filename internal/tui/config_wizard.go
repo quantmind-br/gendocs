@@ -308,9 +308,10 @@ func (m Model) renderProviderSelection() string {
 }
 
 func (m Model) renderAPIKeyInput() string {
+	inputView := StyleFormInputFocused.Render(m.APIKeyInput.View())
 	s := fmt.Sprintf("Enter your API key for %s:\n\n%s\n\n",
 		highlightStyle.Render(m.Provider),
-		m.APIKeyInput.View())
+		inputView)
 
 	s += "\n(Press Enter when done)"
 	return s
@@ -331,16 +332,18 @@ func (m Model) renderModelInput() string {
 		}
 	}
 
+	inputView := StyleFormInputFocused.Render(m.ModelInput.View())
 	s := fmt.Sprintf("Enter model name (or press Enter for default %s):\n\n%s",
 		highlightStyle.Render(defaultModel),
-		m.ModelInput.View())
+		inputView)
 
 	return s
 }
 
 func (m Model) renderBaseURLInput() string {
+	inputView := StyleFormInputFocused.Render(m.BaseURLInput.View())
 	return fmt.Sprintf("Enter base URL (optional, press Enter to skip):\n\n%s\n\nLeave empty for provider default.",
-		m.BaseURLInput.View())
+		inputView)
 }
 
 func (m Model) renderConfirm() string {

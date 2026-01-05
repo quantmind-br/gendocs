@@ -1,9 +1,0 @@
-{
-  "sourceType": "ideation",
-  "ideationType": "code_quality",
-  "ideaId": "cq-002",
-  "rationale": "Code duplication leads to bugs when fixes are applied inconsistently. If retry logic or error handling needs improvement, it must be updated in 3+ places. This increases maintenance burden and risk of inconsistencies.",
-  "category": "refactoring",
-  "codeQualitySeverity": "major",
-  "priority": "high"
-}
