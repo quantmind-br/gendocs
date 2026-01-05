@@ -390,3 +390,9 @@ time=2026-01-05T16:08:10.627-03:00 level=INFO msg="RPC server ready (socket list
 time=2026-01-05T16:08:10.629-03:00 level=INFO msg="registered in global registry"
 time=2026-01-05T16:08:10.629-03:00 level=INFO msg="Starting %s..." !BADKEY="sync cycle"
 time=2026-01-05T16:08:10.630-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:08:11.052-03:00 level=INFO msg="Sync branch pull failed: %v" !BADKEY="git pull failed in worktree: exit status 128\nFrom https://github.com/quantmind-br/gendocs\n * branch            main       -> FETCH_HEAD\nwarning: fetch updated the current branch head.\nfast-forwarding your working tree from\ncommit 622ef7e127ccfc7ef358c82cf70a372397d2d772.\nerror: Your local changes to the following files would be overwritten by merge:\n\t.beads/beads.db\nPlease commit your changes or stash them before you merge.\nAborting\nfatal: Cannot fast-forward your working tree.\nAfter making sure that you saved anything precious from\n$ git diff 622ef7e127ccfc7ef358c82cf70a372397d2d772\noutput, run\n$ git reset --hard\nto recover.\n"
+time=2026-01-05T16:08:11.052-03:00 level=INFO msg="monitoring parent process" pid=0
+time=2026-01-05T16:08:11.052-03:00 level=INFO msg="using event-driven mode"
+time=2026-01-05T16:08:11.052-03:00 level=INFO msg="Auto-pull disabled: use 'git pull' manually to sync remote changes"
+time=2026-01-05T16:08:11.087-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:08:11.087-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
