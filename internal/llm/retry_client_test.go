@@ -512,3 +512,36 @@ func (l *countingListener) Accept() (net.Conn, error) {
 	}
 	return conn, err
 }
+
+func TestParseRetryAfter(t *testing.T) {
+	tests := []struct {
+		name     string
+		header   string
+		expected time.Duration
+	}{
+		{"empty header", "", 0},
+		{"seconds", "60", 60 * time.Second},
+		{"zero seconds", "0", 0},
+		{"invalid", "invalid", 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resp := &http.Response{Header: http.Header{}}
+			if tt.header != "" {
+				resp.Header.Set("Retry-After", tt.header)
+			}
+
+			got := parseRetryAfter(resp)
+			if got != tt.expected {
+				t.Errorf("parseRetryAfter() = %v, want %v", got, tt.expected)
+			}
+		})
+	}
+
+	t.Run("nil response", func(t *testing.T) {
+		if got := parseRetryAfter(nil); got != 0 {
+			t.Errorf("parseRetryAfter(nil) = %v, want 0", got)
+		}
+	})
+}

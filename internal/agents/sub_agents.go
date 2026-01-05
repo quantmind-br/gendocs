@@ -118,7 +118,7 @@ func (sa *SubAgent) Run(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("failed to render user prompt: %w", err)
 	}
 
-	// Run with retry logic
+	// Run with retry logic and exponential backoff
 	var lastErr error
 	for attempt := 0; attempt < sa.maxRetries; attempt++ {
 		sa.logger.Info(fmt.Sprintf("Running sub-agent %s (attempt %d/%d)", sa.config.Name, attempt+1, sa.maxRetries))
@@ -131,6 +131,20 @@ func (sa *SubAgent) Run(ctx context.Context) (string, error) {
 
 		lastErr = err
 		sa.logger.Warn(fmt.Sprintf("Sub-agent %s attempt %d failed: %v", sa.config.Name, attempt+1, err))
+
+		// Exponential backoff before next attempt: 30s, 60s, 120s...
+		if attempt < sa.maxRetries-1 {
+			backoff := time.Duration(30<<attempt) * time.Second
+			if backoff > 5*time.Minute {
+				backoff = 5 * time.Minute
+			}
+			sa.logger.Info(fmt.Sprintf("Waiting %v before retry...", backoff))
+			select {
+			case <-time.After(backoff):
+			case <-ctx.Done():
+				return "", ctx.Err()
+			}
+		}
 	}
 
 	return "", fmt.Errorf("sub-agent %s failed after %d retries: %w", sa.config.Name, sa.maxRetries, lastErr)

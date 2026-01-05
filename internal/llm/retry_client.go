@@ -8,6 +8,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -248,6 +249,16 @@ func (rc *RetryClient) DoWithContext(ctx context.Context, req *http.Request) (*h
 		// Calculate wait time with exponential backoff
 		waitTime := rc.calculateWaitTime(attempt)
 
+		// For 429 (rate limit), respect Retry-After header or use minimum wait
+		if resp != nil && resp.StatusCode == 429 {
+			if retryAfter := parseRetryAfter(resp); retryAfter > 0 {
+				waitTime = retryAfter
+			} else if rc.config.MaxWaitPerAttempt >= 30*time.Second && waitTime < 30*time.Second {
+				// Minimum 30s wait for rate limits (unless short timeout explicitly configured)
+				waitTime = 30 * time.Second
+			}
+		}
+
 		// Check if we've exceeded max total wait time
 		if time.Since(totalStartTime)+waitTime > rc.config.MaxTotalWait {
 			break
@@ -287,6 +298,35 @@ func (rc *RetryClient) calculateWaitTime(attempt int) time.Duration {
 	}
 
 	return baseWait
+}
+
+// parseRetryAfter parses the Retry-After header value.
+// It supports both delta-seconds (e.g., "60") and HTTP-date formats.
+// Returns 0 if the header is missing, empty, or invalid.
+func parseRetryAfter(resp *http.Response) time.Duration {
+	if resp == nil {
+		return 0
+	}
+
+	retryAfter := resp.Header.Get("Retry-After")
+	if retryAfter == "" {
+		return 0
+	}
+
+	// Try to parse as seconds (most common for LLM APIs)
+	if seconds, err := strconv.ParseInt(retryAfter, 10, 64); err == nil {
+		return time.Duration(seconds) * time.Second
+	}
+
+	// Try to parse as HTTP-date (RFC 1123)
+	if t, err := http.ParseTime(retryAfter); err == nil {
+		waitTime := time.Until(t)
+		if waitTime > 0 {
+			return waitTime
+		}
+	}
+
+	return 0
 }
 
 // SetTimeout updates the client timeout
