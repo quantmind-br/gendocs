@@ -80,8 +80,7 @@ func runCronjobAnalyze(cmd *cobra.Command, args []string) error {
 	}
 
 	cliOverrides := map[string]interface{}{
-		"debug":       debugFlag,
-		"max_workers": 0,
+		"debug": debugFlag,
 	}
 
 	analyzerCfgPtr, err := config.LoadAnalyzerConfig(".", cliOverrides)

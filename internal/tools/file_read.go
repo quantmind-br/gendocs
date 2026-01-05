@@ -68,9 +68,14 @@ func (frt *FileReadTool) Execute(ctx context.Context, params map[string]interfac
 			return nil, fmt.Errorf("file_path must be a string")
 		}
 
-		// Check if file exists
 		info, err := os.Stat(filePath)
 		if err != nil {
+			if os.IsNotExist(err) {
+				return map[string]interface{}{
+					"error":   fmt.Sprintf("File '%s' does not exist", filePath),
+					"message": "The requested file was not found. Please verify the path exists and try again with a valid file path from the project root.",
+				}, nil
+			}
 			return nil, &ModelRetryError{Message: fmt.Sprintf("Failed to stat file: %v", err)}
 		}
 

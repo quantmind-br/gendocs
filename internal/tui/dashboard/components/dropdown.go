@@ -90,18 +90,22 @@ func (m DropdownModel) View() string {
 
 	var optionsView string
 	if m.expanded {
-		var opts []string
-		for i, opt := range m.options {
-			prefix := "  "
-			optStyle := tui.StyleMuted
-			if i == m.selected {
-				prefix = "▸ "
-				optStyle = tui.StyleHighlight
+		if len(m.options) == 0 {
+			optionsView = tui.StyleBox.Render(tui.StyleMuted.Render("No options available"))
+		} else {
+			var opts []string
+			for i, opt := range m.options {
+				prefix := "  "
+				optStyle := tui.StyleMuted
+				if i == m.selected {
+					prefix = "▸ "
+					optStyle = tui.StyleHighlight
+				}
+				opts = append(opts, optStyle.Render(prefix+opt.Label))
 			}
-			opts = append(opts, optStyle.Render(prefix+opt.Label))
+			optionsView = lipgloss.JoinVertical(lipgloss.Left, opts...)
+			optionsView = tui.StyleBox.Render(optionsView)
 		}
-		optionsView = lipgloss.JoinVertical(lipgloss.Left, opts...)
-		optionsView = tui.StyleBox.Render(optionsView)
 	}
 
 	helpView := tui.StyleFormHelp.Render(m.helpText)

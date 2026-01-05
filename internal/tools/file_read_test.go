@@ -137,16 +137,26 @@ func TestFileReadTool_Execute_WithPagination(t *testing.T) {
 func TestFileReadTool_Execute_FileNotFound(t *testing.T) {
 	tool := NewFileReadTool(3)
 
-	_, err := tool.Execute(context.Background(), map[string]interface{}{
+	result, err := tool.Execute(context.Background(), map[string]interface{}{
 		"file_path": "/nonexistent/file.txt",
 	})
 
-	if err == nil {
-		t.Fatal("Expected error for non-existent file, got nil")
+	if err != nil {
+		t.Fatalf("Expected no error (graceful handling), got %v", err)
 	}
 
-	// Should be an error (wrapped or not)
-	// After retries, it becomes a different error type
+	resultMap, ok := result.(map[string]interface{})
+	if !ok {
+		t.Fatal("Expected result to be a map")
+	}
+
+	if _, hasError := resultMap["error"]; !hasError {
+		t.Fatal("Expected result to contain 'error' field for non-existent file")
+	}
+
+	if _, hasMessage := resultMap["message"]; !hasMessage {
+		t.Fatal("Expected result to contain 'message' field for non-existent file")
+	}
 }
 
 func TestFileReadTool_Execute_MissingFilePath(t *testing.T) {

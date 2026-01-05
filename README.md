@@ -6,6 +6,7 @@ Gendocs is a modular, AI-powered CLI application built in Go that automates the 
 
 - **Multi-Agent Orchestration**: A central analyzer coordinates specialized sub-agents to perform focused analysis on structure, dependencies, data flow, request flow, and API definitions.
 - **Incremental Analysis**: Uses a two-tier caching system (file-based hashes and LLM response caching) to skip unchanged files, reducing API costs and execution time.
+- **Documentation Drift Detection**: Detect when your code has diverged from the last analysis and get recommendations for keeping documentation fresh.
 - **Support for Multiple LLM Providers**: Built-in support for Anthropic, OpenAI, and Google Gemini.
 - **Automated Documentation**: Generates high-quality `README.md` files, AI assistant rules (`CLAUDE.md`, `.cursor/rules`), and technical documentation.
 - **Interactive TUI Dashboard**: A component-based Terminal User Interface for managing configurations and tracking analysis progress in real-time.
@@ -54,6 +55,13 @@ go build -o gendocs main.go
    ```bash
    gendocs generate ai-rules
    ```
+
+5. **Check for Documentation Drift**:
+   Detect if your codebase has changed since the last analysis.
+   ```bash
+   gendocs check
+   ```
+   Use `--exit-code` flag in CI/CD pipelines to fail builds when documentation is stale.
 
 ## Architecture
 

@@ -464,3 +464,22 @@ func (l *Loader) LoadMergedConfig(repoPath string) (*GlobalConfig, error) {
 
 	return cfg, nil
 }
+
+func LoadCheckConfig(repoPath string, cliOverrides map[string]interface{}) (*CheckConfig, error) {
+	configMap, err := MergeConfigs(repoPath, "check", &CheckConfig{}, cliOverrides)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg := &CheckConfig{
+		BaseConfig: BaseConfig{
+			RepoPath: getString(configMap, "repo_path", "."),
+			Debug:    getBool(configMap, "debug", false),
+		},
+		MaxHashWorkers: getInt(configMap, "max_hash_workers", 0),
+		OutputFormat:   getString(configMap, "output_format", "text"),
+		Verbose:        getBool(configMap, "verbose", false),
+	}
+
+	return cfg, nil
+}

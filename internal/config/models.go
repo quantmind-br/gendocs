@@ -181,3 +181,16 @@ func (c *LLMCacheConfig) GetCachePath() string {
 func (c *AnalyzerConfig) GetMaxHashWorkers() int {
 	return c.MaxHashWorkers
 }
+
+// CheckConfig holds configuration for the check command (drift detection)
+type CheckConfig struct {
+	BaseConfig     `yaml:",inline"`
+	MaxHashWorkers int    `mapstructure:"max_hash_workers" yaml:"max_hash_workers"`
+	OutputFormat   string `mapstructure:"output_format" yaml:"output_format"` // text, json
+	Verbose        bool   `mapstructure:"verbose" yaml:"verbose"`
+}
+
+// GetMaxHashWorkers returns the max hash workers with a default (0 = use CPU count with max of 8)
+func (c *CheckConfig) GetMaxHashWorkers() int {
+	return c.MaxHashWorkers
+}

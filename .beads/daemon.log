@@ -418,3 +418,915 @@ time=2026-01-05T16:15:21.440-03:00 level=INFO msg="File change detected: %s" !BA
 time=2026-01-05T16:15:21.474-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
 time=2026-01-05T16:15:21.478-03:00 level=INFO msg="Git ref change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.git/refs/heads/main.lock
 time=2026-01-05T16:15:21.859-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:15:21.892-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:15:22.336-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:15:22.336-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:15:23.149-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:15:23.149-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:15:23.336-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:15:23.336-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:15:23.337-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:15:24.150-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:15:24.150-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:15:24.150-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:27:44.665-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq006
+time=2026-01-05T16:27:45.166-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:27:45.166-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:27:45.170-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:27:45.170-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:27:45.170-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:27:46.171-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:27:46.171-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:27:46.171-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:27:46.172-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:27:46.172-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:27:46.172-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:27:46.510-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:27:46.510-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:27:46.510-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:27:46.513-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:27:46.513-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:27:47.511-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:27:47.511-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:27:47.511-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:28:01.370-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq006-t1
+time=2026-01-05T16:28:01.871-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:28:01.871-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:28:01.872-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:28:01.872-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:28:01.872-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:01.872-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:02.873-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:28:02.874-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:28:02.874-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:28:02.875-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:02.875-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:28:02.875-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:28:03.211-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:28:03.211-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:03.212-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:28:03.215-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:28:03.216-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:28:04.212-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:28:04.212-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:28:04.212-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:28:14.100-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq006-t2
+time=2026-01-05T16:28:14.601-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:28:14.601-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:28:14.602-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:14.602-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:28:14.602-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:28:15.604-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:28:15.604-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:28:15.604-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:28:15.605-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:15.605-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:28:15.605-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:28:15.932-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:28:15.933-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:15.933-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:28:15.936-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:28:15.937-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:28:16.933-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:28:16.934-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:28:16.934-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:28:22.454-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq006-t3
+time=2026-01-05T16:28:22.955-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:28:22.955-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:28:22.956-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:28:22.956-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:22.956-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:22.956-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:28:23.957-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:28:23.957-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:28:23.957-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:28:23.958-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:23.958-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:28:23.958-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:28:24.290-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:28:24.290-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:24.290-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:28:24.294-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:28:24.295-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:28:25.291-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:28:25.291-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:28:25.291-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:28:31.978-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq006-t4
+time=2026-01-05T16:28:32.479-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:28:32.479-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:28:32.480-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:32.480-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:28:32.480-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:28:32.480-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:33.481-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:28:33.482-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:28:33.482-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:28:33.483-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:33.483-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:28:33.483-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:28:33.816-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:28:33.817-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:33.817-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:28:33.820-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:28:33.821-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:28:34.817-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:28:34.818-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:28:34.818-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:28:38.881-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq006-t1
+time=2026-01-05T16:28:39.382-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:28:39.382-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:28:39.383-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:39.383-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:28:39.383-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:28:40.167-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq006-t2
+time=2026-01-05T16:28:40.384-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:28:40.384-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:28:40.385-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:28:40.386-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:40.386-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:28:40.386-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:28:40.668-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:28:40.668-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:28:40.668-03:00 level=INFO msg="Pre-export validation failed: %v" !BADKEY="refusing to export: JSONL content has changed since last import (import first to avoid data loss)"
+time=2026-01-05T16:28:40.724-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:28:40.724-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:40.724-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:28:40.727-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:28:40.728-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:28:41.458-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq006-t3
+time=2026-01-05T16:28:41.725-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:28:41.725-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:28:41.725-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:28:41.959-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:28:41.959-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:28:41.961-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:41.961-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:28:41.961-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:28:42.532-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq006-t4
+time=2026-01-05T16:28:42.962-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:28:42.962-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:28:42.962-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:28:42.963-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:42.963-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:28:42.963-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:28:43.032-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:28:43.032-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:28:43.033-03:00 level=INFO msg="Pre-export validation failed: %v" !BADKEY="refusing to export: JSONL content has changed since last import (import first to avoid data loss)"
+time=2026-01-05T16:28:43.293-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:28:43.293-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:28:43.293-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:28:43.297-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:28:43.298-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:28:44.294-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:28:44.294-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:28:44.294-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:29:09.653-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq005
+time=2026-01-05T16:29:10.154-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:29:10.154-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:29:10.155-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:29:10.155-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:29:10.155-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:29:10.155-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:29:11.157-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:29:11.157-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:29:11.157-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:29:11.158-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:29:11.158-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:29:11.158-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:29:11.498-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:29:11.498-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:29:11.498-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:29:11.502-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:29:11.503-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:29:12.500-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:29:12.500-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:29:12.500-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:29:33.424-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq005-t1
+time=2026-01-05T16:29:33.925-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:29:33.925-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:29:33.926-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:29:33.926-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:29:33.926-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:29:34.927-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:29:34.928-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:29:34.928-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:29:34.929-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:29:34.929-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:29:34.929-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:29:35.267-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:29:35.267-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:29:35.267-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:29:35.270-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:29:35.271-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:29:36.268-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:29:36.268-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:29:36.268-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:29:40.241-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq005-t2
+time=2026-01-05T16:29:40.741-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:29:40.741-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:29:40.743-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:29:40.743-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:29:40.743-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:29:40.743-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:29:41.743-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:29:41.743-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:29:41.744-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:29:41.745-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:29:41.745-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:29:41.745-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:29:42.083-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:29:42.083-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:29:42.083-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:29:42.087-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:29:42.088-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:29:43.084-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:29:43.084-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:29:43.084-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:29:53.924-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq005-t3
+time=2026-01-05T16:29:54.425-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:29:54.425-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:29:54.427-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:29:54.427-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:29:54.427-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:29:55.428-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:29:55.428-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:29:55.428-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:29:55.429-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:29:55.429-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:29:55.429-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:29:55.766-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:29:55.766-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:29:55.766-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:29:55.769-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:29:55.770-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:29:56.767-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:29:56.767-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:29:56.767-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:30:05.186-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq005-t4
+time=2026-01-05T16:30:05.686-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:30:05.686-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:30:05.688-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:30:05.688-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:30:05.688-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:30:06.689-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:30:06.689-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:30:06.689-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:30:06.690-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:30:06.690-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:30:06.690-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:30:07.028-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:30:07.028-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:30:07.028-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:30:07.031-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:30:07.032-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:30:07.141-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq005-t1
+time=2026-01-05T16:30:07.642-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:30:07.642-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:30:07.644-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:30:07.644-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:30:07.644-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:30:08.029-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:30:08.029-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:30:08.029-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:30:08.030-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:30:08.030-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:30:08.030-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:30:08.353-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:30:08.353-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:30:08.353-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:30:08.356-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:30:08.357-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:30:08.645-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:30:08.645-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:30:08.645-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:30:09.306-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq005-t2
+time=2026-01-05T16:30:09.353-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:30:09.353-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:30:09.353-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:30:09.807-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:30:09.807-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:30:09.809-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:30:09.809-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:30:09.809-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:30:09.809-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:30:10.594-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq005-t3
+time=2026-01-05T16:30:10.810-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:30:10.810-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:30:10.810-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:30:10.811-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:30:10.811-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:30:10.811-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:30:11.095-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:30:11.095-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:30:11.095-03:00 level=INFO msg="Pre-export validation failed: %v" !BADKEY="refusing to export: JSONL content has changed since last import (import first to avoid data loss)"
+time=2026-01-05T16:30:11.143-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:30:11.143-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:30:11.143-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:30:11.146-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:30:11.147-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:30:11.381-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq005-t4
+time=2026-01-05T16:30:11.882-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:30:11.882-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:30:11.883-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:30:11.883-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:30:11.883-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:30:12.144-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:30:12.144-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:30:12.144-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:30:12.145-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:30:12.145-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:30:12.145-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:30:12.497-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:30:12.497-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:30:12.497-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:30:12.501-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:30:12.502-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:30:12.885-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:30:12.885-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:30:12.885-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:30:13.498-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:30:13.498-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:30:13.498-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:30:36.480-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq003
+time=2026-01-05T16:30:36.981-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:30:36.981-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:30:36.983-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:30:36.983-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:30:36.983-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:30:37.984-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:30:37.984-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:30:37.984-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:30:37.985-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:30:37.985-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:30:37.985-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:30:38.333-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:30:38.333-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:30:38.333-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:30:38.337-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:30:38.338-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:30:39.334-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:30:39.334-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:30:39.334-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:30:54.852-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq003-t1
+time=2026-01-05T16:30:55.352-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:30:55.352-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:30:55.354-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:30:55.354-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:30:55.354-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:30:56.355-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:30:56.355-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:30:56.355-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:30:56.356-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:30:56.356-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:30:56.356-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:30:56.708-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:30:56.708-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:30:56.708-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:30:56.711-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:30:56.712-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:30:57.708-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:30:57.708-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:30:57.708-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:31:04.830-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq003-t2
+time=2026-01-05T16:31:05.330-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:31:05.330-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:31:05.332-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:05.332-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:31:05.333-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:31:06.334-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:31:06.334-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:31:06.334-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:31:06.335-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:06.335-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:31:06.335-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:31:06.698-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:31:06.698-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:06.698-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:31:06.701-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:31:06.703-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:31:07.699-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:31:07.699-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:31:07.699-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:31:13.012-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq003-t3
+time=2026-01-05T16:31:13.512-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:31:13.512-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:31:13.514-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:13.514-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:31:13.514-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:31:14.515-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:31:14.515-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:31:14.515-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:31:14.516-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:14.516-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:31:14.516-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:31:14.855-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:31:14.855-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:14.855-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:31:14.859-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:31:14.860-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:31:15.856-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:31:15.856-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:31:15.856-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:31:23.444-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq003-t4
+time=2026-01-05T16:31:23.945-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:31:23.945-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:31:23.947-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:31:23.947-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:31:23.947-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:23.947-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:24.729-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq003-t1
+time=2026-01-05T16:31:24.948-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:31:24.948-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:31:24.949-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:31:24.949-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:24.949-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:31:24.949-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:31:25.230-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:31:25.230-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:31:25.230-03:00 level=INFO msg="Pre-export validation failed: %v" !BADKEY="refusing to export: JSONL content has changed since last import (import first to avoid data loss)"
+time=2026-01-05T16:31:25.291-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:31:25.291-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:25.292-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:31:25.295-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:31:25.296-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:31:25.726-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq003-t2
+time=2026-01-05T16:31:26.226-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:31:26.226-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:31:26.228-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:26.229-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:26.228-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:31:26.229-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:31:26.293-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:31:26.293-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:31:26.293-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:31:26.294-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:26.294-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:31:26.294-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:31:26.617-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:31:26.617-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:31:26.620-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:31:26.621-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:31:26.960-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq003-t3
+time=2026-01-05T16:31:27.460-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:31:27.461-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:31:27.462-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:27.462-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:27.462-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:31:27.462-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:31:27.618-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:31:27.618-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:31:27.618-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:31:27.619-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:27.620-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:31:27.620-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:31:27.936-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq003-t4
+time=2026-01-05T16:31:27.940-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:31:27.940-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:31:27.943-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:31:27.944-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:31:28.436-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:31:28.436-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:31:28.438-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:28.438-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:28.438-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:31:28.438-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:31:29.440-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:31:29.440-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:31:29.440-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:31:29.441-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:29.441-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:31:29.441-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:31:29.760-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:31:29.760-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:29.760-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:31:29.762-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:31:29.763-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:31:30.762-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:31:30.762-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:31:30.762-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:31:56.313-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq001
+time=2026-01-05T16:31:56.814-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:31:56.814-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:31:56.816-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:56.816-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:31:56.816-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:31:57.816-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:31:57.816-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:31:57.817-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:31:57.818-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:57.818-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:31:57.818-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:31:58.153-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:31:58.154-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:31:58.154-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:31:58.157-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:31:58.158-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:31:59.154-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:31:59.154-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:31:59.154-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:32:16.073-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq004
+time=2026-01-05T16:32:16.574-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:32:16.574-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:32:16.576-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:16.576-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:16.576-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:32:16.576-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:32:17.578-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:32:17.578-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:32:17.578-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:32:17.579-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:17.579-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:32:17.579-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:32:17.913-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:32:17.913-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:17.913-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:32:17.917-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:32:17.918-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:32:18.914-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:32:18.914-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:32:18.914-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:32:32.957-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq001-t1
+time=2026-01-05T16:32:33.458-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:32:33.458-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:32:33.460-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:32:33.460-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:32:33.460-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:33.460-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:34.461-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:32:34.461-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:32:34.461-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:32:34.462-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:34.462-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:32:34.462-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:32:34.796-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:32:34.796-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:34.796-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:32:34.800-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:32:34.801-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:32:35.797-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:32:35.798-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:32:35.798-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:32:43.803-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq001-t2
+time=2026-01-05T16:32:44.303-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:32:44.303-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:32:44.305-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:32:44.305-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:32:44.305-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:45.307-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:32:45.307-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:32:45.307-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:32:45.308-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:45.308-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:32:45.308-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:32:45.635-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:32:45.635-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:45.635-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:32:45.639-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:32:45.640-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:32:46.636-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:32:46.636-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:32:46.636-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:32:50.799-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq001-t3
+time=2026-01-05T16:32:51.299-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:32:51.299-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:32:51.302-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:51.302-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:51.302-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:32:51.302-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:32:52.178-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq001-t1
+time=2026-01-05T16:32:52.302-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:32:52.302-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:32:52.302-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:32:52.303-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:52.303-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:32:52.303-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:32:52.638-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:32:52.638-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:52.638-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:32:52.642-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:32:52.643-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:32:52.679-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:32:52.679-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:32:52.681-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:52.681-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:32:52.681-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:32:53.220-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq001-t2
+time=2026-01-05T16:32:53.683-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:32:53.683-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:32:53.683-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:32:53.684-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:53.684-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:32:53.684-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:32:53.721-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:32:53.721-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:32:53.721-03:00 level=INFO msg="Pre-export validation failed: %v" !BADKEY="refusing to export: JSONL content has changed since last import (import first to avoid data loss)"
+time=2026-01-05T16:32:54.025-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:32:54.025-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:54.025-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:32:54.028-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:32:54.030-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:32:54.275-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq001-t3
+time=2026-01-05T16:32:54.776-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:32:54.776-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:32:54.779-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:32:54.779-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:32:54.779-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:54.779-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:55.027-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:32:55.027-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:32:55.027-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:32:55.028-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:55.028-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:32:55.028-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:32:55.354-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:32:55.354-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:32:55.354-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:32:55.358-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:32:55.359-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:32:55.780-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:32:55.780-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:32:55.780-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:32:56.356-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:32:56.356-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:32:56.356-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:33:12.218-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq004-t1
+time=2026-01-05T16:33:12.718-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:33:12.718-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:33:12.720-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:33:12.720-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:33:12.720-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:33:13.721-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:33:13.721-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:33:13.722-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:33:13.723-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:33:13.723-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:33:13.723-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:33:14.068-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:33:14.068-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:33:14.068-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:33:14.071-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:33:14.073-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:33:15.069-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:33:15.069-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:33:15.069-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:33:22.962-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq004-t2
+time=2026-01-05T16:33:23.463-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:33:23.463-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:33:23.465-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:33:23.465-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:33:23.465-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:33:23.465-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:33:24.466-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:33:24.466-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:33:24.467-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:33:24.468-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:33:24.468-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:33:24.468-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:33:24.802-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:33:24.803-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:33:24.803-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:33:24.806-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:33:24.807-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:33:25.803-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:33:25.804-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:33:25.804-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:33:31.825-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq004-t3
+time=2026-01-05T16:33:32.326-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:33:32.326-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:33:32.328-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:33:32.328-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:33:32.328-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:33:32.328-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:33:33.327-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq004-t1
+time=2026-01-05T16:33:33.330-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:33:33.330-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:33:33.330-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:33:33.332-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:33:33.332-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:33:33.332-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:33:33.658-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:33:33.658-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:33:33.658-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:33:33.662-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:33:33.663-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:33:33.828-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:33:33.828-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:33:33.830-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:33:33.830-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:33:33.830-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:33:34.407-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq004-t2
+time=2026-01-05T16:33:34.831-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:33:34.831-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:33:34.831-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:33:34.832-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:33:34.832-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:33:34.832-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:33:34.907-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:33:34.907-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:33:34.907-03:00 level=INFO msg="Pre-export validation failed: %v" !BADKEY="refusing to export: JSONL content has changed since last import (import first to avoid data loss)"
+time=2026-01-05T16:33:35.156-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:33:35.157-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:33:35.157-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:33:35.160-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:33:35.162-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:33:35.553-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq004-t3
+time=2026-01-05T16:33:36.054-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:33:36.054-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:33:36.056-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:33:36.056-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:33:36.056-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:33:36.056-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:33:36.159-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:33:36.159-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:33:36.159-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:33:36.160-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:33:36.160-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:33:36.160-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:33:36.485-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:33:36.485-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:33:36.489-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:33:36.490-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:33:37.487-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:33:37.487-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:33:37.487-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:34:07.496-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq002
+time=2026-01-05T16:34:07.996-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:34:07.996-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:34:07.999-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:34:07.999-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:34:07.999-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:34:09.000-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:34:09.000-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:34:09.000-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:34:09.001-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:34:09.001-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:34:09.001-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:34:09.361-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:34:09.361-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:34:09.361-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:34:09.365-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:34:09.366-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:34:10.361-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:34:10.361-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:34:10.362-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:34:27.488-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq002-t1
+time=2026-01-05T16:34:27.989-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:34:27.989-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:34:27.992-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:34:27.992-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:34:27.992-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:34:28.992-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:34:28.993-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:34:28.993-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:34:28.994-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:34:28.994-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:34:28.994-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:34:29.349-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:34:29.349-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:34:29.349-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:34:29.353-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:34:29.354-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:34:30.350-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:34:30.350-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:34:30.351-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:34:40.823-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq002-t2
+time=2026-01-05T16:34:41.324-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:34:41.324-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:34:41.326-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:34:41.326-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:34:41.326-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:34:41.326-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:34:42.328-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:34:42.328-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:34:42.328-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:34:42.329-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:34:42.329-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:34:42.329-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:34:42.665-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:34:42.665-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:34:42.665-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:34:42.668-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:34:42.670-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:34:43.666-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:34:43.666-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:34:43.666-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:34:48.897-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq002-t3
+time=2026-01-05T16:34:49.397-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:34:49.397-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:34:49.400-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:34:49.400-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:34:49.400-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:34:50.401-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:34:50.401-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:34:50.402-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:34:50.403-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:34:50.403-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:34:50.403-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:34:50.741-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:34:50.741-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:34:50.741-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:34:50.745-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:34:50.746-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:34:51.742-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:34:51.742-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:34:51.743-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:34:58.568-03:00 level=INFO msg="Mutation detected: %s %s" create=gendocs-cq002-t4
+time=2026-01-05T16:34:59.069-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:34:59.069-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:34:59.072-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:34:59.072-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:34:59.072-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:34:59.072-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:35:00.040-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq002-t1
+time=2026-01-05T16:35:00.073-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:35:00.073-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:35:00.073-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:35:00.074-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:35:00.074-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:35:00.074-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:35:00.412-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:35:00.412-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:35:00.412-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:35:00.416-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:35:00.418-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:35:00.541-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:35:00.541-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:35:00.544-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:35:00.544-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:35:00.544-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:35:00.969-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq002-t2
+time=2026-01-05T16:35:01.470-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:35:01.470-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:35:01.470-03:00 level=INFO msg="Pre-export validation failed: %v" !BADKEY="refusing to export: JSONL content has changed since last import (import first to avoid data loss)"
+time=2026-01-05T16:35:01.544-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:35:01.544-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:35:01.544-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:35:01.545-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:35:01.545-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:35:01.545-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:35:01.878-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:35:01.879-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:35:01.879-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:35:01.882-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:35:01.884-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:35:02.013-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq002-t3
+time=2026-01-05T16:35:02.513-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:35:02.513-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:35:02.516-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:35:02.516-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:35:02.516-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:35:02.516-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:35:02.879-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:35:02.879-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:35:02.879-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:35:02.880-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:35:02.880-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:35:02.880-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:35:03.058-03:00 level=INFO msg="Mutation detected: %s %s" update=gendocs-cq002-t4
+time=2026-01-05T16:35:03.434-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:35:03.434-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:35:03.434-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:35:03.438-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:35:03.439-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:35:03.517-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:35:03.517-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:35:03.517-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:35:03.559-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:35:03.559-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:35:03.562-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:35:03.562-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:35:03.562-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:35:04.563-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:35:04.563-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:35:04.564-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:35:04.565-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:35:04.565-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:35:04.565-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:35:04.886-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:35:04.886-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:35:04.886-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:35:04.888-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:35:04.888-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:35:05.886-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:35:05.887-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:35:05.887-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import
+time=2026-01-05T16:39:16.291-03:00 level=INFO msg="Mutation detected: %s %s" status=gendocs-cq006-t1
+time=2026-01-05T16:39:16.792-03:00 level=INFO msg="Export triggered by mutation events"
+time=2026-01-05T16:39:16.792-03:00 level=INFO msg="Starting %s..." !BADKEY=export
+time=2026-01-05T16:39:16.794-03:00 level=INFO msg="JSONL file created: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:39:16.794-03:00 level=INFO msg="Exported to JSONL"
+time=2026-01-05T16:39:16.795-03:00 level=INFO msg="Export complete"
+time=2026-01-05T16:39:17.795-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:39:17.796-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:39:17.796-03:00 level=INFO msg="JSONL content changed, proceeding with %s..." !BADKEY=auto-import
+time=2026-01-05T16:39:17.797-03:00 level=INFO msg="⚠️  WARNING: Uncommitted local changes detected in %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:39:17.797-03:00 level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-01-05T16:39:17.797-03:00 level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-01-05T16:39:18.141-03:00 level=INFO msg="Pulled sync branch %s" !BADKEY=main
+time=2026-01-05T16:39:18.141-03:00 level=INFO msg="File change detected: %s" !BADKEY=/home/diogo/dev/gendocs/.beads/issues.jsonl
+time=2026-01-05T16:39:18.141-03:00 level=INFO msg="Synced JSONL from sync branch to main repo"
+time=2026-01-05T16:39:18.145-03:00 level=INFO msg="Imported from JSONL"
+time=2026-01-05T16:39:18.147-03:00 level=INFO msg="Auto-import complete"
+time=2026-01-05T16:39:19.142-03:00 level=INFO msg="Import triggered by file change"
+time=2026-01-05T16:39:19.142-03:00 level=INFO msg="Starting %s..." !BADKEY=auto-import
+time=2026-01-05T16:39:19.142-03:00 level=INFO msg="Skipping %s: JSONL content unchanged" !BADKEY=auto-import

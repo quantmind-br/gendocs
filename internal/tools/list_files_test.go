@@ -161,16 +161,31 @@ func TestListFilesTool_Execute_OnlyDirectories(t *testing.T) {
 func TestListFilesTool_Execute_DirectoryNotFound(t *testing.T) {
 	tool := NewListFilesTool(3)
 
-	_, err := tool.Execute(context.Background(), map[string]interface{}{
+	result, err := tool.Execute(context.Background(), map[string]interface{}{
 		"directory": "/nonexistent/directory",
 	})
 
-	if err == nil {
-		t.Fatal("Expected error for non-existent directory, got nil")
+	if err != nil {
+		t.Fatalf("Expected no error (graceful handling), got %v", err)
 	}
 
-	// Should be an error (wrapped or not)
-	// After retries, it becomes a different error type
+	resultMap, ok := result.(map[string]interface{})
+	if !ok {
+		t.Fatal("Expected result to be a map")
+	}
+
+	if _, hasError := resultMap["error"]; !hasError {
+		t.Fatal("Expected result to contain 'error' field for non-existent directory")
+	}
+
+	if _, hasMessage := resultMap["message"]; !hasMessage {
+		t.Fatal("Expected result to contain 'message' field for non-existent directory")
+	}
+
+	filesList := resultMap["files"].([]string)
+	if len(filesList) != 0 {
+		t.Errorf("Expected 0 files for non-existent directory, got %d", len(filesList))
+	}
 }
 
 func TestListFilesTool_Execute_MissingDirectory(t *testing.T) {
@@ -196,30 +211,32 @@ func TestListFilesTool_Execute_InvalidDirectory(t *testing.T) {
 }
 
 func TestListFilesTool_Execute_FileAsDirectory(t *testing.T) {
-	// Try to list files from a file path (not a directory)
 	tmpDir := t.TempDir()
 	testFile := filepath.Join(tmpDir, "test.txt")
 	_ = os.WriteFile(testFile, []byte("content"), 0644)
 
 	tool := NewListFilesTool(3)
 
-	// This should succeed (Walk treats file as directory with single entry)
-	// filepath.Walk doesn't error for files, it just walks them
 	result, err := tool.Execute(context.Background(), map[string]interface{}{
 		"directory": testFile,
 	})
 
 	if err != nil {
-		t.Fatalf("Expected no error, got %v", err)
+		t.Fatalf("Expected no error (graceful handling), got %v", err)
 	}
 
-	// Should return the file itself
-	resultMap := result.(map[string]interface{})
-	filesList := resultMap["files"].([]string)
+	resultMap, ok := result.(map[string]interface{})
+	if !ok {
+		t.Fatal("Expected result to be a map")
+	}
 
-	// The file itself will be in the list
-	if len(filesList) != 1 {
-		t.Errorf("Expected 1 file (the file itself), got %d", len(filesList))
+	if _, hasError := resultMap["error"]; !hasError {
+		t.Fatal("Expected result to contain 'error' field when path is a file")
+	}
+
+	filesList := resultMap["files"].([]string)
+	if len(filesList) != 0 {
+		t.Errorf("Expected 0 files when path is a file, got %d", len(filesList))
 	}
 }
 

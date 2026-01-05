@@ -54,7 +54,28 @@ func (lft *ListFilesTool) Execute(ctx context.Context, params map[string]interfa
 			return nil, fmt.Errorf("directory must be a string")
 		}
 
-		// Load gitignore patterns
+		info, statErr := os.Stat(directory)
+		if statErr != nil {
+			if os.IsNotExist(statErr) {
+				return map[string]interface{}{
+					"files":   []string{},
+					"count":   0,
+					"error":   fmt.Sprintf("Directory '%s' does not exist", directory),
+					"message": "The requested directory was not found. Please verify the path exists and try again with a valid directory from the project root.",
+				}, nil
+			}
+			return nil, &ModelRetryError{Message: fmt.Sprintf("Failed to access directory: %v", statErr)}
+		}
+
+		if !info.IsDir() {
+			return map[string]interface{}{
+				"files":   []string{},
+				"count":   0,
+				"error":   fmt.Sprintf("Path '%s' is not a directory", directory),
+				"message": "The specified path is a file, not a directory. Use read_file tool to read file contents.",
+			}, nil
+		}
+
 		ignorePatterns := LoadGitignorePatterns(directory)
 
 		var files []string

@@ -62,15 +62,30 @@ func init() {
 
 func runAnalyze(cmd *cobra.Command, args []string) error {
 	cliOverrides := map[string]interface{}{
-		"repo_path":              repoPath,
-		"exclude_code_structure": excludeStructure,
-		"exclude_data_flow":      excludeDataFlow,
-		"exclude_dependencies":   excludeDeps,
-		"exclude_request_flow":   excludeReqFlow,
-		"exclude_api_analysis":   excludeAPI,
-		"max_workers":            maxWorkers,
-		"debug":                  debugFlag,
-		"force":                  forceAnalysis,
+		"repo_path": repoPath,
+		"debug":     debugFlag,
+	}
+
+	if cmd.Flags().Changed("exclude-code-structure") {
+		cliOverrides["exclude_code_structure"] = excludeStructure
+	}
+	if cmd.Flags().Changed("exclude-data-flow") {
+		cliOverrides["exclude_data_flow"] = excludeDataFlow
+	}
+	if cmd.Flags().Changed("exclude-dependencies") {
+		cliOverrides["exclude_dependencies"] = excludeDeps
+	}
+	if cmd.Flags().Changed("exclude-request-flow") {
+		cliOverrides["exclude_request_flow"] = excludeReqFlow
+	}
+	if cmd.Flags().Changed("exclude-api-analysis") {
+		cliOverrides["exclude_api_analysis"] = excludeAPI
+	}
+	if cmd.Flags().Changed("max-workers") {
+		cliOverrides["max_workers"] = maxWorkers
+	}
+	if cmd.Flags().Changed("force") {
+		cliOverrides["force"] = forceAnalysis
 	}
 
 	cfg, err := config.LoadAnalyzerConfig(repoPath, cliOverrides)
@@ -97,6 +112,7 @@ func runAnalyze(cmd *cobra.Command, args []string) error {
 	var progress *tui.Progress
 	if showProgress {
 		progress = tui.NewProgress("Gendocs Analyze")
+		progress.SetSubtitle(fmt.Sprintf("Repository: %s", cfg.RepoPath))
 		handler.SetProgressReporter(progress)
 		progress.Start()
 	}
